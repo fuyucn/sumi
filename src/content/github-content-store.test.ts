@@ -72,3 +72,18 @@ test("deletePost removes the post files", async () => {
   await store.deletePost("alice", "bye");
   expect(await store.getPost("alice", "bye")).toBeNull();
 });
+
+test("deletePost recurses into the images/ subdir and removes everything", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  await store.savePost("alice", { title: "With Image", body: "x", status: "draft" });
+  await store.uploadImage("alice", "with-image", "cover.png", new Uint8Array([1, 2, 3]));
+  // both the article file and the nested image exist
+  expect([...client.files.keys()].some((k) => k.includes("/images/cover.png"))).toBe(true);
+
+  await store.deletePost("alice", "with-image");
+
+  // nothing under the post dir remains (recursive delete reached images/)
+  const remaining = [...client.files.keys()].filter((k) => k.includes("content/@alice/with-image"));
+  expect(remaining).toEqual([]);
+});
