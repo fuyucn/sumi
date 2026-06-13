@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { getCurrentUser } from "@/lib/current-user";
 
+// This page reads session state per-request; opt out of static prerendering.
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  // Lazy import to avoid evaluating env at build time.
-  const { getCurrentUser } = await import("@/lib/current-user");
   const user = await getCurrentUser();
   return (
     <main style={{ maxWidth: 640, margin: "4rem auto" }}>
