@@ -6,6 +6,8 @@ export interface ListPostsOptions {
 }
 
 export interface ContentStore {
+  /** All creator handles that have content. */
+  listHandles(): Promise<string[]>;
   listPosts(opts?: ListPostsOptions): Promise<PostMeta[]>;
   getPost(handle: string, slug: string): Promise<Post | null>;
   savePost(handle: string, post: NewPost): Promise<string>;

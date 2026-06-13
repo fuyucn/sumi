@@ -65,7 +65,7 @@ export class GitHubContentStore implements ContentStore {
     return `images/${filename}`;
   }
 
-  private async listHandles(): Promise<string[]> {
+  async listHandles(): Promise<string[]> {
     const entries = await this.client.listDir(CONTENT_DIR);
     return entries.filter((e) => e.type === "dir" && e.name.startsWith("@")).map((e) => e.name.slice(1));
   }

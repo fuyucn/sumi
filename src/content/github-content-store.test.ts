@@ -73,6 +73,14 @@ test("deletePost removes the post files", async () => {
   expect(await store.getPost("alice", "bye")).toBeNull();
 });
 
+test("listHandles returns all creator handles with content", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  await store.savePost("alice", { title: "A", body: "a", status: "published" });
+  await store.savePost("bob", { title: "B", body: "b", status: "draft" });
+  const handles = await store.listHandles();
+  expect(handles.sort()).toEqual(["alice", "bob"]);
+});
+
 test("deletePost recurses into the images/ subdir and removes everything", async () => {
   const client = fakeClient();
   const store = new GitHubContentStore(client);
