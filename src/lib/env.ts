@@ -8,7 +8,9 @@ const schema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1),
   // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
   ALLOWED_GITHUB_USERS: z.string().default(""),
-  GITHUB_CONTENT_REPO: z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo"),
+  // Optional until Plan 2 (content engine via GitHub API) actually uses it, so a
+  // Plan 1-only deployment doesn't fail on first request. When present it must be owner/repo.
+  GITHUB_CONTENT_REPO: z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo").optional(),
 });
 
 export type Env = z.infer<typeof schema>;
