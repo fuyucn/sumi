@@ -7,5 +7,6 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    env: { BETTER_AUTH_SECRET: "x".repeat(32), DATABASE_FILE: ":memory:" },
   },
 });
