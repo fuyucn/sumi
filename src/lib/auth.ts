@@ -20,6 +20,9 @@ export const auth = betterAuth({
     github: {
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET,
+      // `repo` scope is needed to commit articles/images to the content repo
+      // (GitHub-API content store, Plan 2). It grants private-repo write — keep
+      // only while that feature is in scope; narrow to `public_repo` if deferred.
       scope: ["repo", "read:user"],
       /**
        * Capture the GitHub login (username) into the `username` field.
@@ -31,12 +34,17 @@ export const auth = betterAuth({
       }),
     },
   },
+  // NOTE: the allowlist gate fires only at account creation. A user removed
+  // from ALLOWED_GITHUB_USERS after their account row exists can still sign in.
+  // For v0 (small trusted allowlist) this is acceptable; revisit with a sign-in
+  // check if immediate revocation is needed.
   databaseHooks: {
     user: {
       create: {
         before: async (user) => {
           // `username` was set by mapProfileToUser above and carries profile.login.
-          const login = (user as { username?: string }).username ?? "";
+          const raw = (user as Record<string, unknown>)["username"];
+          const login = typeof raw === "string" ? raw : "";
           if (!isAllowedGithubUser(login, env.ALLOWED_GITHUB_USERS)) {
             throw new APIError("FORBIDDEN", {
               message: "This GitHub account is not on the allowlist.",
