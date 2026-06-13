@@ -18,8 +18,9 @@ test("parses a full valid env", () => {
 });
 
 test("requires DATABASE_URL", () => {
-  const { DATABASE_URL, ...rest } = base;
-  expect(() => loadEnv({ ...rest })).toThrow();
+  const rest: Partial<typeof base> = { ...base };
+  delete rest.DATABASE_URL;
+  expect(() => loadEnv(rest)).toThrow();
 });
 
 test("requires a secret of at least 32 chars", () => {
@@ -27,8 +28,9 @@ test("requires a secret of at least 32 chars", () => {
 });
 
 test("requires GITHUB_CLIENT_ID and SECRET", () => {
-  const { GITHUB_CLIENT_ID, ...rest } = base;
-  expect(() => loadEnv({ ...rest })).toThrow();
+  const rest: Partial<typeof base> = { ...base };
+  delete rest.GITHUB_CLIENT_ID;
+  expect(() => loadEnv(rest)).toThrow();
 });
 
 test("requires GITHUB_CONTENT_REPO in owner/repo form", () => {
