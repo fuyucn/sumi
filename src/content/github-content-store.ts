@@ -2,7 +2,7 @@ import type { GitHubClient } from "@/lib/github";
 import type { ContentStore, ListPostsOptions } from "./store";
 import type { NewPost, Post, PostMeta } from "./types";
 import { parsePost, serializePost } from "./frontmatter";
-import { imagePath, postDir, postFile, slugify, userDir } from "./paths";
+import { CONTENT_DIR, imagePath, postDir, postFile, slugify, userDir } from "./paths";
 
 export class GitHubContentStore implements ContentStore {
   constructor(private readonly client: GitHubClient) {}
@@ -13,6 +13,11 @@ export class GitHubContentStore implements ContentStore {
     return parsePost(file.content, slug);
   }
 
+  /**
+   * Create or overwrite a post. The slug is derived from the title, so editing a
+   * post's title produces a NEW path and orphans the old file — callers that
+   * support renames must deletePost(oldSlug) first (Plan 3 edit flow).
+   */
   async savePost(handle: string, post: NewPost): Promise<string> {
     const slug = slugify(post.title);
     const full: Post = {
@@ -61,7 +66,7 @@ export class GitHubContentStore implements ContentStore {
   }
 
   private async listHandles(): Promise<string[]> {
-    const entries = await this.client.listDir("content");
+    const entries = await this.client.listDir(CONTENT_DIR);
     return entries.filter((e) => e.type === "dir" && e.name.startsWith("@")).map((e) => e.name.slice(1));
   }
 
