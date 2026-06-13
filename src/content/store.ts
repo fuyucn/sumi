@@ -1,8 +1,8 @@
-import type { Post, PostMeta, NewPost } from "./types";
+import type { Post, PostMeta, NewPost, PostStatus } from "./types";
 
 export interface ListPostsOptions {
   handle?: string;
-  status?: "draft" | "published";
+  status?: PostStatus;
 }
 
 export interface ContentStore {
