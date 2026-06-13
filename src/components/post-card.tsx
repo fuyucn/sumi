@@ -15,7 +15,7 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
       {post.tags.length > 0 ? (
         <p style={{ margin: "0.25rem 0", fontSize: "0.85rem" }}>
           {post.tags.map((t) => (
-            <Link key={t} href={`/tag/${t}`} style={{ marginRight: 8 }}>#{t}</Link>
+            <Link key={t} href={`/tag/${encodeURIComponent(t)}`} style={{ marginRight: 8 }}>#{t}</Link>
           ))}
         </p>
       ) : null}
