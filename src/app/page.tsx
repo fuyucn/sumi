@@ -11,7 +11,17 @@ export default async function Home() {
     <main style={{ maxWidth: 680, margin: "2rem auto", padding: "0 1rem" }}>
       <header style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
         <h1>Sumi 墨</h1>
-        <span>{user ? `@${(user as { username?: string }).username ?? user.name}` : <Link href="/sign-in">Sign in</Link>}</span>
+        <span>
+          {user ? (
+            <>
+              @{(user as { username?: string }).username ?? user.name}
+              {" · "}
+              <Link href="/write">Write</Link>
+            </>
+          ) : (
+            <Link href="/sign-in">Sign in</Link>
+          )}
+        </span>
       </header>
       {feed.length === 0 ? (
         <p style={{ color: "#666" }}>No published posts yet.</p>

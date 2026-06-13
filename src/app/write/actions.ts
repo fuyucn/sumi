@@ -1,3 +1,4 @@
+"use server";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
