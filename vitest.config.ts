@@ -7,6 +7,14 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-    env: { BETTER_AUTH_SECRET: "x".repeat(32), DATABASE_FILE: ":memory:" },
+    env: {
+      DATABASE_URL: "postgresql://user:pass@localhost/sumi_test",
+      BETTER_AUTH_SECRET: "x".repeat(32),
+      BETTER_AUTH_URL: "http://localhost:3000",
+      GITHUB_CLIENT_ID: "test-cid",
+      GITHUB_CLIENT_SECRET: "test-csecret",
+      ALLOWED_GITHUB_USERS: "alice,bob",
+      GITHUB_CONTENT_REPO: "alice/sumi-content",
+    },
   },
 });

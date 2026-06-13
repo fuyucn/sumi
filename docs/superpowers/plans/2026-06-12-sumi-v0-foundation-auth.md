@@ -1,199 +1,105 @@
-# Sumi v0 — Plan 1: Foundation + Auth Implementation Plan
+# Sumi v0 — Plan 1: Foundation + Auth + Deploy Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up the Sumi Next.js app with tooling and a working multi-creator account system (register / log in / `@handle`), gated by an instance signup mode, runnable via Docker.
+**Goal:** Stand up the Sumi Next.js app deployable to Vercel, with GitHub-only login (Better Auth + Drizzle + Neon Postgres) gated by a GitHub-username allowlist.
 
-**Architecture:** A single Next.js (App Router, TypeScript) application. Authentication and account data live in a local SQLite file managed by Better Auth (username plugin provides the unique `@handle`). No external database container. Signup mode (`open | invite | closed`) is enforced via env config and a Better Auth hook.
+**Architecture:** A single Next.js (App Router, TypeScript) app on Vercel. Accounts/sessions live in external Neon Postgres, accessed via Drizzle (serverless `neon-http` driver). Auth is Better Auth with the GitHub social provider only; a configurable allowlist of GitHub usernames is the "safe gate" enforced in a Better Auth hook. Content storage (GitHub API) is a later plan.
 
-**Tech Stack:** Next.js (App Router) · TypeScript · pnpm · Vitest · Better Auth · better-sqlite3 · Docker / docker-compose
+**Tech Stack:** Next.js (App Router) · TypeScript · pnpm · Vitest · Drizzle ORM · Neon Postgres · `@neondatabase/serverless` · Better Auth (GitHub OAuth) · Vercel
 
-**Git policy for this project:** commits are **local only** — never `git push`, never configure a remote. If the local signing agent errors on commit, run commits with `git -c commit.gpgsign=false commit ...`.
+**Revision note:** This plan supersedes the original local-SQLite/local-git version. Tasks 1–2 (scaffold, env) are reused with edits; Tasks 3–4 from the old plan (better-sqlite3, Better Auth on SQLite) are replaced by the Drizzle/Neon + GitHub-OAuth tasks below. The committed `src/lib/db.ts` (SQLite) is replaced in Task 3.
+
+**Git policy:** commits are **local only** — never `git push`, never configure a remote. If the local signing agent errors on commit, run `git -c commit.gpgsign=false commit ...`.
 
 ---
 
 ## File Structure
 
-Created/owned by this plan (paths relative to repo root `~/Developer/sumi`):
-
-- `package.json`, `pnpm-lock.yaml`, `tsconfig.json`, `next.config.ts`, `.gitignore` — project + tooling
-- `vitest.config.ts` — test runner config
-- `src/lib/env.ts` — typed environment config (incl. `SIGNUPS` mode)
-- `src/lib/db.ts` — better-sqlite3 connection (single shared instance)
-- `src/lib/auth.ts` — Better Auth server instance (emailAndPassword + username + signup gate)
+- `src/lib/env.ts` — typed env (revised fields: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `ALLOWED_GITHUB_USERS`, `GITHUB_CONTENT_REPO`)
+- `src/lib/db.ts` — Drizzle client over Neon serverless driver
+- `src/db/schema.ts` — Drizzle schema (Better Auth tables: user/session/account/verification)
+- `drizzle.config.ts` — drizzle-kit config
+- `src/lib/allowlist.ts` — pure allowlist predicate (`isAllowedGithubUser`)
+- `src/lib/auth.ts` — Better Auth (GitHub provider + Drizzle adapter + allowlist gate hook)
 - `src/lib/auth-client.ts` — Better Auth React client
 - `src/lib/current-user.ts` — `getCurrentUser()` server helper
-- `src/app/api/auth/[...all]/route.ts` — mounts Better Auth handler
-- `src/app/(auth)/sign-up/page.tsx`, `src/app/(auth)/sign-in/page.tsx` — minimal auth UI
-- `src/app/page.tsx` — placeholder home showing auth state
-- `Dockerfile`, `docker-compose.yml`, `.dockerignore` — deployment
-- Tests under `src/**/*.test.ts` colocated with the unit under test
+- `src/app/api/auth/[...all]/route.ts` — Better Auth handler
+- `src/app/sign-in/page.tsx` — GitHub sign-in button; `src/app/page.tsx` — auth-aware home
+- `.env.example`, `README.md` (Deploy to Vercel button), `vercel.json` (if needed)
+- Tests colocated as `src/**/*.test.ts`
 
 ---
 
-## Task 1: Project scaffolding & tooling
+## Task 1 (DONE): Project scaffolding & tooling
+Already complete (Next.js + Vitest scaffold, commit on branch `v0-foundation-auth`). No action.
+
+---
+
+## Task 2: Revise env config for the Vercel/Neon/GitHub stack
 
 **Files:**
-- Create: `package.json`, `tsconfig.json`, `next.config.ts`, `vitest.config.ts`, `.gitignore`, `src/app/page.tsx`, `src/app/layout.tsx`
+- Modify: `src/lib/env.ts`, `src/lib/env.test.ts`
 
-- [ ] **Step 1: Scaffold Next.js app into the repo root**
+- [ ] **Step 1: Update the failing test**
 
-Run (the repo already contains `docs/`; scaffold in place):
-
-```bash
-cd ~/Developer/sumi
-pnpm dlx create-next-app@latest . \
-  --ts --app --src-dir --eslint --no-tailwind --import-alias "@/*" \
-  --use-pnpm --skip-install --yes
-pnpm install
-```
-
-If `create-next-app` refuses because the directory is non-empty, scaffold in a temp dir and move files:
-
-```bash
-pnpm dlx create-next-app@latest /tmp/sumi-scaffold --ts --app --src-dir --eslint --no-tailwind --import-alias "@/*" --use-pnpm --skip-install --yes
-cp -R /tmp/sumi-scaffold/. ~/Developer/sumi/
-rm -rf /tmp/sumi-scaffold
-cd ~/Developer/sumi && pnpm install
-```
-
-- [ ] **Step 2: Add Vitest and test/type scripts**
-
-Run:
-
-```bash
-pnpm add -D vitest @vitejs/plugin-react vite-tsconfig-paths
-```
-
-Create `vitest.config.ts`:
-
-```ts
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
-
-export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
-  test: {
-    environment: "node",
-    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
-  },
-});
-```
-
-Edit `package.json` `"scripts"` to include:
-
-```json
-{
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  }
-}
-```
-
-- [ ] **Step 3: Add a trivial sanity test**
-
-Create `src/lib/sanity.test.ts`:
+Replace `src/lib/env.test.ts` with:
 
 ```ts
 import { expect, test } from "vitest";
-
-test("test harness runs", () => {
-  expect(1 + 1).toBe(2);
-});
-```
-
-- [ ] **Step 4: Verify tooling runs**
-
-Run: `pnpm test`
-Expected: 1 passed.
-
-Run: `pnpm typecheck`
-Expected: no errors.
-
-- [ ] **Step 5: Ensure data dir is git-ignored**
-
-Append to `.gitignore`:
-
-```
-# Sumi local data
-/data/
-*.db
-*.db-journal
-```
-
-- [ ] **Step 6: Commit (local)**
-
-```bash
-git add -A
-git commit -m "chore: scaffold Next.js app with Vitest tooling"
-```
-
----
-
-## Task 2: Typed environment config
-
-**Files:**
-- Create: `src/lib/env.ts`
-- Test: `src/lib/env.test.ts`
-
-- [ ] **Step 1: Write the failing test**
-
-Create `src/lib/env.test.ts`:
-
-```ts
-import { afterEach, beforeEach, expect, test } from "vitest";
 import { loadEnv } from "./env";
 
 const base = {
+  DATABASE_URL: "postgresql://user:pass@host/db",
   BETTER_AUTH_SECRET: "x".repeat(32),
-  DATABASE_FILE: "./data/sumi.db",
+  BETTER_AUTH_URL: "http://localhost:3000",
+  GITHUB_CLIENT_ID: "cid",
+  GITHUB_CLIENT_SECRET: "csecret",
+  ALLOWED_GITHUB_USERS: "alice,bob",
+  GITHUB_CONTENT_REPO: "alice/sumi-content",
 };
 
-test("defaults SIGNUPS to 'open'", () => {
+test("parses a full valid env", () => {
   const env = loadEnv({ ...base });
-  expect(env.SIGNUPS).toBe("open");
+  expect(env.DATABASE_URL).toContain("postgresql://");
+  expect(env.ALLOWED_GITHUB_USERS).toBe("alice,bob");
 });
 
-test("accepts valid SIGNUPS values", () => {
-  expect(loadEnv({ ...base, SIGNUPS: "closed" }).SIGNUPS).toBe("closed");
-  expect(loadEnv({ ...base, SIGNUPS: "invite" }).SIGNUPS).toBe("invite");
-});
-
-test("rejects invalid SIGNUPS value", () => {
-  expect(() => loadEnv({ ...base, SIGNUPS: "nope" })).toThrow();
+test("requires DATABASE_URL", () => {
+  const { DATABASE_URL, ...rest } = base;
+  expect(() => loadEnv({ ...rest })).toThrow();
 });
 
 test("requires a secret of at least 32 chars", () => {
   expect(() => loadEnv({ ...base, BETTER_AUTH_SECRET: "short" })).toThrow();
 });
+
+test("requires GITHUB_CLIENT_ID and SECRET", () => {
+  const { GITHUB_CLIENT_ID, ...rest } = base;
+  expect(() => loadEnv({ ...rest })).toThrow();
+});
+
+test("requires GITHUB_CONTENT_REPO in owner/repo form", () => {
+  expect(() => loadEnv({ ...base, GITHUB_CONTENT_REPO: "noslash" })).toThrow();
+});
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2: Run test, watch it fail** — `pnpm vitest run src/lib/env.test.ts` → FAIL (schema mismatch).
 
-Run: `pnpm vitest run src/lib/env.test.ts`
-Expected: FAIL — cannot find module `./env`.
-
-- [ ] **Step 3: Add zod and implement env loader**
-
-Run: `pnpm add zod`
-
-Create `src/lib/env.ts`:
+- [ ] **Step 3: Update `src/lib/env.ts`**
 
 ```ts
 import { z } from "zod";
 
 const schema = z.object({
+  DATABASE_URL: z.string().url().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
-  DATABASE_FILE: z.string().min(1).default("./data/sumi.db"),
-  SIGNUPS: z.enum(["open", "invite", "closed"]).default("open"),
-  INVITE_CODE: z.string().optional(),
+  BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
+  GITHUB_CLIENT_ID: z.string().min(1),
+  GITHUB_CLIENT_SECRET: z.string().min(1),
+  // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
+  ALLOWED_GITHUB_USERS: z.string().default(""),
+  GITHUB_CONTENT_REPO: z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo"),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -202,130 +108,254 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
   return schema.parse(source);
 }
 
-export const env = loadEnv();
+// Lazy singleton: importing this module must NOT eagerly parse process.env
+// (tests import `loadEnv` directly). Parsed on first property access.
+let _env: Env | undefined;
+export const env: Env = new Proxy({} as Env, {
+  get(_t, prop: string) {
+    _env ??= loadEnv();
+    return _env[prop as keyof Env];
+  },
+});
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [ ] **Step 4: Update vitest env block** in `vitest.config.ts` so modules importing `env` at load time don't throw. Replace the `env:` line under `test` with:
 
-Run: `pnpm vitest run src/lib/env.test.ts`
-Expected: PASS (4 tests).
-
-- [ ] **Step 5: Commit (local)**
-
-```bash
-git add src/lib/env.ts src/lib/env.test.ts package.json pnpm-lock.yaml
-git commit -m "feat: typed env config with SIGNUPS mode"
+```ts
+    env: {
+      DATABASE_URL: "postgresql://user:pass@localhost/sumi_test",
+      BETTER_AUTH_SECRET: "x".repeat(32),
+      BETTER_AUTH_URL: "http://localhost:3000",
+      GITHUB_CLIENT_ID: "test-cid",
+      GITHUB_CLIENT_SECRET: "test-csecret",
+      ALLOWED_GITHUB_USERS: "alice,bob",
+      GITHUB_CONTENT_REPO: "alice/sumi-content",
+    },
 ```
+
+- [ ] **Step 5: Run** — `pnpm vitest run src/lib/env.test.ts` → PASS; then `pnpm test` + `pnpm typecheck` green.
+
+- [ ] **Step 6: Commit** — `git add src/lib/env.ts src/lib/env.test.ts vitest.config.ts && git commit -m "feat: revise env config for Vercel/Neon/GitHub stack"`
 
 ---
 
-## Task 3: SQLite connection module
+## Task 3: Drizzle client over Neon + Better Auth schema
 
 **Files:**
-- Create: `src/lib/db.ts`
-- Test: `src/lib/db.test.ts`
+- Create: `src/lib/db.ts`, `src/db/schema.ts`, `drizzle.config.ts`
+- Remove: the old better-sqlite3 usage in `src/lib/db.ts` (overwrite it)
+- Modify: `package.json` (remove `better-sqlite3`/`@types/better-sqlite3`; add `drizzle-orm`, `@neondatabase/serverless`, dev `drizzle-kit`)
+- Test: `src/lib/db.test.ts` (rewrite)
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Swap dependencies**
 
-Create `src/lib/db.test.ts`:
+```bash
+pnpm remove better-sqlite3 @types/better-sqlite3
+pnpm add drizzle-orm @neondatabase/serverless
+pnpm add -D drizzle-kit
+```
+
+Also remove `better-sqlite3` from `pnpm.onlyBuiltDependencies` in `package.json` if present.
+
+- [ ] **Step 2: Write the failing test**
+
+The Drizzle client construction should be pure (no network at import). Test that `createDb(url)` returns a Drizzle instance with a `.select` method, using a dummy URL (neon-http is lazy — no connection until a query runs). Create `src/lib/db.test.ts`:
 
 ```ts
 import { expect, test } from "vitest";
 import { createDb } from "./db";
 
-test("createDb opens an in-memory db and runs a query", () => {
-  const db = createDb(":memory:");
-  db.exec("CREATE TABLE t (id INTEGER PRIMARY KEY, v TEXT)");
-  db.prepare("INSERT INTO t (v) VALUES (?)").run("hi");
-  const row = db.prepare("SELECT v FROM t WHERE id = 1").get() as { v: string };
-  expect(row.v).toBe("hi");
-  db.close();
+test("createDb returns a drizzle client without connecting", () => {
+  const db = createDb("postgresql://user:pass@localhost/sumi_test");
+  expect(typeof db.select).toBe("function");
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 3: Run test, watch it fail** — `pnpm vitest run src/lib/db.test.ts` → FAIL (module/exports missing).
 
-Run: `pnpm vitest run src/lib/db.test.ts`
-Expected: FAIL — cannot find module `./db`.
+- [ ] **Step 4: Implement schema + client**
 
-- [ ] **Step 3: Add better-sqlite3 and implement**
+Create `src/db/schema.ts` (Better Auth's required tables, Postgres/Drizzle. These column names match Better Auth's expected schema — Task 4 will confirm via the Better Auth CLI and adjust if the installed version differs):
 
-Run: `pnpm add better-sqlite3 && pnpm add -D @types/better-sqlite3`
+```ts
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").notNull().default(false),
+  image: text("image"),
+  username: text("username").unique(),
+  displayUsername: text("display_username"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const schema = { user, session, account, verification };
+```
 
 Create `src/lib/db.ts`:
 
 ```ts
-import Database from "better-sqlite3";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
 import { env } from "./env";
+import { schema } from "@/db/schema";
 
-export function createDb(file: string) {
-  if (file !== ":memory:") {
-    mkdirSync(dirname(file), { recursive: true });
-  }
-  const db = new Database(file);
-  db.pragma("journal_mode = WAL");
-  return db;
+export function createDb(url: string) {
+  const sql = neon(url);
+  return drizzle(sql, { schema });
 }
 
-// Single shared instance for the running app.
-export const db = createDb(env.DATABASE_FILE);
+// Shared instance for the running app (lazy: constructed at import, connects on first query).
+export const db = createDb(env.DATABASE_URL);
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+Create `drizzle.config.ts`:
 
-Run: `pnpm vitest run src/lib/db.test.ts`
-Expected: PASS.
+```ts
+import { defineConfig } from "drizzle-kit";
 
-> Note: importing `./db` pulls in `./env`, which requires `BETTER_AUTH_SECRET`. Set test env in `vitest.config.ts` by adding under `test`: `env: { BETTER_AUTH_SECRET: "x".repeat(32) }`. Apply that edit now and re-run to confirm green.
-
-- [ ] **Step 5: Commit (local)**
-
-```bash
-git add src/lib/db.ts src/lib/db.test.ts vitest.config.ts package.json pnpm-lock.yaml
-git commit -m "feat: sqlite connection module"
+export default defineConfig({
+  schema: "./src/db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: { url: process.env.DATABASE_URL ?? "" },
+});
 ```
+
+- [ ] **Step 5: Run** — `pnpm vitest run src/lib/db.test.ts` → PASS; `pnpm test` + `pnpm typecheck` green.
+
+- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat: drizzle client over neon + better-auth schema (replaces sqlite)"`
 
 ---
 
-## Task 4: Better Auth server instance
+## Task 4: Better Auth with GitHub OAuth + allowlist gate
 
 **Files:**
-- Create: `src/lib/auth.ts`
+- Create: `src/lib/allowlist.ts`, `src/lib/auth.ts`
+- Test: `src/lib/allowlist.test.ts`
+- Modify: `package.json` (add `better-auth`)
 
-- [ ] **Step 1: Install Better Auth**
+- [ ] **Step 1: Install** — `pnpm add better-auth`
 
-Run: `pnpm add better-auth`
+- [ ] **Step 2: Write failing test for the allowlist predicate**
 
-- [ ] **Step 2: Implement the auth instance**
+Create `src/lib/allowlist.test.ts`:
 
-Create `src/lib/auth.ts`:
+```ts
+import { expect, test } from "vitest";
+import { isAllowedGithubUser } from "./allowlist";
+
+test("allows a listed user (case-insensitive)", () => {
+  expect(isAllowedGithubUser("Alice", "alice,bob")).toBe(true);
+});
+
+test("rejects an unlisted user", () => {
+  expect(isAllowedGithubUser("carol", "alice,bob")).toBe(false);
+});
+
+test("empty allowlist denies everyone", () => {
+  expect(isAllowedGithubUser("alice", "")).toBe(false);
+});
+
+test("ignores surrounding whitespace in the list", () => {
+  expect(isAllowedGithubUser("bob", " alice , bob ")).toBe(true);
+});
+```
+
+- [ ] **Step 3: Run test, watch it fail** — `pnpm vitest run src/lib/allowlist.test.ts` → FAIL.
+
+- [ ] **Step 4: Implement the predicate**
+
+Create `src/lib/allowlist.ts`:
+
+```ts
+/** True if `login` is in the comma-separated allowlist. Empty list => deny all. */
+export function isAllowedGithubUser(login: string, allowlist: string): boolean {
+  const allowed = allowlist
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  return allowed.includes(login.trim().toLowerCase());
+}
+```
+
+- [ ] **Step 5: Run** — `pnpm vitest run src/lib/allowlist.test.ts` → PASS (4 tests).
+
+- [ ] **Step 6: Implement Better Auth**
+
+Create `src/lib/auth.ts` (verify option names against the installed `better-auth` version — read `node_modules/better-auth/dist` types — and adapt while keeping behavior):
 
 ```ts
 import { betterAuth } from "better-auth";
-import { username } from "better-auth/plugins";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { db } from "./db";
 import { env } from "./env";
+import { schema } from "@/db/schema";
+import { isAllowedGithubUser } from "./allowlist";
 
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
-  database: db,
-  emailAndPassword: {
-    enabled: true,
-    // 'closed' fully disables self-signup; 'open'/'invite' allow the call
-    // through and the invite code is enforced in the hook below.
-    disableSignUp: env.SIGNUPS === "closed",
+  baseURL: env.BETTER_AUTH_URL,
+  database: drizzleAdapter(db, { provider: "pg", schema }),
+  socialProviders: {
+    github: {
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+      scope: ["repo", "read:user"],
+    },
   },
-  plugins: [username()],
   databaseHooks: {
     user: {
       create: {
-        before: async (user, ctx) => {
-          if (env.SIGNUPS !== "invite") return { data: user };
-          const code = ctx?.body?.inviteCode;
-          if (!code || code !== env.INVITE_CODE) {
-            throw new Error("A valid invite code is required to sign up.");
+        before: async (user) => {
+          // The GitHub login is on the user record (username plugin not used;
+          // Better Auth maps GitHub login -> name/email; the GitHub login is
+          // available as the profile login). Gate on the allowlist.
+          const login = (user as { name?: string }).name ?? "";
+          if (!isAllowedGithubUser(login, env.ALLOWED_GITHUB_USERS)) {
+            throw new APIError("FORBIDDEN", {
+              message: "This GitHub account is not on the allowlist.",
+            });
           }
           return { data: user };
         },
@@ -335,52 +365,49 @@ export const auth = betterAuth({
 });
 ```
 
-- [ ] **Step 3: Verify it typechecks and the schema generates**
+> NOTE for implementer: The exact field carrying the GitHub `login` may differ (it could be `user.name`, or you may need a `mapProfileToUser`/`profile` mapping in the github provider to capture `profile.login`). Read the Better Auth GitHub provider docs/types in `node_modules/better-auth/dist`. The REQUIRED behavior: a user whose GitHub login is not in `ALLOWED_GITHUB_USERS` must be rejected at account creation with a `FORBIDDEN` APIError; allowed users proceed. If capturing the GitHub login cleanly requires `mapProfileToUser` to store `profile.login` into a field, do that and gate on that field. Report exactly how you captured the login.
 
-Run: `pnpm typecheck`
-Expected: no errors.
+- [ ] **Step 7: Verify** — `pnpm typecheck` clean; `pnpm test` green (allowlist tests pass; auth module imports without error). Do NOT attempt a live GitHub OAuth round-trip here (needs real credentials) — Task 5 covers gate behavior with a test DB.
 
-Run: `BETTER_AUTH_SECRET=$(node -e "console.log('x'.repeat(32))") DATABASE_FILE=./data/sumi.db pnpm dlx @better-auth/cli@latest migrate -y`
-Expected: creates auth tables (user, account, session, verification) in `./data/sumi.db`. The command prints the tables it created.
-
-- [ ] **Step 4: Commit (local)**
-
-```bash
-git add src/lib/auth.ts package.json pnpm-lock.yaml
-git commit -m "feat: Better Auth server with username plugin and signup gate"
-```
+- [ ] **Step 8: Commit** — `git add -A && git commit -m "feat: Better Auth GitHub OAuth with allowlist safe gate"`
 
 ---
 
-## Task 5: Signup gate behavior (integration test)
+## Task 5: Allowlist gate integration test (pglite)
 
 **Files:**
 - Test: `src/lib/auth.test.ts`
+- Modify: `package.json` (add dev `@electric-sql/pglite`, `drizzle-orm` already present)
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Install pglite** — `pnpm add -D @electric-sql/pglite`
 
-This test builds isolated auth instances against in-memory DBs to assert gating. Create `src/lib/auth.test.ts`:
+- [ ] **Step 2: Write the integration test**
+
+Build an isolated Better Auth instance over an in-memory pglite Postgres, create the tables, and assert the allowlist gate: a `databaseHooks.user.create.before` that rejects users not on the list. Since a full GitHub OAuth flow can't run offline, test the gate by exercising the hook via Better Auth's internal user-create path OR by unit-testing the hook function directly against the same predicate. Create `src/lib/auth.test.ts`:
 
 ```ts
+import { drizzle } from "drizzle-orm/pglite";
+import { PGlite } from "@electric-sql/pglite";
 import { betterAuth } from "better-auth";
-import { username } from "better-auth/plugins";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { expect, test } from "vitest";
-import { createDb } from "./db";
+import { schema } from "@/db/schema";
+import { isAllowedGithubUser } from "./allowlist";
 
-function makeAuth(signups: "open" | "invite" | "closed", inviteCode?: string) {
-  const db = createDb(":memory:");
+function makeAuth(allowlist: string) {
+  const client = new PGlite();
+  const db = drizzle(client, { schema });
   const auth = betterAuth({
     secret: "x".repeat(32),
-    database: db,
-    emailAndPassword: { enabled: true, disableSignUp: signups === "closed" },
-    plugins: [username()],
+    baseURL: "http://localhost:3000",
+    database: drizzleAdapter(db, { provider: "pg", schema }),
     databaseHooks: {
       user: {
         create: {
-          before: async (user: any, ctx: any) => {
-            if (signups !== "invite") return { data: user };
-            if (!ctx?.body?.inviteCode || ctx.body.inviteCode !== inviteCode) {
-              throw new Error("A valid invite code is required to sign up.");
+          before: async (user: { name?: string }) => {
+            if (!isAllowedGithubUser(user.name ?? "", allowlist)) {
+              throw new APIError("FORBIDDEN", { message: "not allowed" });
             }
             return { data: user };
           },
@@ -388,83 +415,25 @@ function makeAuth(signups: "open" | "invite" | "closed", inviteCode?: string) {
       },
     },
   });
-  return { auth, db };
+  return { auth, client };
 }
 
-async function signUp(auth: ReturnType<typeof betterAuth>, body: Record<string, unknown>) {
-  return auth.api.signUpEmail({ body: body as any, asResponse: true });
-}
-
-test("open mode allows signup", async () => {
-  const { auth } = makeAuth("open");
-  const res = await signUp(auth, {
-    email: "a@example.com", password: "password123", name: "A", username: "alice",
-  });
-  expect(res.status).toBe(200);
+test("auth instance constructs over pglite", () => {
+  const { auth } = makeAuth("alice");
+  expect(auth).toBeDefined();
 });
 
-test("closed mode rejects signup", async () => {
-  const { auth } = makeAuth("closed");
-  const res = await signUp(auth, {
-    email: "b@example.com", password: "password123", name: "B", username: "bob",
-  });
-  expect(res.status).toBeGreaterThanOrEqual(400);
-});
-
-test("invite mode rejects without correct code", async () => {
-  const { auth } = makeAuth("invite", "secret");
-  const res = await signUp(auth, {
-    email: "c@example.com", password: "password123", name: "C", username: "carol",
-  });
-  expect(res.status).toBeGreaterThanOrEqual(400);
-});
-
-test("invite mode accepts with correct code", async () => {
-  const { auth } = makeAuth("invite", "secret");
-  const res = await signUp(auth, {
-    email: "d@example.com", password: "password123", name: "D", username: "dave",
-    inviteCode: "secret",
-  });
-  expect(res.status).toBe(200);
+test("allowlist predicate gates the hook logic", () => {
+  expect(isAllowedGithubUser("alice", "alice")).toBe(true);
+  expect(isAllowedGithubUser("mallory", "alice")).toBe(false);
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails first / drives behavior**
+> NOTE: If `drizzle-orm/pglite` + Better Auth schema creation needs the tables to exist first, create them by pushing the schema (use `drizzle-kit` programmatic push against pglite, or execute the `CREATE TABLE` SQL Better Auth expects). Keep the test focused on proving (a) the auth instance builds over a real Postgres-compatible DB, and (b) the gate predicate rejects/admits correctly. Do not over-invest in simulating the full OAuth callback offline.
 
-Run: `pnpm vitest run src/lib/auth.test.ts`
-Expected: Tables may not exist on the in-memory db. Better Auth needs its schema. If tests fail because tables are missing, add a `before* migration step: in `makeAuth`, after creating `db`, run the Better Auth SQL by calling the Kysely-based migrator. Simplest reliable approach: create the four tables explicitly in the test helper.
+- [ ] **Step 3: Run** — `pnpm vitest run src/lib/auth.test.ts` → PASS; full `pnpm test` + `pnpm typecheck` green.
 
-Add this helper and call it inside `makeAuth` right after `createDb`:
-
-```ts
-function migrate(db: ReturnType<typeof createDb>) {
-  db.exec(`
-    CREATE TABLE "user" (id TEXT PRIMARY KEY, name TEXT, email TEXT UNIQUE, emailVerified INTEGER,
-      image TEXT, username TEXT UNIQUE, displayUsername TEXT, createdAt TEXT, updatedAt TEXT);
-    CREATE TABLE "session" (id TEXT PRIMARY KEY, expiresAt TEXT, token TEXT UNIQUE, createdAt TEXT,
-      updatedAt TEXT, ipAddress TEXT, userAgent TEXT, userId TEXT);
-    CREATE TABLE "account" (id TEXT PRIMARY KEY, accountId TEXT, providerId TEXT, userId TEXT,
-      accessToken TEXT, refreshToken TEXT, idToken TEXT, accessTokenExpiresAt TEXT,
-      refreshTokenExpiresAt TEXT, scope TEXT, password TEXT, createdAt TEXT, updatedAt TEXT);
-    CREATE TABLE "verification" (id TEXT PRIMARY KEY, identifier TEXT, value TEXT, expiresAt TEXT,
-      createdAt TEXT, updatedAt TEXT);
-  `);
-}
-```
-
-> If a future Better Auth version changes column names, regenerate the canonical schema with `pnpm dlx @better-auth/cli@latest generate` and copy the columns. Keep this helper in sync.
-
-- [ ] **Step 3: Run test to verify it passes**
-
-Run: `pnpm vitest run src/lib/auth.test.ts`
-Expected: PASS (4 tests).
-
-- [ ] **Step 4: Commit (local)**
-
-```bash
-git add src/lib/auth.test.ts
-git commit -m "test: signup gating for open/invite/closed modes"
-```
+- [ ] **Step 4: Commit** — `git add -A && git commit -m "test: allowlist gate over pglite"`
 
 ---
 
@@ -473,9 +442,7 @@ git commit -m "test: signup gating for open/invite/closed modes"
 **Files:**
 - Create: `src/app/api/auth/[...all]/route.ts`
 
-- [ ] **Step 1: Implement the handler**
-
-Create `src/app/api/auth/[...all]/route.ts`:
+- [ ] **Step 1: Implement** (verify `toNextJsHandler` import path against installed better-auth; this repo uses a newer Next.js — consult `node_modules/next/dist/docs/` if the App Router route handler signature differs):
 
 ```ts
 import { auth } from "@/lib/auth";
@@ -484,20 +451,9 @@ import { toNextJsHandler } from "better-auth/next-js";
 export const { POST, GET } = toNextJsHandler(auth);
 ```
 
-- [ ] **Step 2: Verify build picks up the route**
+- [ ] **Step 2: Verify** — `pnpm typecheck` clean; `pnpm build` succeeds and lists `/api/auth/[...all]`.
 
-Run: `pnpm typecheck`
-Expected: no errors.
-
-Run: `pnpm build`
-Expected: build succeeds and lists `/api/auth/[...all]` as a route.
-
-- [ ] **Step 3: Commit (local)**
-
-```bash
-git add "src/app/api/auth/[...all]/route.ts"
-git commit -m "feat: mount Better Auth route handler"
-```
+- [ ] **Step 3: Commit** — `git add -A && git commit -m "feat: mount Better Auth route handler"`
 
 ---
 
@@ -506,25 +462,17 @@ git commit -m "feat: mount Better Auth route handler"
 **Files:**
 - Create: `src/lib/auth-client.ts`, `src/lib/current-user.ts`
 
-- [ ] **Step 1: Implement the React client**
-
-Create `src/lib/auth-client.ts`:
+- [ ] **Step 1: Auth client** — `src/lib/auth-client.ts`:
 
 ```ts
 "use client";
-import { usernameClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 
-export const authClient = createAuthClient({
-  plugins: [usernameClient()],
-});
-
-export const { signIn, signUp, signOut, useSession } = authClient;
+export const authClient = createAuthClient();
+export const { signIn, signOut, useSession } = authClient;
 ```
 
-- [ ] **Step 2: Implement the server-side current-user helper**
-
-Create `src/lib/current-user.ts`:
+- [ ] **Step 2: current-user helper** — `src/lib/current-user.ts`:
 
 ```ts
 import { headers } from "next/headers";
@@ -536,113 +484,37 @@ export async function getCurrentUser() {
 }
 ```
 
-- [ ] **Step 3: Verify typecheck**
+- [ ] **Step 3: Verify** — `pnpm typecheck` clean.
 
-Run: `pnpm typecheck`
-Expected: no errors.
-
-- [ ] **Step 4: Commit (local)**
-
-```bash
-git add src/lib/auth-client.ts src/lib/current-user.ts
-git commit -m "feat: auth client and getCurrentUser helper"
-```
+- [ ] **Step 4: Commit** — `git add -A && git commit -m "feat: auth client and getCurrentUser helper"`
 
 ---
 
-## Task 8: Minimal auth pages + home
+## Task 8: GitHub sign-in page + auth-aware home
 
 **Files:**
-- Create: `src/app/(auth)/sign-up/page.tsx`, `src/app/(auth)/sign-in/page.tsx`
+- Create: `src/app/sign-in/page.tsx`
 - Modify: `src/app/page.tsx`
 
-- [ ] **Step 1: Sign-up page**
-
-Create `src/app/(auth)/sign-up/page.tsx`:
+- [ ] **Step 1: Sign-in page** — `src/app/sign-in/page.tsx`:
 
 ```tsx
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { signUp } from "@/lib/auth-client";
-
-export default function SignUpPage() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const f = new FormData(e.currentTarget);
-    const res = await signUp.email({
-      email: String(f.get("email")),
-      password: String(f.get("password")),
-      name: String(f.get("displayName")),
-      username: String(f.get("handle")),
-      // inviteCode is ignored by the server unless SIGNUPS=invite
-      // @ts-expect-error custom field passed through to the create hook
-      inviteCode: String(f.get("inviteCode") ?? ""),
-    });
-    if (res.error) return setError(res.error.message ?? "Sign up failed");
-    router.push("/");
-  }
-
-  return (
-    <form onSubmit={onSubmit} style={{ maxWidth: 360, margin: "4rem auto", display: "grid", gap: 8 }}>
-      <h1>Create your account</h1>
-      <input name="displayName" placeholder="Display name" required />
-      <input name="handle" placeholder="handle (e.g. alice)" required />
-      <input name="email" type="email" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password (min 8)" required minLength={8} />
-      <input name="inviteCode" placeholder="Invite code (if required)" />
-      <button type="submit">Sign up</button>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-    </form>
-  );
-}
-```
-
-- [ ] **Step 2: Sign-in page**
-
-Create `src/app/(auth)/sign-in/page.tsx`:
-
-```tsx
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 
 export default function SignInPage() {
-  const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
-
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-    const f = new FormData(e.currentTarget);
-    const res = await signIn.email({
-      email: String(f.get("email")),
-      password: String(f.get("password")),
-    });
-    if (res.error) return setError(res.error.message ?? "Sign in failed");
-    router.push("/");
-  }
-
   return (
-    <form onSubmit={onSubmit} style={{ maxWidth: 360, margin: "4rem auto", display: "grid", gap: 8 }}>
-      <h1>Sign in</h1>
-      <input name="email" type="email" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password" required />
-      <button type="submit">Sign in</button>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
-    </form>
+    <main style={{ maxWidth: 360, margin: "4rem auto", textAlign: "center" }}>
+      <h1>Sign in to Sumi</h1>
+      <button onClick={() => signIn.social({ provider: "github", callbackURL: "/" })}>
+        Continue with GitHub
+      </button>
+    </main>
   );
 }
 ```
 
-- [ ] **Step 3: Home page shows auth state**
-
-Replace `src/app/page.tsx` with:
+- [ ] **Step 2: Home page** — replace `src/app/page.tsx`:
 
 ```tsx
 import Link from "next/link";
@@ -654,156 +526,86 @@ export default async function Home() {
     <main style={{ maxWidth: 640, margin: "4rem auto" }}>
       <h1>Sumi 墨</h1>
       {user ? (
-        <p>Signed in as @{(user as { username?: string }).username ?? user.name}.</p>
+        <p>Signed in as {user.name}.</p>
       ) : (
-        <p>
-          <Link href="/sign-in">Sign in</Link> or <Link href="/sign-up">Sign up</Link>.
-        </p>
+        <p><Link href="/sign-in">Sign in with GitHub</Link>.</p>
       )}
     </main>
   );
 }
 ```
 
-- [ ] **Step 4: Manual verification of the full auth loop**
+- [ ] **Step 3: Verify** — `pnpm typecheck` clean; `pnpm build` succeeds.
 
-Run (in one shell):
+> Manual GitHub OAuth verification requires a real GitHub OAuth app + Neon DB + env; document it in the README (Task 9) rather than running it here.
 
-```bash
-BETTER_AUTH_SECRET=$(node -e "console.log('x'.repeat(32))") DATABASE_FILE=./data/sumi.db SIGNUPS=open pnpm dev
-```
-
-In a browser: open `http://localhost:3000/sign-up`, register `alice`, confirm redirect to `/` shows "Signed in as @alice." Then verify `/sign-in` works after signing out (sign-out wiring is a later UI task; for now confirm session via reload).
-Expected: account persists in `./data/sumi.db`.
-
-- [ ] **Step 5: Commit (local)**
-
-```bash
-git add "src/app/(auth)" src/app/page.tsx
-git commit -m "feat: minimal sign-up/sign-in pages and auth-aware home"
-```
+- [ ] **Step 4: Commit** — `git add -A && git commit -m "feat: GitHub sign-in page and auth-aware home"`
 
 ---
 
-## Task 9: Docker & compose for v0
+## Task 9: Vercel deploy config, env example, README, migrations
 
 **Files:**
-- Create: `Dockerfile`, `.dockerignore`, `docker-compose.yml`, `.env.example`
+- Create: `.env.example`, `README.md` (overwrite default), `drizzle/` migration output
+- Modify: `package.json` (add `db:generate`, `db:migrate` scripts)
 
-- [ ] **Step 1: Enable standalone output**
+- [ ] **Step 1: Generate the migration**
 
-Edit `next.config.ts` to set `output: "standalone"`:
+```bash
+pnpm exec drizzle-kit generate
+```
+This produces SQL under `drizzle/`. Commit it so deploys can apply it.
 
-```ts
-import type { NextConfig } from "next";
-const nextConfig: NextConfig = { output: "standalone" };
-export default nextConfig;
+- [ ] **Step 2: Add db scripts** to `package.json`:
+
+```json
+{
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  }
+}
 ```
 
-- [ ] **Step 2: Dockerfile**
-
-Create `Dockerfile`:
-
-```dockerfile
-FROM node:22-slim AS base
-RUN corepack enable
-WORKDIR /app
-
-FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
-FROM base AS build
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN pnpm build
-
-FROM base AS run
-ENV NODE_ENV=production
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
-
-- [ ] **Step 3: .dockerignore**
-
-Create `.dockerignore`:
+- [ ] **Step 3: `.env.example`**
 
 ```
-node_modules
-.next
-data
-.git
-docs
-```
-
-- [ ] **Step 4: docker-compose.yml**
-
-Create `docker-compose.yml` (single service, persistent volume for the sqlite file):
-
-```yaml
-services:
-  app:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set a 32+ char secret}
-      DATABASE_FILE: /app/data/sumi.db
-      SIGNUPS: ${SIGNUPS:-open}
-      INVITE_CODE: ${INVITE_CODE:-}
-    volumes:
-      - sumi-data:/app/data
-
-volumes:
-  sumi-data:
-```
-
-- [ ] **Step 5: .env.example**
-
-Create `.env.example`:
-
-```
-# Generate with: node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
+# Neon Postgres (from Vercel Neon integration or neon.tech)
+DATABASE_URL=postgresql://...
+# Better Auth: generate secret with: node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 BETTER_AUTH_SECRET=
-DATABASE_FILE=./data/sumi.db
-SIGNUPS=open
-INVITE_CODE=
+BETTER_AUTH_URL=http://localhost:3000
+# GitHub OAuth app (Settings > Developer settings > OAuth Apps). Callback: $BETTER_AUTH_URL/api/auth/callback/github
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+# Comma-separated GitHub usernames allowed to sign in (empty = nobody)
+ALLOWED_GITHUB_USERS=
+# Content repo (owner/repo) where articles/images are committed
+GITHUB_CONTENT_REPO=
 ```
 
-- [ ] **Step 6: Verify the image builds and runs**
+- [ ] **Step 4: README with Deploy button**
 
-Run:
+Overwrite `README.md`. Include: project summary; a "Deploy to Vercel" button:
 
-```bash
-export BETTER_AUTH_SECRET=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
-docker compose build
-docker compose up -d
+```markdown
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=YOUR_REPO_URL&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS,GITHUB_CONTENT_REPO)
 ```
 
-> The Better Auth tables must exist in the mounted volume. Run the migration once against the container's db before first use:
-> `docker compose exec app sh -c "DATABASE_FILE=/app/data/sumi.db pnpm dlx @better-auth/cli@latest migrate -y"`
-> (Add this as a documented first-run step; a later plan automates it via an entrypoint.)
+Plus a "Local development" section: copy `.env.example` to `.env.local`, create a Neon DB, create a GitHub OAuth app with callback `http://localhost:3000/api/auth/callback/github`, run `pnpm db:migrate`, `pnpm dev`. And a "First deploy" section: add the Neon integration on Vercel, set env vars, run `pnpm db:migrate` against the production `DATABASE_URL` once.
 
-Open `http://localhost:3000` — expect the Sumi home page. Sign up; confirm it persists across `docker compose restart`.
+- [ ] **Step 5: Verify** — `pnpm build` succeeds; `pnpm test` + `pnpm typecheck` green.
 
-- [ ] **Step 7: Commit (local)**
-
-```bash
-git add Dockerfile .dockerignore docker-compose.yml .env.example next.config.ts
-git commit -m "feat: Docker and compose for single-container v0 deploy"
-```
+- [ ] **Step 6: Commit** — `git add -A && git commit -m "feat: Vercel deploy config, env example, README, drizzle migrations"`
 
 ---
 
 ## Done criteria for Plan 1
 
 - `pnpm test`, `pnpm typecheck`, `pnpm build` all pass.
-- A user can register with a unique `@handle`, log in, and the home page reflects session state.
-- `SIGNUPS=open|invite|closed` is enforced (covered by tests).
-- `docker compose up` serves the app with a persistent SQLite volume.
+- Better Auth is configured with GitHub as the only provider; the allowlist gate (`isAllowedGithubUser`) is unit- and integration-tested.
+- Drizzle schema + generated migration exist for the Better Auth tables on Postgres.
+- The app deploys to Vercel (button + documented env) and connects to Neon.
+- A GitHub-allowlisted user can sign in; non-allowlisted users are rejected with a clear 403.
 
-These outputs are the foundation Plan 2 (Content engine) builds on.
-```
+Content storage (GitHub API) is Plan 2.

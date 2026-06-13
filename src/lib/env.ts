@@ -1,10 +1,14 @@
 import { z } from "zod";
 
 const schema = z.object({
+  DATABASE_URL: z.string().url().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
-  DATABASE_FILE: z.string().min(1).default("./data/sumi.db"),
-  SIGNUPS: z.enum(["open", "invite", "closed"]).default("open"),
-  INVITE_CODE: z.string().optional(),
+  BETTER_AUTH_URL: z.string().url().default("http://localhost:3000"),
+  GITHUB_CLIENT_ID: z.string().min(1),
+  GITHUB_CLIENT_SECRET: z.string().min(1),
+  // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
+  ALLOWED_GITHUB_USERS: z.string().default(""),
+  GITHUB_CONTENT_REPO: z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo"),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -13,14 +17,12 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
   return schema.parse(source);
 }
 
-// Lazy singleton: evaluated on first access, not at module load time.
-// This allows test files to import `loadEnv` without triggering a parse of
-// process.env (which lacks BETTER_AUTH_SECRET in the test environment).
-// In production the getter runs once and is then cached.
+// Lazy singleton: importing this module must NOT eagerly parse process.env
+// (tests import `loadEnv` directly). Parsed on first property access.
 let _env: Env | undefined;
 export const env: Env = new Proxy({} as Env, {
-  get(_target, prop) {
-    if (!_env) _env = loadEnv();
+  get(_t, prop: string) {
+    _env ??= loadEnv();
     return _env[prop as keyof Env];
   },
 });

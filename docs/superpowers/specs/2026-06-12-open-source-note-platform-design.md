@@ -1,79 +1,75 @@
-# Sumi 墨 — 开源自托管发布平台设计文档
+# Sumi 墨 — 开源发布平台设计文档
 
-> **Sumi（墨）**。一个 note.com 风格的、自托管的多创作者写作与发布平台。
-> 日期：2026-06-12 · 状态：设计已批准，待写实现计划
+> **Sumi（墨）**。一个 note.com 风格的多创作者写作与发布平台，**部署在 Vercel**，用 GitHub 登录，内容存进 GitHub 仓库。
+> 日期：2026-06-12（2026-06-12 修订为 Vercel-native 架构） · 状态：设计已批准，执行中
 
 ## 1. 项目定位与目标
 
-构建一个**开源、可自托管**的多创作者内容发布平台，气质对标 note.com：干净的写作体验、独立创作者主页、轻社交、简单可预测的内容发现。
+构建一个**开源**的多创作者内容发布平台，气质对标 note.com：干净的写作体验、独立创作者主页、轻社交、简单可预测的内容发现。
 
-三个核心目标，所有取舍都服务于它们：
+修订后的核心目标（所有取舍服务于它们）：
 
-1. **自托管易用** — 起步零外部依赖容器，一条命令跑起来。
-2. **写作体验好** — TipTap 块状富文本编辑器，干净、所见即所得。
-3. **贡献者友好** — 单一代码库、TypeScript 全栈、内容人类可读。
+1. **Vercel 一键部署** — 一个 Next.js 应用推到 Vercel 即可上线。
+2. **用 GitHub 登录、内容存进 GitHub** — GitHub OAuth 登录（白名单 safe gate），文章/图片/评论通过 GitHub API 提交进一个 GitHub 仓库。
+3. **写作体验好** — TipTap 块状富文本编辑器，内容序列化为 Markdown。
+4. **贡献者友好** — 单一代码库、TypeScript 全栈。
 
-**明确不做**：支付/付费内容、算法个性化推荐、嵌套评论、移动 App（数据/接口为后续预留空间，但不实现）。
+**明确不做**：付费内容、算法推荐、嵌套评论、移动 App（为后续预留空间，不实现）。
 
-## 2. 两阶段架构（核心决策）
+## 2. 架构总览
 
-本项目分两个阶段演进，**从一开始就为阶段迁移而设计**：
+**形态：纯 serverless。** 一个 Next.js 应用部署到 Vercel。两类持久化都在 Vercel 之外：
+- **账号/会话** → 外部托管 **Neon Postgres**（Better Auth 通过 Drizzle 写入）。
+- **内容（文章/图片/评论/杂志）** → **一个 GitHub 仓库**，通过 GitHub API（Octokit）提交。
 
-| | **v0（前期开发 · 现在做）** | **v1（后期 · 完整版）** |
-|---|---|---|
-| 内容存储 | **git 仓库**（Markdown + 图片文件） | **PostgreSQL + Prisma** |
-| 评论 | git 文件 | DB 表 |
-| 账号/认证 | **Better Auth + SQLite**（文件型，无容器） | Better Auth + Postgres |
-| 点赞(スキ)/关注 | **不做**（延后） | 完整支持 |
-| 发现流 | 最新 + 标签 | 最新 + 标签 + 关注流 |
-| 部署 | app 进程 + git 仓库 + sqlite 文件 | app + Postgres 容器 |
+> 为什么不放本地 SQLite / 本地 git 工作区：Vercel 是无状态、文件系统只读且易失的 serverless 环境，本地 SQLite 文件与"提交到本地 git 工作区"的长驻进程模型都无法在其上运行。Neon（外部 Postgres）+ GitHub API（无状态 HTTP）才能在 serverless 上持久化。
 
-**迁移接缝：`ContentStore` 抽象接口。**
-应用代码只依赖一个内容访问接口，不直接碰 git 或 DB：
-
-```ts
-interface ContentStore {
-  listPosts(opts): Promise<PostMeta[]>
-  getPost(handle, slug): Promise<Post | null>
-  savePost(handle, post): Promise<void>
-  deletePost(handle, slug): Promise<void>
-  listComments(handle, slug): Promise<Comment[]>
-  addComment(handle, slug, comment): Promise<void>
-  listMagazines(handle): Promise<Magazine[]>
-  // ...
-}
+```
+┌─────────────── Vercel ───────────────┐
+│  Next.js (App Router, TS)             │
+│   • Server Components 渲染阅读页       │
+│   • Server Actions / Route Handlers   │
+│   • TipTap 编辑器(客户端)              │
+└───────┬───────────────────┬───────────┘
+        │ Drizzle           │ Octokit (GitHub API)
+        ▼                   ▼
+   Neon Postgres        GitHub 仓库 (内容)
+   (账号/会话)           articles/images/comments/magazines
 ```
 
-- **v0** → `GitContentStore`：读写 git 里的 Markdown 文件。
-- **v1** → `DbContentStore`：Postgres + Prisma。
+**迁移接缝：`ContentStore` 抽象接口。** 应用只依赖内容访问接口，不直接调 Octokit。
+- **v0** → `GitHubContentStore`（通过 GitHub API 读写 Markdown + 图片）。
+- **未来** → 可加 `DbContentStore`（内容转存 Postgres），用一次性脚本从 GitHub 导入。
 
-因为 v0 内容是**标准 Markdown + frontmatter**，迁移 = 一次性"把文件导入 Postgres"的脚本，而非返工。
-
----
-
-## 3. v0 技术栈
+## 3. 技术栈
 
 | 层 | 选型 | 理由 |
 |---|---|---|
-| 框架 | **Next.js (App Router) + TypeScript** | 前后端一体，单一部署单元 |
-| 内容库 | **git 仓库（本地工作区 + 可选远程）** | 版本化、可读、可移植，零数据库容器 |
-| 内容格式 | **Markdown + YAML frontmatter** | git diff 可读、可移植、易迁移到 DB |
-| 编辑器 | **TipTap (ProseMirror)，序列化为 Markdown** | 干净富文本。支持的块限定在 Markdown 能干净表达的范围 |
-| 认证 | **Better Auth + SQLite** | TS 原生、`@handle`、文件型存储无需容器 |
-| 图片 | **git 仓库内独立文件**，正文相对路径引用 | git 原生用法；不用 base64 内联（会污染 diff、文件膨胀） |
-| 部署 | **单 Docker 镜像 + docker-compose** | 一条命令跑起来 |
+| 框架 | **Next.js (App Router) + TypeScript** | 前后端一体，Vercel 原生 |
+| 部署 | **Vercel** | 一键部署；Neon 有官方 Marketplace 集成 |
+| 数据库 | **Neon Postgres**（外部托管） | serverless 友好、免费档、Vercel 一键接入 |
+| ORM | **Drizzle** | 纯 TS、无引擎二进制、冷启动快、`drizzle-orm/neon-http` 原生对接 Neon |
+| 认证 | **Better Auth**（GitHub OAuth + Drizzle adapter） | TS 原生；只用 GitHub 社交登录；白名单 safe gate |
+| 内容库 | **GitHub 仓库 + GitHub API (Octokit)** | 内容版本化、可移植；serverless 可用（HTTP API，非本地工作区） |
+| 内容格式 | **Markdown + YAML frontmatter** | 可读、可移植、易迁移 |
+| 编辑器 | **TipTap (ProseMirror)，序列化 Markdown** | 干净富文本；块限定在 Markdown 可干净表达的范围 |
+| 图片 | **提交进 GitHub 内容仓库**，正文相对路径引用 | 与文章同源；不用 base64 内联（污染 diff） |
 
-**应用形态**：单体 Next.js 应用。
-- **Server Components** 渲染阅读类页面（SEO 友好）。
-- **Server Actions / Route Handlers** 承载写操作。
-- **Client Components** 承载编辑器与交互控件。
+## 4. 认证与 safe gate
 
-## 4. v0 内容仓库结构
+- **唯一登录方式：GitHub OAuth**（Better Auth 的 `socialProviders.github`）。请求 `repo` scope，以便用登录者的 GitHub token 向内容仓库提交。
+- **Safe gate（白名单）**：环境变量 `ALLOWED_GITHUB_USERS`（逗号分隔的 GitHub 登录名）。在 Better Auth 的登录/建账钩子里校验：登录者的 GitHub `login` 不在白名单 → 拒绝。白名单为空时的策略：默认拒绝所有（必须显式配置），避免误开放。
+- **会话**：Better Auth 默认会话（存 Neon）。
+- **账号数据**：`user` / `account` / `session` / `verification` 表存在 Neon，由 Better Auth + Drizzle adapter 管理；GitHub access token 存在 `account` 表，供 Octokit 调用。
+
+## 5. 内容模型（GitHub 仓库布局）
+
+内容仓库（由 `GITHUB_CONTENT_REPO` 指定，形如 `owner/repo`）：
 
 ```
 content/
   @alice/
-    profile.md                       # 创作者资料（昵称/简介/头像引用）
+    profile.md                       # 创作者资料(frontmatter)
     my-first-post/
       index.md                       # frontmatter(title/tags/cover/status/publishedAt) + 正文 Markdown
       images/cover.png               # 图片独立文件，正文相对路径引用
@@ -83,48 +79,21 @@ content/
       my-zine.md                     # frontmatter 列出收录文章引用 + 排序
 ```
 
-- **文章 slug** = 目录名，按创作者唯一。
-- **草稿/发布** 由 frontmatter `status: draft|published` 控制。
+- 读：用 GitHub API 拉取文件/目录（带缓存）。
+- 写：用 Octokit 的 contents API 创建/更新文件并产生一次 commit（可选 push 即时生效）。
+- 文章 slug = 目录名，按创作者唯一；草稿/发布由 frontmatter `status` 控制。
 
-## 5. v0 写/读模型
+## 6. 功能模块（v0）
 
-- **写操作走串行 git 提交队列**：发布文章 / 上传图片 / 发评论 / 改资料 → 写文件 → `git add && git commit` →（若配置了远程）`git push`。串行化避免并发提交冲突。
-- **读操作**直接读工作区文件，Markdown 解析渲染后在内存缓存；文件变更（含远程 pull）后失效缓存。
-- **「链接 git」**：通过环境变量配置一个可选远程仓库地址 + 凭证，app 把内容 push 过去做备份/同步；远程也可作为内容的"真源"，由 webhook 触发 pull。
+- **写作**：TipTap 编辑器→Markdown；草稿/发布；封面图；标签；图片上传（提交进内容仓库 `images/`）。
+- **阅读**：文章页 `/@handle/<slug>`（SSR/SEO/OG）；创作者主页 `/@handle`；标签页 `/tag/<slug>`。
+- **评论**：平铺、按时间；提交即作为文件写进内容仓库。
+- **发现**（不做算法推荐）：首页最新已发布流；标签浏览。
+- **杂志/合集**：创作者创建杂志收录文章并排序；杂志页 `/@handle/m/<slug>`。
+- **账户**：GitHub 登录、白名单 gate、个人资料（写入 `profile.md`）。
+- **v0 延后**：点赞(スキ)、关注、关注流（未来加，存 Neon）。
 
-## 6. v0 功能模块
-
-### 6.1 写作
-- TipTap 编辑器（标题、段落/标题/列表/引用/代码/图片/链接/分隔线），序列化 Markdown
-- 草稿 ↔ 发布
-- 封面图、标签、摘要
-- 图片上传 → 存入文章目录 `images/` 并提交
-
-### 6.2 阅读
-- 文章页 `/@handle/<slug>`（SSR、SEO、OG 标签）
-- 创作者主页 `/@handle`（资料 + 文章列表）
-- 标签页 `/tag/<slug>`
-
-### 6.3 评论
-- 平铺、按时间排序；提交即作为文件 commit 进 git
-
-### 6.4 发现（不做算法推荐）
-- 首页：全站最新已发布文章流
-- 标签浏览
-
-### 6.5 杂志/合集
-- 创作者创建杂志、收录自己的文章并排序
-- 杂志页 `/@handle/m/<slug>`
-
-### 6.6 账户与运维
-- Better Auth（SQLite）：注册/登录、邮箱密码 + 可选 OAuth、`@handle` 唯一
-- 个人资料编辑（写入 `profile.md`）
-- 实例配置 `signups: open | invite | closed`
-- 基础 Admin（ADMIN 角色）：删违规文章/评论、封禁用户
-
-**v0 明确延后**：点赞(スキ)、关注、关注流 → 留到 v1（DB 阶段）。
-
-## 7. v0 关键路由
+## 7. 关键路由
 
 | 路由 | 渲染 | 说明 |
 |---|---|---|
@@ -134,53 +103,50 @@ content/
 | `/@:handle/m/:magazineSlug` | SSR | 杂志页 |
 | `/tag/:slug` | SSR | 标签页 |
 | `/write`、`/write/:slug` | Client | 编辑器 |
-| `/settings` | Client | 资料/账户设置 |
-| `/admin` | Client(鉴权) | 基础管理 |
-| `/api/auth/*` | Route Handler | Better Auth |
-| `/api/upload` | Route Handler | 图片上传（写入 git） |
+| `/sign-in` | Client | GitHub 登录按钮 |
+| `/settings` | Client | 资料设置 |
+| `/api/auth/*` | Route Handler | Better Auth (GitHub OAuth 回调) |
+| `/api/upload` | Route Handler | 图片上传→提交进内容仓库 |
 
 ## 8. 模块边界与可测试性
 
-按职责切分，接口清晰、可独立测试：
+- **db/** — Drizzle client（`drizzle-orm/neon-http` + `@neondatabase/serverless`）+ schema（含 Better Auth 生成的表）。
+- **auth/** — Better Auth(GitHub OAuth + Drizzle adapter + 白名单 gate)；对外 `getCurrentUser()`。
+- **content/** — `ContentStore` 接口 + `GitHubContentStore`（Octokit + Markdown 解析/序列化 + frontmatter）。迁移接缝。
+- **editor/** — TipTap 配置、Markdown 序列化；纯前端可独立测。
+- **posts/ comments/ magazines/** — 领域 server actions，调用 `ContentStore`。
 
-- **content/** — `ContentStore` 接口 + `GitContentStore` 实现（git 操作 + Markdown 解析/序列化 + frontmatter）。**这是 git→db 的接缝。**
-- **auth/** — Better Auth(SQLite) 配置；对外 `getCurrentUser()`
-- **editor/** — TipTap 配置、Markdown ↔ 编辑器状态序列化；纯前端可独立测
-- **git/** — 串行提交队列、commit/push、可选 pull；对 content 暴露简单接口
-- **posts/ comments/ magazines/** — 领域 server actions，调用 `ContentStore`，输入输出有明确类型
-
-判据：能否不读内部实现就说清每个单元"做什么、怎么用、依赖什么"。`ContentStore` 接口是关键解耦点。
+判据：能否不读内部实现就说清每个单元"做什么、怎么用、依赖什么"。`ContentStore` 与 `auth` 是关键解耦点。
 
 ## 9. 错误处理与测试策略
 
-- **校验**：所有 server action 入参用 zod 校验；handle/slug 唯一性冲突给明确错误。
-- **鉴权**：写操作统一经 `getCurrentUser()` 守卫；越权改他人内容返回 403。
-- **git 失败**：提交/推送失败要回滚工作区改动并返回可读错误；提交队列保证串行。
+- **校验**：server action 入参用 zod；白名单拒绝返回明确 403。
+- **认证错误**：Better Auth 钩子里用其 `APIError` 抛出（普通 `Error` 会被吞成通用 422）。
+- **GitHub API**：处理 rate limit / 冲突；写失败返回可读错误。
 - **测试**：
-  - 单元测试：slug 生成、frontmatter 解析/序列化、Markdown 往返、权限判断。
-  - 集成测试：`GitContentStore` 在临时 git 仓库上跑（发布/评论/读取）。
-  - 关键 happy-path E2E：注册 → 写 → 发布 → 他人阅读/评论。
+  - 单元：frontmatter 解析/序列化、Markdown 往返、白名单判断、slug 生成。
+  - 集成：`GitHubContentStore` 对 Octokit 打桩（nock/MSW 或注入 fake client）；认证 gate 用 **pglite**（内嵌 Postgres）跑 Drizzle 进行真实集成。
+  - happy-path E2E：GitHub 登录(mock) → 写 → 发布 → 阅读。
 - **TDD**：每个功能先写测试。
 
-## 10. 部署（v0）
+## 10. 部署（Vercel 一键）
 
-- 单 `Dockerfile` 构建 Next.js 生产镜像。
-- `docker-compose.yml`：仅 app 一个服务；卷挂载 ① 内容 git 仓库目录 ② sqlite 文件。
-- 环境变量：Better Auth secret、`signups` 模式、内容仓库路径、可选 git 远程地址+凭证。
-- 首次启动：初始化内容仓库（若不存在）、跑 Better Auth 表迁移、可选 seed 首个 admin。
+- README 提供 **Deploy to Vercel** 按钮，提示填写环境变量。
+- **Neon**：通过 Vercel Marketplace 一键接入，自动注入 `DATABASE_URL`。
+- **Drizzle 迁移**：`drizzle-kit` 生成 + 应用迁移；Better Auth 表通过 Better Auth CLI 生成 Drizzle schema 后纳入迁移。首次部署后跑一次迁移（构建步骤或一次性命令）。
+- **环境变量**：`DATABASE_URL`、`BETTER_AUTH_SECRET`、`BETTER_AUTH_URL`、`GITHUB_CLIENT_ID`、`GITHUB_CLIENT_SECRET`、`ALLOWED_GITHUB_USERS`、`GITHUB_CONTENT_REPO`。
+- **本地开发**：`.env.local` 用 Neon 连接串（或本地 Postgres）；GitHub OAuth app 配 `http://localhost:3000` 回调。
 
-## 11. 里程碑（供实现计划参考）
+## 11. 里程碑 / 计划拆分
 
-1. 骨架 + Docker + Better Auth(SQLite) 跑通（注册/登录/`@handle`）
-2. `ContentStore` 接口 + `GitContentStore`（含提交队列、Markdown 解析）
-3. 写作与阅读核心（编辑器、草稿/发布、文章页、创作者主页、图片上传）
-4. 评论（git 文件）
-5. 发现（首页流、标签）+ 杂志/合集
-6. Admin + 配置开关 + 部署文档 + 「链接远程 git」
+- **Plan 1 — Foundation + Auth + Deploy（当前）**：scaffold、env、Drizzle+Neon、Better Auth(GitHub OAuth+白名单)、auth 路由、`getCurrentUser`、GitHub 登录页、Vercel 部署配置 + Deploy 按钮。产出：能用 GitHub 登录、白名单生效、可一键部署的空壳应用。
+- **Plan 2 — 内容引擎**：`ContentStore` 接口 + `GitHubContentStore`（Octokit、Markdown、frontmatter、提交）。
+- **Plan 3 — 写作与阅读**：TipTap 编辑器、草稿/发布、文章页、创作者主页、图片上传。
+- **Plan 4 — 评论 + 发现 + 杂志。**
+- **Plan 5 — 打磨**：资料设置、标签页、部署文档完善。
 
-## 12. v1 展望（后期 · 完整 DB 版）
+## 12. 未来展望
 
-- 新增 `DbContentStore`（Postgres + Prisma），写一次性迁移脚本把 Markdown 内容导入 DB。
-- 补齐点赞(スキ)、关注、关注流。
-- 为支付/会员预留的数据模型（`visibility`、`price`、订阅）在此阶段评估接入。
-- 其余未来项：通知、全文搜索增强、嵌套评论、移动端、联邦/ActivityPub。
+- 点赞(スキ)、关注、关注流（存 Neon）。
+- 内容可选转存 Postgres（加 `DbContentStore`）。
+- 付费/会员、通知、全文搜索、嵌套评论、GitHub App（比 OAuth token 更硬的内容写入凭证）。
