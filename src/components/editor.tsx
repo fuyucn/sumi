@@ -1,12 +1,12 @@
 "use client";
-import { EditorContent, useEditor, type Editor } from "@tiptap/react";
+import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 import { useEffect } from "react";
 
 // @tiptap/core v3 types `editor.storage` as the DOM Storage interface, so the
 // markdown extension's storage isn't visible. Narrow it to its real shape.
-function toMarkdown(editor: Editor): string {
+function toMarkdown(editor: TiptapEditor): string {
   return (editor.storage as unknown as { markdown: MarkdownStorage }).markdown.getMarkdown();
 }
 
