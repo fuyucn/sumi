@@ -6,6 +6,7 @@ export const writeFormSchema = z.object({
   body: z.string().default(""),
   tags: z.string().default(""),
   publish: z.boolean().default(false),
+  publishedAt: z.string().optional(),
 });
 
 export type WriteForm = z.input<typeof writeFormSchema>;
@@ -14,11 +15,13 @@ export type WriteForm = z.input<typeof writeFormSchema>;
 export function buildNewPost(form: unknown, now: Date): NewPost {
   const f = writeFormSchema.parse(form);
   const tags = f.tags.split(",").map((t) => t.trim()).filter(Boolean);
+  const existing = f.publishedAt;
+  const publishedAt = f.publish ? (existing ?? now.toISOString()) : existing;
   return {
     title: f.title,
     body: f.body,
     tags,
     status: f.publish ? "published" : "draft",
-    ...(f.publish ? { publishedAt: now.toISOString() } : {}),
+    ...(publishedAt ? { publishedAt } : {}),
   };
 }

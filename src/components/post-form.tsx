@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Editor } from "./editor";
 import { savePostAction } from "@/app/write/actions";
 
-export function PostForm({ initial }: { initial?: { title: string; tags: string; body: string } }) {
+export function PostForm({ initial }: { initial?: { title: string; tags: string; body: string; publishedAt?: string } }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [tags, setTags] = useState(initial?.tags ?? "");
@@ -15,7 +15,7 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
   async function submit(publish: boolean) {
     setBusy(true);
     setError(null);
-    const res = await savePostAction({ title, tags, body, publish });
+    const res = await savePostAction({ title, tags, body, publish, publishedAt: initial?.publishedAt });
     setBusy(false);
     if (!res.ok) {
       setError(res.error);

@@ -17,7 +17,7 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
   return (
     <main style={{ maxWidth: 680, margin: "2rem auto", padding: "0 1rem" }}>
       <h1>Edit post</h1>
-      <PostForm initial={{ title: post.title, tags: post.tags.join(", "), body: post.body }} />
+      <PostForm initial={{ title: post.title, tags: post.tags.join(", "), body: post.body, publishedAt: post.publishedAt }} />
     </main>
   );
 }

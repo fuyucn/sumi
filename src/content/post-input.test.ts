@@ -28,3 +28,14 @@ test("missing fields use defaults (tags '', publish false)", () => {
   expect(p.status).toBe("draft");
   expect(p.tags).toEqual([]);
 });
+
+test("publish preserves an existing publishedAt (no re-stamp)", () => {
+  const p = buildNewPost({ title: "Hi", body: "x", publish: true, publishedAt: "2026-01-01T00:00:00.000Z" }, now);
+  expect(p.publishedAt).toBe("2026-01-01T00:00:00.000Z");
+});
+
+test("save-as-draft preserves an existing publishedAt", () => {
+  const p = buildNewPost({ title: "Hi", body: "x", publish: false, publishedAt: "2026-01-01T00:00:00.000Z" }, now);
+  expect(p.status).toBe("draft");
+  expect(p.publishedAt).toBe("2026-01-01T00:00:00.000Z");
+});
