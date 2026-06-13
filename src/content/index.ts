@@ -1,4 +1,4 @@
-import { githubClientFromToken } from "@/lib/github";
+import { githubClientFromToken, readGitHubClient } from "@/lib/github";
 import { env } from "@/lib/env";
 import { getGithubToken } from "./github-token";
 import { GitHubContentStore } from "./github-content-store";
@@ -18,4 +18,11 @@ export async function getContentStoreForUser(userId: string): Promise<ContentSto
   const repo = env.GITHUB_CONTENT_REPO;
   if (!token || !repo) return null;
   return buildContentStore(token, repo);
+}
+
+/** A content store for PUBLIC reads (no signed-in user needed). Null if no repo configured. */
+export function getReadContentStore(): ContentStore | null {
+  const repo = env.GITHUB_CONTENT_REPO;
+  if (!repo) return null;
+  return new GitHubContentStore(readGitHubClient(repo, env.GITHUB_CONTENT_TOKEN));
 }

@@ -74,3 +74,8 @@ export function makeGitHubClient(octokit: Octokit, repo: string): GitHubClient {
 export function githubClientFromToken(token: string, repo: string): GitHubClient {
   return makeGitHubClient(new Octokit({ auth: token }), repo);
 }
+
+/** A GitHubClient for reads. Uses the token if provided, else unauthenticated (public repos). */
+export function readGitHubClient(repo: string, token?: string): GitHubClient {
+  return makeGitHubClient(new Octokit(token ? { auth: token } : {}), repo);
+}
