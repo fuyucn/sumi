@@ -5,12 +5,14 @@ import { Markdown } from "@/components/markdown";
 
 export const dynamic = "force-dynamic";
 
-async function load(handleRaw: string, slug: string) {
-  if (!handleRaw.startsWith("@")) return null;
+async function load(handleRaw: string, slugRaw: string) {
+  // Next delivers params URL-encoded (e.g. "%40fuyucn"); decode before use.
+  const handleParam = decodeURIComponent(handleRaw);
+  if (!handleParam.startsWith("@")) return null;
   const store = getReadContentStore();
   if (!store) return null;
-  const handle = handleRaw.slice(1);
-  const post = await store.getPost(handle, slug);
+  const handle = handleParam.slice(1);
+  const post = await store.getPost(handle, decodeURIComponent(slugRaw));
   if (!post || post.status !== "published") return null;
   return { handle, post };
 }

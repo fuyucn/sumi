@@ -6,8 +6,10 @@ export const dynamic = "force-dynamic";
 
 export default async function CreatorPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle: raw } = await params;
-  if (!raw.startsWith("@")) notFound();
-  const handle = raw.slice(1);
+  // Next delivers the param URL-encoded (e.g. "%40fuyucn"); decode before checks.
+  const handleParam = decodeURIComponent(raw);
+  if (!handleParam.startsWith("@")) notFound();
+  const handle = handleParam.slice(1);
   const store = getReadContentStore();
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
