@@ -2,7 +2,8 @@
 import { EditorContent, useEditor, type Editor as TiptapEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
-import { useEffect } from "react";
+import Image from "@tiptap/extension-image";
+import { useEffect, useRef } from "react";
 
 // @tiptap/core v3 types `editor.storage` as the DOM Storage interface, so the
 // markdown extension's storage isn't visible. Narrow it to its real shape.
@@ -13,12 +14,16 @@ function toMarkdown(editor: TiptapEditor): string {
 export function Editor({
   initialMarkdown = "",
   onChange,
+  uploadImage,
 }: {
   initialMarkdown?: string;
   onChange: (markdown: string) => void;
+  uploadImage?: (file: File) => Promise<string | null>;
 }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
-    extensions: [StarterKit, Markdown],
+    extensions: [StarterKit, Markdown, Image],
     content: initialMarkdown,
     immediatelyRender: false, // avoid SSR hydration mismatch under Next App Router
     onUpdate: ({ editor }) => onChange(toMarkdown(editor)),
@@ -29,8 +34,37 @@ export function Editor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !editor || !uploadImage) return;
+    // Reset so the same file can be re-selected if needed
+    e.target.value = "";
+    const path = await uploadImage(file);
+    if (path) {
+      editor.chain().focus().setImage({ src: path }).run();
+    }
+  }
+
   return (
     <div className="mt-6 border-t border-line pt-6">
+      {uploadImage && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-sm text-ink-muted hover:text-ink transition-colors"
+          >
+            + Add image
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      )}
       <div className="prose prose-stone max-w-none min-h-[50vh] font-serif prose-headings:font-serif focus-within:outline-none">
         <EditorContent editor={editor} />
       </div>

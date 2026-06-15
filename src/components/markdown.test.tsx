@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
-import { Markdown } from "./markdown";
+import { Markdown, resolveUrl } from "./markdown";
 
 test("renders markdown headings and bold to HTML", () => {
   const html = renderToStaticMarkup(<Markdown>{"# Title\n\nsome **bold** text"}</Markdown>);
@@ -16,4 +16,34 @@ test("renders GFM tables", () => {
 test("does not render raw HTML (XSS safety)", () => {
   const html = renderToStaticMarkup(<Markdown>{"<script>alert(1)</script>"}</Markdown>);
   expect(html).not.toContain("<script>");
+});
+
+test("resolveUrl: relative path is prefixed with base", () => {
+  expect(resolveUrl("https://raw.githubusercontent.com/owner/repo/main/content/@alice/my-post/", "images/photo.png")).toBe(
+    "https://raw.githubusercontent.com/owner/repo/main/content/@alice/my-post/images/photo.png",
+  );
+});
+
+test("resolveUrl: absolute URL is left unchanged", () => {
+  const abs = "https://example.com/img.png";
+  expect(resolveUrl("https://some.base/path/", abs)).toBe(abs);
+});
+
+test("resolveUrl: no base leaves URL unchanged", () => {
+  expect(resolveUrl(undefined, "images/foo.png")).toBe("images/foo.png");
+});
+
+test("resolveUrl: root-relative path is left unchanged", () => {
+  expect(resolveUrl("https://some.base/path/", "/static/img.png")).toBe("/static/img.png");
+});
+
+test("Markdown with baseUrl resolves relative image src", () => {
+  const base = "https://raw.githubusercontent.com/owner/repo/main/content/@alice/post/";
+  const html = renderToStaticMarkup(<Markdown baseUrl={base}>{"![alt](images/photo.png)"}</Markdown>);
+  expect(html).toContain(`src="${base}images/photo.png"`);
+});
+
+test("Markdown without baseUrl leaves image src unchanged", () => {
+  const html = renderToStaticMarkup(<Markdown>{"![alt](images/photo.png)"}</Markdown>);
+  expect(html).toContain('src="images/photo.png"');
 });

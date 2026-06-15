@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
+import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const data = await load(handle, slug);
   if (!data) notFound();
   const { post } = data;
+  const repo = env.GITHUB_CONTENT_REPO;
+  const decodedSlug = decodeURIComponent(slug);
+  const imageBase = repo
+    ? `https://raw.githubusercontent.com/${repo}/main/content/@${data.handle}/${decodedSlug}/`
+    : undefined;
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
       <header>
@@ -58,7 +64,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
       </header>
       <hr className="mt-8 mb-10 border-line" />
       <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
-        <Markdown>{post.body}</Markdown>
+        <Markdown baseUrl={imageBase}>{post.body}</Markdown>
       </article>
       {post.tags.length > 0 ? (
         <footer className="mt-16 flex flex-wrap items-center gap-3 border-t border-line pt-8 text-sm text-ink-faint">

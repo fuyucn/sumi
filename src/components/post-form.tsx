@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Editor } from "./editor";
-import { savePostAction } from "@/app/write/actions";
+import { savePostAction, uploadImageAction } from "@/app/write/actions";
 
 export function PostForm({ initial }: { initial?: { title: string; tags: string; body: string; publishedAt?: string } }) {
   const router = useRouter();
@@ -11,6 +11,17 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
   const [body, setBody] = useState(initial?.body ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  async function handleUploadImage(file: File): Promise<string | null> {
+    const buffer = await file.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    const res = await uploadImageAction({ title, filename: file.name, base64 });
+    if (!res.ok) {
+      setError(res.error);
+      return null;
+    }
+    return res.path;
+  }
 
   async function submit(publish: boolean) {
     setBusy(true);
@@ -38,7 +49,7 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
         placeholder="Add tags, comma separated"
         className="mt-3 w-full bg-transparent text-sm text-ink-muted placeholder:text-ink-faint/70 focus:outline-none"
       />
-      <Editor initialMarkdown={initial?.body ?? ""} onChange={setBody} />
+      <Editor initialMarkdown={initial?.body ?? ""} onChange={setBody} uploadImage={handleUploadImage} />
       <div className="mt-2 flex items-center justify-end gap-3 border-t border-line pt-5">
         {error ? (
           <p className="mr-auto text-sm text-seal">{error}</p>

@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 import type { ContentStore } from "@/content/store";
-import { runDeletePost, runSavePost } from "./actions-core";
+import { runDeletePost, runSavePost, runUploadImage } from "./actions-core";
 
 const now = new Date("2026-06-13T12:00:00.000Z");
 
@@ -11,7 +11,7 @@ function fakeStore(): ContentStore {
     getPost: vi.fn(),
     savePost: vi.fn().mockResolvedValue("hi"),
     deletePost: vi.fn().mockResolvedValue(undefined),
-    uploadImage: vi.fn(),
+    uploadImage: vi.fn().mockResolvedValue("images/x.png"),
   };
 }
 
@@ -49,4 +49,35 @@ test("runDeletePost: happy path calls store.deletePost", async () => {
 test("runDeletePost: not signed in → error", async () => {
   const r = await runDeletePost({ userId: null, handle: null, store: null }, "hi");
   expect(r.ok).toBe(false);
+});
+
+const bytes = new Uint8Array([1, 2, 3]);
+
+test("runUploadImage: not signed in → error", async () => {
+  const r = await runUploadImage(
+    { userId: null, handle: null, store: null },
+    { title: "My Post", filename: "photo.png", bytes },
+  );
+  expect(r).toEqual({ ok: false, error: expect.stringContaining("signed in") });
+});
+
+test("runUploadImage: empty title → error, store.uploadImage NOT called", async () => {
+  const store = fakeStore();
+  const r = await runUploadImage(
+    { userId: "u", handle: "alice", store },
+    { title: "  ", filename: "photo.png", bytes },
+  );
+  expect(r).toEqual({ ok: false, error: expect.stringContaining("title") });
+  expect(store.uploadImage).not.toHaveBeenCalled();
+});
+
+test("runUploadImage: happy path → returns ok path, calls store.uploadImage with safe name", async () => {
+  const store = fakeStore();
+  (store.uploadImage as ReturnType<typeof vi.fn>).mockResolvedValue("images/my-photo.png");
+  const r = await runUploadImage(
+    { userId: "u", handle: "alice", store },
+    { title: "My Post", filename: "My Photo.PNG", bytes },
+  );
+  expect(r).toEqual({ ok: true, path: "images/my-photo.png" });
+  expect(store.uploadImage).toHaveBeenCalledWith("alice", "my-post", "my-photo.png", bytes);
 });
