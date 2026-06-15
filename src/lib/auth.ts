@@ -10,6 +10,14 @@ function buildAuth() {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
+    // `username` (the GitHub login, set via mapProfileToUser) is a custom field;
+    // it must be declared here or Better Auth won't persist it to the column.
+    // input:false → it's set server-side from the OAuth profile, not user input.
+    user: {
+      additionalFields: {
+        username: { type: "string", required: false, input: false },
+      },
+    },
     database: drizzleAdapter(db, {
       provider: "pg",
       schema,
