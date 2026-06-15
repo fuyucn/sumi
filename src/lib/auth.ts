@@ -68,4 +68,11 @@ export const auth = new Proxy({} as AuthInstance, {
     if (!_auth) _auth = buildAuth();
     return _auth[prop as keyof AuthInstance];
   },
+  // `has` must reflect the real instance: better-auth's toNextJsHandler uses
+  // `"handler" in auth` to detect the instance, and the get-only proxy would
+  // otherwise report false and mistake `auth` for the handler function.
+  has(_t, prop) {
+    if (!_auth) _auth = buildAuth();
+    return prop in _auth;
+  },
 });

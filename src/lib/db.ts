@@ -16,4 +16,8 @@ export const db = new Proxy({} as ReturnType<typeof createDb>, {
     _db ??= createDb(env.DATABASE_URL);
     return _db[prop as keyof typeof _db];
   },
+  has(_t, prop) {
+    _db ??= createDb(env.DATABASE_URL);
+    return prop in _db;
+  },
 });
