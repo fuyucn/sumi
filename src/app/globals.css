@@ -32,6 +32,42 @@ body {
   color: var(--color-ink);
 }
 
+/* Dark mode — "ink at night": warm near-black paper, soft warm ink, a brighter
+   cinnabar so the seal still reads. Automatic via the OS preference; the
+   .dark / [data-theme="dark"] hooks allow a future manual toggle. */
+:root {
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-paper: #1b1816;
+    --color-paper-raised: #232019;
+    --color-ink: #ece6da;
+    --color-ink-soft: #cec7b9;
+    --color-ink-muted: #9a9286;
+    --color-ink-faint: #6e685e;
+    --color-line: #332e27;
+    --color-line-strong: #443d34;
+    --color-seal: #e06a4f;
+    --color-seal-soft: #ee8a72;
+  }
+}
+:root.dark,
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #1b1816;
+  --color-paper-raised: #232019;
+  --color-ink: #ece6da;
+  --color-ink-soft: #cec7b9;
+  --color-ink-muted: #9a9286;
+  --color-ink-faint: #6e685e;
+  --color-line: #332e27;
+  --color-line-strong: #443d34;
+  --color-seal: #e06a4f;
+  --color-seal-soft: #ee8a72;
+}
+
 ::selection {
   background-color: color-mix(in srgb, var(--color-seal) 18%, transparent);
   color: var(--color-ink);
