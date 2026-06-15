@@ -36,3 +36,13 @@ test("requires GITHUB_CLIENT_ID and SECRET", () => {
 test("requires GITHUB_CONTENT_REPO in owner/repo form", () => {
   expect(() => loadEnv({ ...base, GITHUB_CONTENT_REPO: "noslash" })).toThrow();
 });
+
+test("treats an empty GITHUB_CONTENT_REPO as unset (not a regex error)", () => {
+  const env = loadEnv({ ...base, GITHUB_CONTENT_REPO: "" });
+  expect(env.GITHUB_CONTENT_REPO).toBeUndefined();
+});
+
+test("treats an empty GITHUB_CONTENT_TOKEN as unset", () => {
+  const env = loadEnv({ ...base, GITHUB_CONTENT_TOKEN: "" });
+  expect(env.GITHUB_CONTENT_TOKEN).toBeUndefined();
+});

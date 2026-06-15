@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// .env files commonly leave optional keys present-but-blank (e.g. `FOO=`).
+// Treat an empty string as "not set" so optional fields don't fail validation.
+const emptyToUndefined = (v: unknown) => (v === "" ? undefined : v);
+
 const schema = z.object({
   DATABASE_URL: z.string().url().min(1),
   BETTER_AUTH_SECRET: z.string().min(32),
@@ -10,10 +14,13 @@ const schema = z.object({
   ALLOWED_GITHUB_USERS: z.string().default(""),
   // Optional until Plan 2 (content engine via GitHub API) actually uses it, so a
   // Plan 1-only deployment doesn't fail on first request. When present it must be owner/repo.
-  GITHUB_CONTENT_REPO: z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo").optional(),
+  GITHUB_CONTENT_REPO: z.preprocess(
+    emptyToUndefined,
+    z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo").optional(),
+  ),
   // Optional read token for server-side public reads of the content repo.
   // If absent, reads use unauthenticated Octokit (works for public repos).
-  GITHUB_CONTENT_TOKEN: z.string().optional(),
+  GITHUB_CONTENT_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export type Env = z.infer<typeof schema>;
