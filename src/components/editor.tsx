@@ -30,15 +30,10 @@ export function Editor({
   }, [editor]);
 
   return (
-    <div
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 6,
-        padding: "0.75rem",
-        minHeight: 240,
-      }}
-    >
-      <EditorContent editor={editor} />
+    <div className="border-t border-stone-200 pt-4">
+      <div className="prose prose-stone max-w-none min-h-[50vh] focus-within:outline-none">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }

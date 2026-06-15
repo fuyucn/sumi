@@ -25,15 +25,37 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
   }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" style={{ fontSize: "1.4rem", padding: 8 }} />
-      <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="tags, comma, separated" style={{ padding: 8 }} />
+    <div className="flex flex-col gap-4">
+      <input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Title"
+        className="font-serif text-3xl font-semibold placeholder:text-stone-300 focus:outline-none w-full bg-transparent"
+      />
+      <input
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        placeholder="tags, comma separated"
+        className="text-sm text-stone-500 placeholder:text-stone-300 focus:outline-none w-full bg-transparent border-b border-stone-200 pb-2"
+      />
       <Editor initialMarkdown={initial?.body ?? ""} onChange={setBody} />
-      <div style={{ display: "flex", gap: 8 }}>
-        <button disabled={busy} onClick={() => submit(false)}>Save draft</button>
-        <button disabled={busy} onClick={() => submit(true)}>Publish</button>
+      <div className="flex justify-end gap-3 pt-2">
+        <button
+          disabled={busy}
+          onClick={() => submit(false)}
+          className="border border-stone-300 text-stone-700 hover:bg-stone-50 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40"
+        >
+          Save draft
+        </button>
+        <button
+          disabled={busy}
+          onClick={() => submit(true)}
+          className="bg-stone-900 text-white hover:bg-stone-700 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-40"
+        >
+          Publish
+        </button>
       </div>
-      {error ? <p style={{ color: "crimson" }}>{error}</p> : null}
+      {error ? <p className="text-red-600 text-sm">{error}</p> : null}
     </div>
   );
 }

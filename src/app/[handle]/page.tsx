@@ -14,12 +14,16 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
   return (
-    <main style={{ maxWidth: 680, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>@{handle}</h1>
+    <main className="max-w-2xl mx-auto px-5 py-10">
+      <h1 className="font-serif text-2xl font-medium text-stone-900 mb-8">@{handle}</h1>
       {posts.length === 0 ? (
-        <p style={{ color: "#666" }}>No posts yet.</p>
+        <p className="text-stone-500 text-center py-16">Nothing published yet.</p>
       ) : (
-        posts.map((post) => <PostCard key={post.slug} handle={handle} post={post} />)
+        <div className="divide-y divide-stone-200">
+          {posts.map((post) => (
+            <PostCard key={post.slug} handle={handle} post={post} />
+          ))}
+        </div>
       )}
     </main>
   );

@@ -3,19 +3,31 @@ import type { PostMeta } from "@/content/types";
 
 export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
   return (
-    <article style={{ borderBottom: "1px solid #eee", padding: "1rem 0" }}>
-      <h2 style={{ margin: 0, fontSize: "1.2rem" }}>
-        <Link href={`/@${handle}/${post.slug}`}>{post.title}</Link>
+    <article className="py-6">
+      <h2 className="font-serif text-xl font-medium leading-snug">
+        <Link href={`/@${handle}/${post.slug}`} className="text-stone-900 hover:underline">
+          {post.title}
+        </Link>
       </h2>
-      <p style={{ color: "#666", margin: "0.25rem 0" }}>
-        <Link href={`/@${handle}`}>@{handle}</Link>
+      <p className="mt-1 text-sm text-stone-500">
+        <Link href={`/@${handle}`} className="hover:text-stone-900 transition-colors">
+          @{handle}
+        </Link>
         {post.publishedAt ? ` · ${new Date(post.publishedAt).toLocaleDateString()}` : ""}
       </p>
-      {post.excerpt ? <p style={{ margin: 0 }}>{post.excerpt}</p> : null}
+      {post.excerpt ? (
+        <p className="mt-2 text-stone-600 text-sm leading-relaxed line-clamp-2">{post.excerpt}</p>
+      ) : null}
       {post.tags.length > 0 ? (
-        <p style={{ margin: "0.25rem 0", fontSize: "0.85rem" }}>
+        <p className="mt-2 flex flex-wrap gap-3">
           {post.tags.map((t) => (
-            <Link key={t} href={`/tag/${encodeURIComponent(t)}`} style={{ marginRight: 8 }}>#{t}</Link>
+            <Link
+              key={t}
+              href={`/tag/${encodeURIComponent(t)}`}
+              className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
+            >
+              #{t}
+            </Link>
           ))}
         </p>
       ) : null}

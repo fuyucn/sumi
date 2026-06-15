@@ -30,13 +30,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   if (!data) notFound();
   const { post } = data;
   return (
-    <main style={{ maxWidth: 680, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>{post.title}</h1>
-      <p style={{ color: "#666" }}>
-        <a href={`/@${data.handle}`}>@{data.handle}</a>
+    <main className="max-w-2xl mx-auto px-5 py-10">
+      <h1 className="font-serif text-3xl font-semibold leading-tight">{post.title}</h1>
+      <p className="mt-3 text-sm text-stone-500">
+        <a href={`/@${data.handle}`} className="hover:text-stone-900 transition-colors">
+          @{data.handle}
+        </a>
         {post.publishedAt ? ` · ${new Date(post.publishedAt).toLocaleDateString()}` : ""}
       </p>
-      <Markdown>{post.body}</Markdown>
+      <article className="prose prose-stone max-w-none mt-8">
+        <Markdown>{post.body}</Markdown>
+      </article>
     </main>
   );
 }

@@ -8,8 +8,7 @@ export default async function WritePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   return (
-    <main style={{ maxWidth: 680, margin: "2rem auto", padding: "0 1rem" }}>
-      <h1>New post</h1>
+    <main className="max-w-2xl mx-auto px-5 py-10">
       <PostForm />
     </main>
   );
