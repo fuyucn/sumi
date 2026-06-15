@@ -30,8 +30,8 @@ export function Editor({
   }, [editor]);
 
   return (
-    <div className="border-t border-stone-200 pt-4">
-      <div className="prose prose-lg prose-stone max-w-none min-h-[50vh] font-serif prose-headings:font-serif focus-within:outline-none">
+    <div className="mt-6 border-t border-line pt-6">
+      <div className="prose prose-stone max-w-none min-h-[50vh] font-serif prose-headings:font-serif focus-within:outline-none">
         <EditorContent editor={editor} />
       </div>
     </div>

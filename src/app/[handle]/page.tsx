@@ -14,12 +14,21 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
   return (
-    <main className="max-w-2xl mx-auto px-5 py-10">
-      <h1 className="font-serif text-2xl font-medium text-stone-900 mb-8">@{handle}</h1>
+    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+      <header className="mb-10">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+          @{handle}
+        </h1>
+        <p className="mt-2 text-sm text-ink-faint">
+          {posts.length} {posts.length === 1 ? "post" : "posts"}
+        </p>
+      </header>
       {posts.length === 0 ? (
-        <p className="text-stone-500 text-center py-16">Nothing published yet.</p>
+        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
+          Nothing published yet.
+        </p>
       ) : (
-        <div className="divide-y divide-stone-200">
+        <div className="divide-y divide-line border-t border-line">
           {posts.map((post) => (
             <PostCard key={post.slug} handle={handle} post={post} />
           ))}

@@ -4,22 +4,128 @@
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
+
+  /* Ink-on-paper palette. Warm washi paper + true sumi ink, with a single
+     restrained cinnabar accent borrowed from the hanko (seal) tradition. */
+  --color-paper: #fcfbf7;
+  --color-paper-raised: #ffffff;
+  --color-ink: #1c1a17;
+  --color-ink-soft: #3a3733;
+  --color-ink-muted: #78736b;
+  --color-ink-faint: #9c968c;
+  --color-line: #e9e5dc;
+  --color-line-strong: #ddd8cc;
+  --color-seal: #b3402e;
+  --color-seal-soft: #c45a44;
 }
 
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern", "liga", "calt";
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-seal) 18%, transparent);
+  color: var(--color-ink);
+}
+
+/* Focus: a soft cinnabar ring, never a harsh browser outline. */
+*:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-seal) 55%, transparent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Page content drifts up softly on first paint. Restraint over motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .rise {
+    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* An understated animated underline used for prose / inline links. */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover {
+  background-size: 100% 1px;
 }
 
 /* Reading + writing surfaces use the serif for a calm, book-like feel.
    (code/pre keep the typography plugin's monospace.) */
 .prose {
   font-family: var(--font-serif);
+  --tw-prose-body: var(--color-ink-soft);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-quotes: var(--color-ink-soft);
+  --tw-prose-quote-borders: var(--color-seal);
+  --tw-prose-bullets: var(--color-line-strong);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-captions: var(--color-ink-muted);
+  font-size: 1.125rem;
+  line-height: 1.8;
+  letter-spacing: -0.003em;
+}
+@media (min-width: 640px) {
+  .prose {
+    font-size: 1.1875rem;
+  }
 }
 .prose :is(h1, h2, h3, h4, h5, h6) {
   font-family: var(--font-serif);
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+}
+.prose :is(h2, h3) {
+  margin-top: 2.2em;
+}
+/* Links in reading text: ink, with a quiet underline that warms on hover. */
+.prose a {
+  text-decoration: none;
+  font-weight: 500;
+  background-image: linear-gradient(var(--color-line-strong), var(--color-line-strong));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  transition: background-size 0.25s ease, color 0.2s ease;
+}
+.prose a:hover {
+  color: var(--color-seal);
+  background-image: linear-gradient(currentColor, currentColor);
+}
+.prose blockquote {
+  font-style: italic;
+  border-left-width: 2px;
+  padding-left: 1.1em;
+  font-weight: 400;
+}
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+  content: "";
 }
 
 /* TipTap / ProseMirror prose surface */
@@ -29,7 +135,7 @@ html {
 
 .ProseMirror p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  color: var(--color-stone-300);
+  color: var(--color-ink-faint);
   float: left;
   height: 0;
   pointer-events: none;

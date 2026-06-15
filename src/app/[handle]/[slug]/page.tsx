@@ -30,17 +30,49 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   if (!data) notFound();
   const { post } = data;
   return (
-    <main className="max-w-2xl mx-auto px-5 py-10">
-      <h1 className="font-serif text-3xl font-semibold leading-tight">{post.title}</h1>
-      <p className="mt-3 text-sm text-stone-500">
-        <a href={`/@${data.handle}`} className="hover:text-stone-900 transition-colors">
-          @{data.handle}
-        </a>
-        {post.publishedAt ? ` · ${new Date(post.publishedAt).toLocaleDateString()}` : ""}
-      </p>
-      <article className="prose prose-lg prose-stone max-w-none mt-10 font-serif prose-headings:font-serif">
+    <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
+      <header>
+        <h1 className="font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
+          {post.title}
+        </h1>
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
+          <a
+            href={`/@${data.handle}`}
+            className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            @{data.handle}
+          </a>
+          {post.publishedAt ? (
+            <>
+              <span aria-hidden className="text-line-strong">·</span>
+              <time dateTime={post.publishedAt}>
+                {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+            </>
+          ) : null}
+        </div>
+      </header>
+      <hr className="mt-8 mb-10 border-line" />
+      <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
         <Markdown>{post.body}</Markdown>
       </article>
+      {post.tags.length > 0 ? (
+        <footer className="mt-16 flex flex-wrap items-center gap-3 border-t border-line pt-8 text-sm text-ink-faint">
+          {post.tags.map((t) => (
+            <a
+              key={t}
+              href={`/tag/${encodeURIComponent(t)}`}
+              className="rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:text-seal"
+            >
+              #{t}
+            </a>
+          ))}
+        </footer>
+      ) : null}
     </main>
   );
 }

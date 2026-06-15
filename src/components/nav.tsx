@@ -8,34 +8,35 @@ export function Nav() {
   const handle = user?.username ?? user?.name;
 
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-white/80 backdrop-blur">
-      <div className="max-w-2xl mx-auto px-5 h-14 flex items-center justify-between">
+    <header className="sticky top-0 z-10 border-b border-line bg-paper/85 backdrop-blur-md">
+      <div className="max-w-2xl mx-auto px-5 h-16 flex items-center justify-between">
         <Link
           href="/"
-          className="font-serif text-lg font-medium text-stone-900 hover:opacity-80 transition-opacity"
+          className="group font-serif text-lg font-medium tracking-tight text-ink transition-opacity hover:opacity-90"
         >
-          Sumi 墨
+          Sumi{" "}
+          <span className="text-seal transition-colors group-hover:text-seal-soft">墨</span>
         </Link>
-        <nav className="flex items-center gap-4 text-sm">
+        <nav className="flex items-center gap-5 text-sm">
           {handle ? (
             <>
               <Link
-                href="/write"
-                className="rounded-md bg-stone-900 px-3 py-1.5 text-white hover:bg-stone-700 transition-colors"
-              >
-                Write
-              </Link>
-              <Link
                 href={`/@${handle}`}
-                className="text-stone-500 hover:text-stone-900 transition-colors"
+                className="link-underline text-ink-muted transition-colors hover:text-ink"
               >
                 @{handle}
+              </Link>
+              <Link
+                href="/write"
+                className="rounded-full bg-ink px-4 py-1.5 font-medium text-paper transition-colors hover:bg-ink-soft"
+              >
+                Write
               </Link>
             </>
           ) : (
             <Link
               href="/sign-in"
-              className="text-stone-600 hover:text-stone-900 transition-colors"
+              className="link-underline text-ink-muted transition-colors hover:text-ink"
             >
               Sign in
             </Link>

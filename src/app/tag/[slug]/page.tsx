@@ -9,12 +9,22 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
   const feed = await listFeed();
   const matches = feed.filter(({ post }) => post.tags.includes(tag));
   return (
-    <main className="max-w-2xl mx-auto px-5 py-10">
-      <h1 className="font-serif text-2xl font-medium text-stone-900 mb-8">#{tag}</h1>
+    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+      <header className="mb-10">
+        <p className="text-sm font-medium uppercase tracking-widest text-ink-faint">
+          Tagged
+        </p>
+        <h1 className="mt-1 font-serif text-4xl font-semibold tracking-tight text-ink">
+          <span className="text-seal">#</span>
+          {tag}
+        </h1>
+      </header>
       {matches.length === 0 ? (
-        <p className="text-stone-500 text-center py-16">No posts tagged #{tag}.</p>
+        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
+          No posts tagged #{tag} yet.
+        </p>
       ) : (
-        <div className="divide-y divide-stone-200">
+        <div className="divide-y divide-line border-t border-line">
           {matches.map(({ handle, post }) => (
             <PostCard key={`${handle}/${post.slug}`} handle={handle} post={post} />
           ))}

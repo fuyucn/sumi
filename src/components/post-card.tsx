@@ -3,34 +3,56 @@ import type { PostMeta } from "@/content/types";
 
 export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
   return (
-    <article className="py-6">
-      <h2 className="font-serif text-xl font-medium leading-snug">
-        <Link href={`/@${handle}/${post.slug}`} className="text-stone-900 hover:underline">
-          {post.title}
-        </Link>
+    <article className="group relative py-8 first:pt-0">
+      <Link
+        href={`/@${handle}/${post.slug}`}
+        className="absolute inset-0 z-0"
+        aria-label={post.title}
+      />
+      <h2 className="font-serif text-2xl font-medium leading-snug tracking-tight text-ink transition-colors group-hover:text-seal">
+        {post.title}
       </h2>
-      <p className="mt-1 text-sm text-stone-500">
-        <Link href={`/@${handle}`} className="hover:text-stone-900 transition-colors">
-          @{handle}
-        </Link>
-        {post.publishedAt ? ` · ${new Date(post.publishedAt).toLocaleDateString()}` : ""}
-      </p>
       {post.excerpt ? (
-        <p className="mt-2 text-stone-600 text-sm leading-relaxed line-clamp-2">{post.excerpt}</p>
-      ) : null}
-      {post.tags.length > 0 ? (
-        <p className="mt-2 flex flex-wrap gap-3">
-          {post.tags.map((t) => (
-            <Link
-              key={t}
-              href={`/tag/${encodeURIComponent(t)}`}
-              className="text-xs text-stone-500 hover:text-stone-900 transition-colors"
-            >
-              #{t}
-            </Link>
-          ))}
+        <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted line-clamp-2">
+          {post.excerpt}
         </p>
       ) : null}
+      <div className="relative z-10 mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
+        <Link
+          href={`/@${handle}`}
+          className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+        >
+          @{handle}
+        </Link>
+        {post.publishedAt ? (
+          <>
+            <span aria-hidden className="text-line-strong">·</span>
+            <time dateTime={post.publishedAt}>
+              {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })}
+            </time>
+          </>
+        ) : null}
+        {post.tags.length > 0 ? (
+          <>
+            <span aria-hidden className="text-line-strong">·</span>
+            <span className="flex flex-wrap gap-3">
+              {post.tags.map((t) => (
+                <Link
+                  key={t}
+                  href={`/tag/${encodeURIComponent(t)}`}
+                  className="transition-colors hover:text-seal"
+                >
+                  #{t}
+                </Link>
+              ))}
+            </span>
+          </>
+        ) : null}
+      </div>
     </article>
   );
 }
