@@ -31,7 +31,7 @@ export function Editor({
 
   return (
     <div className="border-t border-stone-200 pt-4">
-      <div className="prose prose-stone max-w-none min-h-[50vh] focus-within:outline-none">
+      <div className="prose prose-lg prose-stone max-w-none min-h-[50vh] font-serif prose-headings:font-serif focus-within:outline-none">
         <EditorContent editor={editor} />
       </div>
     </div>

@@ -38,7 +38,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         </a>
         {post.publishedAt ? ` · ${new Date(post.publishedAt).toLocaleDateString()}` : ""}
       </p>
-      <article className="prose prose-stone max-w-none mt-8">
+      <article className="prose prose-lg prose-stone max-w-none mt-10 font-serif prose-headings:font-serif">
         <Markdown>{post.body}</Markdown>
       </article>
     </main>

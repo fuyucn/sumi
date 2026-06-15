@@ -11,6 +11,17 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Reading + writing surfaces use the serif for a calm, book-like feel.
+   (code/pre keep the typography plugin's monospace.) */
+.prose {
+  font-family: var(--font-serif);
+}
+.prose :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
 /* TipTap / ProseMirror prose surface */
 .ProseMirror {
   @apply prose prose-stone max-w-none min-h-[50vh] focus:outline-none;
