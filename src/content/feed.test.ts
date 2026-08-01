@@ -14,6 +14,14 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async savePost() { return ""; },
     async deletePost() {},
     async uploadImage() { return ""; },
+    async listComments() { return []; },
+    async addComment() { return { body: "", handle: "", date: "" }; },
+    async getProfile() { return null; },
+    async saveProfile() {},
+    async listMagazines() { return []; },
+    async getMagazine() { return null; },
+    async saveMagazine() { return ""; },
+    async deleteMagazine() {},
   };
 }
 

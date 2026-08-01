@@ -1,4 +1,4 @@
-import type { Post, PostMeta, NewPost, PostStatus } from "./types";
+import type { Comment, Magazine, NewComment, NewMagazine, Post, PostMeta, NewPost, PostStatus, Profile } from "./types";
 
 export interface ListPostsOptions {
   handle?: string;
@@ -13,4 +13,12 @@ export interface ContentStore {
   savePost(handle: string, post: NewPost): Promise<string>;
   deletePost(handle: string, slug: string): Promise<void>;
   uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string>;
+  listComments(postHandle: string, slug: string): Promise<Comment[]>;
+  addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment>;
+  getProfile(handle: string): Promise<Profile | null>;
+  saveProfile(handle: string, profile: Profile): Promise<void>;
+  listMagazines(handle: string): Promise<Magazine[]>;
+  getMagazine(handle: string, slug: string): Promise<Magazine | null>;
+  saveMagazine(handle: string, magazine: NewMagazine): Promise<string>;
+  deleteMagazine(handle: string, slug: string): Promise<void>;
 }

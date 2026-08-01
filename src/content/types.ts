@@ -23,3 +23,33 @@ export interface NewPost {
   status?: PostStatus;
   publishedAt?: string;
 }
+
+// ---- Comments ----
+
+export interface NewComment {
+  body: string;
+}
+
+export interface Comment extends NewComment {
+  handle: string; // author handle
+  date: string; // ISO 8601
+}
+
+// ---- Magazines (collections) ----
+
+export interface NewMagazine {
+  title: string;
+  description?: string;
+  items?: string[]; // post slugs, in display order
+}
+
+export interface Magazine extends NewMagazine {
+  slug: string;
+}
+
+// ---- Profile ----
+
+export interface Profile {
+  displayName?: string;
+  bio?: string;
+}

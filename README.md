@@ -4,6 +4,16 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/OWNER/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS,GITHUB_CONTENT_REPO)
 
+
+## Features
+
+- **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (committed to the content repo).
+- **Reading** — search-free discovery: newest-first home feed, per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
+- **Comments** — signed-in creators can leave plain comments on any published post, stored per-article in the content repo.
+- **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
+- **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
+- **Own your content** — every article, image, comment, and magazine is committed to a GitHub repo you control (portable, version-controlled).
+
 ## Tech stack
 
 - **Next.js** (App Router)
@@ -37,14 +47,17 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
    node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
    ```
 
-6. Set `ALLOWED_GITHUB_USERS` to your GitHub username (comma-separated for multiple users).
 
-7. Run migrations to create tables:
+6. Set `ALLOWED_GITHUB_USERS` to your GitHub username (comma-separated for multiple users).
+7. Point at the content repository: set `GITHUB_CONTENT_REPO` to `owner/repo`. For
+   public read access, optionally set `GITHUB_CONTENT_TOKEN` (a fine-grained PAT with
+   contents:read); for writing your own posts it uses your GitHub OAuth token.
+8. Run migrations to create tables:
    ```bash
    pnpm db:migrate
    ```
 
-8. Start the dev server:
+9. Start the dev server:
    ```bash
    pnpm dev
    ```
@@ -59,6 +72,7 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — create a separate **production** GitHub OAuth app whose callback URL is `https://YOUR_DOMAIN/api/auth/callback/github`
    - `ALLOWED_GITHUB_USERS` — comma-separated GitHub usernames
    - `GITHUB_CONTENT_REPO` — `owner/repo` for the content repository
+   - `GITHUB_CONTENT_TOKEN` — optional GitHub token for public reads of the content repo (omit for public repos)
 4. After the first successful deploy, run the migration once against the production database:
    ```bash
    DATABASE_URL=<production-url> pnpm db:migrate
@@ -78,6 +92,9 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 
 ## Status
 
-**Plan 1** (project foundation: Next.js scaffold, GitHub OAuth via Better Auth, allowlist gate, Drizzle schema, Neon integration, Vercel deploy config) — **complete**.
+- **Foundation** — Next.js scaffold, GitHub OAuth via Better Auth with an allowlist gate, Drizzle + Neon, Vercel deploy config — **complete**.
+- **Content engine** — GitHub-API-backed `ContentStore` (markdown + frontmatter), per-creator content layout — **complete**.
+- **Writing & reading** — TipTap editor, drafts/publish, image upload, article/creator/tag/home pages — **complete**.
+- **Community** — comments, magazines/collections, and profile/settings — **complete**.
 
-**Plan 2** — content engine: writing and reading articles via the GitHub API, profile pages, feed — coming next.
+The v0 loop (sign in → write → publish → read → comment → curate) is feature-complete. Everything is verified with `pnpm typecheck`, `pnpm test`, and `pnpm build`.

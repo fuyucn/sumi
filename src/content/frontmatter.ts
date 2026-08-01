@@ -27,3 +27,53 @@ export function parsePost(md: string, slug: string): Post {
   };
   return { ...meta, body: content };
 }
+
+// ---- Comments ----
+
+export function serializeComment(comment: { handle: string; date: string; body: string }): string {
+  return matter.stringify(comment.body, { author: comment.handle, date: comment.date });
+}
+
+export function parseComment(md: string, handle: string, fallbackDate: string): { handle: string; date: string; body: string } {
+  const { data, content } = matter(md);
+  return {
+    handle: typeof data.author === "string" && data.author ? data.author : handle,
+    date: typeof data.date === "string" ? data.date : fallbackDate,
+    body: content,
+  };
+}
+
+// ---- Magazines ----
+
+export function serializeMagazine(mag: { title: string; description?: string; items: string[] }): string {
+  const data: Record<string, unknown> = { title: mag.title, items: mag.items };
+  if (mag.description !== undefined) data.description = mag.description;
+  return matter.stringify("", data);
+}
+
+export function parseMagazine(md: string, slug: string): { slug: string; title: string; description?: string; items: string[] } {
+  const { data } = matter(md);
+  return {
+    slug,
+    title: typeof data.title === "string" ? data.title : slug,
+    ...(typeof data.description === "string" ? { description: data.description } : {}),
+    items: Array.isArray(data.items) ? data.items.map(String) : [],
+  };
+}
+
+// ---- Profile ----
+
+export function serializeProfile(profile: { displayName?: string; bio?: string }): string {
+  const data: Record<string, unknown> = {};
+  if (profile.displayName !== undefined && profile.displayName !== "") data.displayName = profile.displayName;
+  if (profile.bio !== undefined && profile.bio !== "") data.bio = profile.bio;
+  return matter.stringify("", data);
+}
+
+export function parseProfile(md: string): { displayName?: string; bio?: string } {
+  const { data } = matter(md);
+  const out: { displayName?: string; bio?: string } = {};
+  if (typeof data.displayName === "string" && data.displayName) out.displayName = data.displayName;
+  if (typeof data.bio === "string" && data.bio) out.bio = data.bio;
+  return out;
+}

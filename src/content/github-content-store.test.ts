@@ -95,3 +95,54 @@ test("deletePost recurses into the images/ subdir and removes everything", async
   const remaining = [...client.files.keys()].filter((k) => k.includes("content/@alice/with-image"));
   expect(remaining).toEqual([]);
 });
+
+// ---- Comments ----
+test("addComment writes a file and listComments reads it back", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const added = await store.addComment("alice", "hello", { body: "great read" }, "bob", new Date("2026-06-13T01:02:03.000Z"));
+  expect(added.handle).toBe("bob");
+  const comments = await store.listComments("alice", "hello");
+  expect(comments).toHaveLength(1);
+  expect(comments[0].handle).toBe("bob");
+  expect(comments[0].body).toContain("great read");
+});
+
+test("listComments returns nothing when there are no comments", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  expect(await store.listComments("alice", "hello")).toEqual([]);
+});
+
+// ---- Profile ----
+test("getProfile returns null when absent, saveProfile round-trips", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  expect(await store.getProfile("alice")).toBeNull();
+  await store.saveProfile("alice", { displayName: "Alice", bio: "hi" });
+  expect(await store.getProfile("alice")).toEqual({ displayName: "Alice", bio: "hi" });
+  // save again (existing sha path)
+  await store.saveProfile("alice", { displayName: "A" });
+  expect(await store.getProfile("alice")).toEqual({ displayName: "A" });
+});
+
+// ---- Magazines ----
+test("magazine CRUD", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  const slug = await store.saveMagazine("alice", { title: "My Zine", description: "desc", items: ["one"] });
+  expect(slug).toBe("my-zine");
+  expect(await store.getMagazine("alice", "my-zine")).toEqual({ slug: "my-zine", title: "My Zine", description: "desc", items: ["one"] });
+  const list = await store.listMagazines("alice");
+  expect(list.map((m) => m.slug)).toEqual(["my-zine"]);
+  await store.deleteMagazine("alice", "my-zine");
+  expect(await store.getMagazine("alice", "my-zine")).toBeNull();
+  expect(await store.listMagazines("alice")).toEqual([]);
+});
+
+test("magazines dir does not leak into listPosts", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  await store.savePost("alice", { title: "One", body: "a", status: "published" });
+  await store.saveMagazine("alice", { title: "Zine", items: [] });
+  const posts = await store.listPosts({ handle: "alice" });
+  expect(posts.map((p) => p.slug)).toEqual(["one"]);
+});

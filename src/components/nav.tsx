@@ -27,6 +27,12 @@ export function Nav() {
                 @{handle}
               </Link>
               <Link
+                href="/settings"
+                className="link-underline text-ink-faint transition-colors hover:text-ink-muted"
+              >
+                Settings
+              </Link>
+              <Link
                 href="/write"
                 className="rounded-full bg-ink px-4 py-1.5 font-medium text-paper transition-colors hover:bg-ink-soft"
               >

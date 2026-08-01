@@ -30,3 +30,46 @@ test("parse fills defaults for missing optional frontmatter", () => {
   expect(parsed.status).toBe("draft");
   expect(parsed.body.trim()).toBe("body text");
 });
+
+// ---- Comments ----
+import { parseComment, serializeComment, parseMagazine, serializeMagazine, parseProfile, serializeProfile } from "./frontmatter";
+
+test("comment round-trips", () => {
+  const md = serializeComment({ handle: "bob", date: "2026-06-13T01:02:03.000Z", body: "nice one!" });
+  const parsed = parseComment(md, "x", "fallback");
+  expect(parsed.handle).toBe("bob");
+  expect(parsed.date).toBe("2026-06-13T01:02:03.000Z");
+  expect(parsed.body.trim()).toBe("nice one!");
+});
+
+test("comment parse falls back on missing frontmatter", () => {
+  const parsed = parseComment("plain body", "alice", "2026-01-01T00:00:00.000Z");
+  expect(parsed.handle).toBe("alice");
+  expect(parsed.date).toBe("2026-01-01T00:00:00.000Z");
+});
+
+// ---- Magazines ----
+test("magazine round-trips", () => {
+  const md = serializeMagazine({ title: "My Zine", description: "a collection", items: ["one", "two"] });
+  const parsed = parseMagazine(md, "my-zine");
+  expect(parsed.title).toBe("My Zine");
+  expect(parsed.description).toBe("a collection");
+  expect(parsed.items).toEqual(["one", "two"]);
+});
+
+test("magazine parse defaults", () => {
+  const parsed = parseMagazine("---\ntitle: Bare\n---\n", "bare");
+  expect(parsed.title).toBe("Bare");
+  expect(parsed.items).toEqual([]);
+  expect(parsed.description).toBeUndefined();
+});
+
+// ---- Profile ----
+test("profile round-trips and omits empty fields", () => {
+  const md = serializeProfile({ displayName: "Alice", bio: "hello" });
+  const parsed = parseProfile(md);
+  expect(parsed).toEqual({ displayName: "Alice", bio: "hello" });
+  const empty = serializeProfile({});
+  expect(empty.trim()).toBe("");
+  expect(parseProfile(empty)).toEqual({});
+});

@@ -42,3 +42,24 @@ export function safeImageName(original: string): string {
   const base = slugged || "image";
   return `${base}${rawExt}`;
 }
+
+export function commentDir(postHandle: string, slug: string): string {
+  return `${postDir(postHandle, slug)}/comments`;
+}
+export function commentFile(postHandle: string, slug: string, filename: string): string {
+  return `${commentDir(postHandle, slug)}/${filename}`;
+}
+export function magazinesDir(handle: string): string {
+  return `${userDir(handle)}/magazines`;
+}
+export function magazineFile(handle: string, slug: string): string {
+  return `${magazinesDir(handle)}/${slug}.md`;
+}
+export function profileFile(handle: string): string {
+  return `${userDir(handle)}/profile.md`;
+}
+export function safeCommentName(date: Date, author: string): string {
+  const ts = date.toISOString().replace(/[:.]/g, "-");
+  const safeAuthor = slugify(author) || "user";
+  return `${ts}-${safeAuthor}.md`;
+}

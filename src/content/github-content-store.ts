@@ -1,8 +1,30 @@
 import type { GitHubClient } from "@/lib/github";
 import type { ContentStore, ListPostsOptions } from "./store";
-import type { NewPost, Post, PostMeta } from "./types";
-import { parsePost, serializePost } from "./frontmatter";
-import { CONTENT_DIR, imagePath, postDir, postFile, slugify, userDir } from "./paths";
+import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, Profile } from "./types";
+import {
+  parseComment,
+  parseMagazine,
+  parsePost,
+  parseProfile,
+  serializeComment,
+  serializeMagazine,
+  serializePost,
+  serializeProfile,
+} from "./frontmatter";
+import {
+  CONTENT_DIR,
+  commentDir,
+  commentFile,
+  imagePath,
+  magazineFile,
+  magazinesDir,
+  postDir,
+  postFile,
+  profileFile,
+  safeCommentName,
+  slugify,
+  userDir,
+} from "./paths";
 
 export class GitHubContentStore implements ContentStore {
   constructor(private readonly client: GitHubClient) {}
@@ -63,6 +85,86 @@ export class GitHubContentStore implements ContentStore {
     const existing = await this.client.getFile(path);
     await this.client.putBinaryFile(path, bytes, `Upload image: ${filename}`, existing?.sha);
     return `images/${filename}`;
+  }
+
+  // ---- Comments ----
+
+  async listComments(postHandle: string, slug: string): Promise<Comment[]> {
+    const entries = await this.client.listDir(commentDir(postHandle, slug));
+    const out: Comment[] = [];
+    for (const entry of entries) {
+      if (entry.type !== "file") continue;
+      const file = await this.client.getFile(entry.path);
+      if (!file) continue;
+      out.push(parseComment(file.content, entry.name, ""));
+    }
+    out.sort((a, b) => a.date.localeCompare(b.date));
+    return out;
+  }
+
+  async addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment> {
+    const name = safeCommentName(now, authorHandle);
+    const full: Comment = { handle: authorHandle, date: now.toISOString(), body: comment.body };
+    await this.client.putTextFile(
+      commentFile(postHandle, slug, name),
+      serializeComment(full),
+      `Comment on @${postHandle}/${slug} by @${authorHandle}`,
+    );
+    return full;
+  }
+
+  // ---- Profile ----
+
+  async getProfile(handle: string): Promise<Profile | null> {
+    const file = await this.client.getFile(profileFile(handle));
+    if (!file) return null;
+    return parseProfile(file.content);
+  }
+
+  async saveProfile(handle: string, profile: Profile): Promise<void> {
+    const path = profileFile(handle);
+    const existing = await this.client.getFile(path);
+    await this.client.putTextFile(path, serializeProfile(profile), `Save profile: @${handle}`, existing?.sha);
+  }
+
+  // ---- Magazines ----
+
+  async listMagazines(handle: string): Promise<Magazine[]> {
+    const entries = await this.client.listDir(magazinesDir(handle));
+    const out: Magazine[] = [];
+    for (const entry of entries) {
+      if (entry.type !== "file" || !entry.name.endsWith(".md")) continue;
+      const slug = entry.name.slice(0, -3);
+      const mag = await this.getMagazine(handle, slug);
+      if (mag) out.push(mag);
+    }
+    return out;
+  }
+
+  async getMagazine(handle: string, slug: string): Promise<Magazine | null> {
+    const file = await this.client.getFile(magazineFile(handle, slug));
+    if (!file) return null;
+    return parseMagazine(file.content, slug);
+  }
+
+  async saveMagazine(handle: string, magazine: NewMagazine): Promise<string> {
+    const slug = slugify(magazine.title);
+    const full: Magazine = {
+      slug,
+      title: magazine.title,
+      items: magazine.items ?? [],
+      ...(magazine.description !== undefined ? { description: magazine.description } : {}),
+    };
+    const path = magazineFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    await this.client.putTextFile(path, serializeMagazine({ ...full, items: full.items ?? [] }), `Save magazine: @${handle}/${slug}`, existing?.sha);
+    return slug;
+  }
+
+  async deleteMagazine(handle: string, slug: string): Promise<void> {
+    const path = magazineFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    if (existing) await this.client.deleteFile(path, `Delete magazine: @${handle}/${slug}`, existing.sha);
   }
 
   async listHandles(): Promise<string[]> {

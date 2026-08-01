@@ -12,6 +12,14 @@ function fakeStore(): ContentStore {
     savePost: vi.fn().mockResolvedValue("hi"),
     deletePost: vi.fn().mockResolvedValue(undefined),
     uploadImage: vi.fn().mockResolvedValue("images/x.png"),
+    listComments: vi.fn().mockResolvedValue([]),
+    addComment: vi.fn(),
+    getProfile: vi.fn().mockResolvedValue(null),
+    saveProfile: vi.fn().mockResolvedValue(undefined),
+    listMagazines: vi.fn().mockResolvedValue([]),
+    getMagazine: vi.fn().mockResolvedValue(null),
+    saveMagazine: vi.fn().mockResolvedValue("zine"),
+    deleteMagazine: vi.fn().mockResolvedValue(undefined),
   };
 }
 

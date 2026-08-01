@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
+import { Comments } from "@/components/comments";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +80,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           ))}
         </footer>
       ) : null}
+      <Comments handle={data.handle} slug={decodedSlug} />
     </main>
   );
 }
