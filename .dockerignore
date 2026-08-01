@@ -1,0 +1,12 @@
+node_modules
+.next
+data
+*.db
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+*.log
+.eslintcache
+tsconfig.tsbuildinfo

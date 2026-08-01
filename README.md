@@ -78,6 +78,42 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
    DATABASE_URL=<production-url> pnpm db:migrate
    ```
 
+## One-click deploy with Docker
+
+Run the whole stack (Postgres + migrations + app) with a single `docker compose` command. The compose file sets up three containers: a bundled `postgres` database, a one-shot migration job, and the Next.js app (built as a standalone image).
+
+1. Make sure **Docker** and Docker Compose are installed, then create your env file (this is required — compose reads `env_file: .env`):
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Fill in the same values as local development:
+   - `BETTER_AUTH_SECRET` — generate with `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
+   - `BETTER_AUTH_URL` — `http://localhost:3000` for local runs, your domain for production
+   - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` + `ALLOWED_GITHUB_USERS`
+   - `GITHUB_CONTENT_REPO` (+ `GITHUB_CONTENT_TOKEN` if the content repo is private)
+
+   The default `DATABASE_URL` (`postgresql://sumi:sumi@db:5432/sumi`) points at the bundled Postgres container, so you don't need Neon. To use a remote/Neon database instead, just override `DATABASE_URL` in `.env`.
+
+3. Build and start:
+   ```bash
+   docker compose up -d --build
+   ```
+   Compose waits for Postgres to be healthy, runs migrations automatically, and only then starts the app.
+
+4. Open **http://localhost:3000**.
+
+5. Check status / logs:
+   ```bash
+   docker compose ps
+   docker compose logs -f app
+   ```
+
+6. Tear everything down (the `-v` flag also removes the database volume):
+   ```bash
+   docker compose down -v
+   ```
+
 ## Scripts
 
 | Script | Description |

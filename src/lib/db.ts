@@ -1,11 +1,15 @@
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
+import postgres from "postgres";
+import { drizzle } from "drizzle-orm/postgres-js";
 import { env } from "./env";
 import { schema } from "@/db/schema";
 
+// TCP driver (postgres-js): works with Neon's connection strings, a local
+// Postgres, or the Postgres container shipped with `docker compose up`.
+// `prepare:false` keeps queries preparable across pool connections, and `max:1`
+// avoids exhausting connections in long-lived containers / serverless workers.
 export function createDb(url: string) {
-  const sql = neon(url);
-  return drizzle(sql, { schema });
+  const client = postgres(url, { max: 1, prepare: false });
+  return drizzle(client, { schema });
 }
 
 // Lazy singleton: `env` (and DATABASE_URL) is NOT accessed at module load —
