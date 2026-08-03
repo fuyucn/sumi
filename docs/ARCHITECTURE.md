@@ -1,0 +1,426 @@
+# Sumi 墨 — 架构设计与核心流程
+
+> 状态: v1 · 与 `docs/PRD.md` 配套，描述当前已实现的系统架构、数据模型与关键业务流程。
+> 更新日期: 2026-08-02
+
+---
+
+## 1. 概述
+
+Sumi 是一个开源的**多创作者发布平台**（借鉴 note.com 的产品形态）。它的核心设计理念是:
+
+- **内容即 Git**: 所有文章、图片、评论、杂志都以 Markdown + frontmatter 文件的形式，通过 GitHub API 提交到**创作者自己拥有的仓库**，天然可迁移、可版本化。
+- **账号与内容分离**: 登录/会话数据放在 Postgres（Neon 或自托管），内容数据放在 GitHub 仓库。两者通过 OAuth token 关联。
+- **Serverless 友好**: 不在本地文件系统写内容，所有读写都走 GitHub API / 数据库，可部署到 Vercel 或 Docker 自托管。
+
+一句话概括数据流:**GitHub OAuth 登录 → Postgres 存会话 →（内容全部走）患者仓库的 GitHub API**。
+
+---
+
+## 2. 系统架构总览
+
+```mermaid
+flowchart TB
+    subgraph Client["客户端"]
+        WB["外部浏览器<br/>http://localhost:3000"]
+        IB["内置浏览器 (proxy)<br/>app.sumi.orb.local"]
+    end
+
+    subgraph Next["Sumi — Next.js 16 (App Router, TS)"]
+        Pages["页面 (SSR)<br/>home / article / creator / write / settings"]
+        SA["Server Actions<br/>savePost / addComment / saveProfile / saveMagazine"]
+        API["API 路由<br/>/api/auth/*"]
+        Auth["Better Auth<br/>GitHub OAuth + allowlist"]
+        Env["env 校验 (zod)"]
+    end
+
+    subgraph DataLayer["数据层"]
+        PG[("Postgres / Neon<br/>user/session/account (Drizzle ORM)")]
+        Repo["GitHub 内容仓库<br/>content/... (Octokit)"]
+    end
+
+    OAuth["GitHub OAuth 授权页"]
+
+    WB --> Pages
+    IB --> Pages
+    Pages --> SA
+    Pages --> API
+    SA --> Auth
+    API --> Auth
+    Auth --> PG
+    Pages --> Repo
+    SA --> Repo
+    Auth --> OAuth
+    OAuth --> API
+```
+
+**强调**: 页面渲染是 SSR（`export const dynamic = "force-dynamic"`），每次请求实时从 GitHub API 拉取内容，因此"发布即生效、无需重新部署"。
+
+---
+
+## 3. 技术栈
+
+| 层 | 技术 | 用途 |
+|---|---|---|
+| 框架 | Next.js 16 (App Router) + React 19 + TypeScript | SSR 页面 / Server Actions / API 路由 |
+| 样式 | Tailwind CSS 4 + `@tailwindcss/typography` | UI 与阅读排版 |
+| 编辑器 | TipTap 3 + `tiptap-markdown` | 富文本 ↔ Markdown 双向转换 |
+| Markdown | `gray-matter`(frontmatter) + `react-markdown` + `remark-gfm` | 解析/序列化与渲染 |
+| 认证 | Better Auth + GitHub OAuth | 登录、会话、allowlist 门禁 |
+| ORM | Drizzle + `postgres`(postgres-js) | Postgres 访问（Neon 兼容） |
+| GitHub | `@octokit/rest` | 内容仓库读写 |
+| 校验 | zod | env / 表单 / 输入校验 |
+| 测试 | Vitest + PGlite + vite-tsconfig-paths | 单测、auth 门禁、内容 store |
+| 部署 | Docker compose（一键自托管）/ VPS 脚本 / Cloudflare Workers (OpenNext) / Vercel | Docker/VPS 用 `output: "standalone"`，CF 由 OpenNext 复用该产物 |
+
+---
+
+## 4. 分层与模块
+
+### 4.1 表现层（页面与组件）
+- `src/app/*` — App Router 页面:**首页 feed**、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、标签页 `/tag/[slug]`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
+- `src/components/*` — 客户端组件:TipTap 编辑器、评论表单、杂志表单、资料表单、导航栏等。
+- 公共读页面一律通过 `getReadContentStore()`（匿名 Octokit）读公开仓库，无需登录即可浏览。
+
+### 4.2 应用层（Server Actions 与 API）
+- `src/app/write/actions.ts` + `actions-core.ts` — 保存/删除文章、图片上传（`"use server"`）。
+- `src/app/community/actions.ts` + `actions-core.ts` — 评论、资料、杂志的增删改。
+- `src/app/api/auth/[...all]/route.ts` — 将 Better Auth 挂到 Next 的 catch-all 路由（GET/POST）。
+- 每个 action 都先经过 `resolveDeps()`（`src/lib/session.ts`）解析「当前用户 id / handle / content store」，再由 `guard()` 校验登录态与配置。
+
+### 4.3 服务层（核心库）
+- `src/lib/auth.ts` — Better Auth 单例（惰性 Proxy），GitHub OAuth + 自定义 `username` 字段 + allowlist 门禁 hook。
+- `src/lib/env.ts` — zod 校验环境变量，惰性加载单例。
+- `src/lib/db.ts` — Drizzle + postgres-js 惰性单例。
+- `src/lib/github.ts` — Octokit 封装成 `GitHubClient`（文件读写/目录列举/二进制上传）。
+- `src/lib/current-user.ts` / `session.ts` / `user.ts` — 会话与 handle 解析。
+
+### 4.4 内容层（ContentStore 抽象）
+- `src/content/store.ts` — `ContentStore` 接口（文章/评论/杂志/资料/图片的统一读写，是未来迁移到 `DbContentStore` 的接缝）。
+- `src/content/github-content-store.ts` — GitHub API 实现。
+- `src/content/frontmatter.ts` — Markdown ↔ frontmatter 序列化/解析。
+- `src/content/paths.ts` — 仓库目录约定与 slug 规则。
+- `src/content/feed.ts` — 聚合各创作者的已发布文章，按 `publishedAt` 倒序。
+- `src/content/index.ts` — 工厂函数：`getReadContentStore()`（匿名读）与 `getContentStoreForUser()`（用 OAuth token 写）。
+
+---
+
+## 5. 数据模型
+
+### 5.1 关系库 (Postgres / Neon) — 只存认证与会话
+
+```mermaid
+erDiagram
+    USER ||--o{ SESSION : has
+    USER ||--o{ ACCOUNT : has
+    ACCOUNT }o--|| USER : belongs_to
+    USER {
+        text id PK
+        text name
+        text email UK
+        boolean email_verified
+        text image
+        text username UK "GitHub login"
+        timestamp created_at
+        timestamp updated_at
+    }
+    SESSION {
+        text id PK
+        text token UK
+        timestamp expires_at
+        text user_id FK
+        text ip_address
+        text user_agent
+    }
+    ACCOUNT {
+        text id PK
+        text account_id
+        text provider_id "github"
+        text user_id FK
+        text access_token "OAuth token → Git 写入"
+        text refresh_token
+    }
+```
+
+- 四张表 `user` / `session` / `account` / `verification`（`src/db/schema.ts`）。
+- `account.access_token` 存 GitHub OAuth token，`src/content/github-token.ts` 据此为已登录用户建立可写 store。
+- `user.username` 存 GitHub login（`mapProfileToUser` 写入），是内容路径 `@<handle>` 的来源。
+
+### 5.2 内容仓库 (GitHub) — 所有创作者内容
+
+```mermaid
+graph TD
+    Root["content/"] --> H["@fuyucn/"]
+    Sub["@another-creator/"] -.同构.-> Root
+
+    H --> P["my-first-post/<br/>(slug，来自标题)"]
+    P --> PI["index.md"]
+    P --> IMG["images/*<br/>(上传的图片)"]
+    P --> C["comments/<br/>2026-08-02...-author.md"]
+
+    H --> MAG["magazines/"]
+    MAG --> M1["daily.md"]
+    MAG --> M2["essays.md"]
+
+    H --> PROF["profile.md"]
+```
+
+- 每篇文章一个目录：`content/@<handle>/<slug>/index.md`，frontmatter 含 `title / tags / status / publishedAt / excerpt / coverImage`，正文为 Markdown。
+- 图片提交到 `content/@<handle>/<slug>/images/<name>`（base64 经 Octokit 写入）。
+- 评论是扁平文件：`comments/<ISO时间戳>-<作者handle>.md`，按 `date` 升序列出。
+- 杂志（合集）：`magazines/<mag>.md`，frontmatter 含 `title / description / items[]`。
+- 资料：`profile.md`，frontmatter 含 `displayName / bio`。
+- `paths.ts` 集中定义这些约定，`slugify()` 负责标题转 slug。
+
+---
+
+## 6. 核心业务流程（Flow 图）
+
+### 6.1 登录认证（GitHub OAuth + Allowlist 门禁）
+
+```mermaid
+sequenceDiagram
+    participant U as 浏览器用户
+    participant N as Next.js (SSR 页面)
+    participant BA as Better Auth
+    participant GH as GitHub OAuth
+    participant DB as Postgres
+
+    U->>N: GET /sign-in
+    N-->>U: 渲染登录页 (client 组件)
+    U->>N: 点击 "Continue with GitHub"
+    N->>BA: POST /api/auth/sign-in/social {provider: github}
+    BA->>BA: origin 校验 (BETTER_AUTH_TRUSTED_ORIGINS)
+    BA-->>U: 302 → GitHub 授权页 (client_id, PKCE)
+    U->>GH: 登录并授权 (scope: repo, read:user)
+    GH-->>U: 302 → /api/auth/callback/github?code=...&state=...
+    U->>N: GET callback
+    N->>BA: code 交换 access_token
+    BA->>GH: 换取用户资料 (login)
+    BA->>BA: mapProfileToUser → username = login
+    alt 不在 ALLOWED_GITHUB_USERS
+        BA-->>U: 403 FORBIDDEN (账号未开通)
+    else 允许
+        BA->>DB: 写入/更新 user + account(accessToken) + session
+        BA-->>U: Set-Cookie 会话 → 跳转首页
+    end
+```
+
+### 6.2 阅读 / 首页 Feed（匿名只读）
+
+```mermaid
+sequenceDiagram
+    participant R as 读者(未登录)
+    participant N as Next.js SSR
+    participant CS as ReadContentStore (匿名 Octokit)
+    participant G as GitHub API
+
+    R->>N: GET / (或 /@handle, /@handle/slug, /tag/slug)
+    N->>CS: getReadContentStore() (env.GITHUB_CONTENT_REPO)
+    CS->>G: 枚举 content/ 下所有 @creator
+    CS->>G: 逐个读取 index.md (含 comments、profile、magazines)
+    G-->>CS: markdown + frontmatter
+    CS-->>N: parsePost/parseComment → 内存对象
+    N-->>R: 渲染首页 feed / 文章正文 / 评论区
+```
+
+### 6.3 写作与发布（登录用户）
+
+```mermaid
+sequenceDiagram
+    participant W as 创作者
+    participant E as TipTap Editor (client)
+    participant A as savePostAction (server)
+    participant D as resolveDeps (session + token + store)
+    participant CS as GitHubContentStore (写)
+    participant G as GitHub API
+
+    W->>E: 编辑 Markdown + tags + publish
+    E->>A: 提交 WriteForm (title/body/tags/publish)
+    A->>D: getCurrentUser() → getUserHandle() → getContentStoreForUser()
+    D-->>A: {userId, handle, store}
+    A->>A: buildNewPost (zod) → slugify(title)
+    A->>CS: savePost(handle, post)
+    CS->>G: GET 既有文件 (拿 sha，避免冲突)
+    CS->>G: PUT content/@handle/<slug>/index.md
+    G-->>CS: 生成 commit
+    CS-->>A: slug
+    A-->>W: 跳转 /@handle/<slug>（已发布）或 /write?draft
+```
+
+### 6.4 图片上传
+
+```mermaid
+sequenceDiagram
+    participant W as 创作者
+    participant E as Editor
+    participant A as uploadImageAction
+    participant CS as ContentStore
+    participant G as GitHub API
+
+    W->>E: 选择/拖入图片
+    E->>A: {title, filename, base64}
+    A->>CS: uploadImage(handle, slug, safeName, bytes)
+    CS->>G: PUT .../images/<safeName> (base64)
+    G-->>CS: commit
+    CS-->>A: 相对路径 images/<name>
+    A-->>E: 插入 markdown 图片引用
+```
+
+### 6.5 评论
+
+```mermaid
+sequenceDiagram
+    participant R as 已登录读者
+    participant P as 文章页
+    participant A as addCommentAction
+    participant CS as ContentStore
+    participant G as GitHub API
+
+    R->>P: 填写评论 → 提交
+    P->>A: addCommentAction(form)
+    A->>A: zod 校验 (commentFormSchema)
+    A->>CS: addComment(postHandle, slug, body, authorHandle, now)
+    CS->>G: PUT comments/<ts>-<author>.md
+    G-->>CS: commit
+    CS-->>A: Comment (handle/date/body)
+    A-->>R: 立即就地追加显示
+```
+
+### 6.6 杂志（合集）与 6.7 资料
+
+```mermaid
+sequenceDiagram
+    participant C as 创作者
+    participant A as saveMagazineAction / saveProfileAction
+    participant CS as ContentStore
+    participant G as GitHub API
+
+    C->>A: 杂志表单 (title/description/items) 或资料表单 (displayName/bio)
+    A->>A: zod 校验后组装
+    A->>CS: saveMagazine → magazines/<slug>.md 或 saveProfile → profile.md
+    CS->>G: GET sha → PUT frontmatter 文件
+    G-->>CS: commit
+    CS-->>A: slug / ok
+    A-->>C: 跳转 /@handle/m/<slug> 或刷新创作者主页
+```
+
+### 6.8 部署拓扑（Docker 一键 + Vercel）
+
+```mermaid
+flowchart LR
+    subgraph Local["Docker 自托管 (docker compose up -d)"]
+        direction TB
+        DB["db: postgres:16-alpine<br/>(healthcheck + pgdata 卷)"]
+        MIG["migrate: drizzle-kit migrate<br/>(one-shot, 成功才起 app)"]
+        APP["app: Next.js standalone<br/>:3000 (uid 1001)"]
+        DB -->|healthy| MIG -->|completed| APP
+    end
+
+    subgraph Cloud["Vercel (可选)"]
+        direction TB
+        VAPP["Next.js serverless"]
+        NEON[("Neon Postgres")]
+        VAPP --> NEON
+    end
+
+    Local -->|GITHUB_CONTENT_REPO| GHRepo["GitHub 内容仓库"]
+    Cloud -->|GITHUB_CONTENT_REPO| GHRepo
+```
+
+- Docker 构建走 `output: "standalone"` 多阶段镜像；`migrate` 服务与 `app` 通过 `depends_on: service_completed_successfully` 保证迁移先行（`Dockerfile` / `docker-compose.yml`）。
+- `env_file: .env` 注入配置；`BETTER_AUTH_TRUSTED_ORIGINS` 用于信任本地代理来源（如内置浏览器 `app.sumi.orb.local`），详见 `README` 的 Docker 一节。
+
+---
+
+## 7. 目录结构与职责速查
+
+| 路径 | 职责 |
+|---|---|
+| `src/app/` | App Router 页面与路由（SSR + Server Actions + API） |
+| `src/components/` | 客户端 UI 组件（编辑器、表单、卡片、导航） |
+| `src/content/` | 内容层:`ContentStore` 接口、GitHub 实现、frontmatter、路径、feed |
+| `src/lib/` | 基础设施:auth、env、db、github 客户端、session、user、allowlist |
+| `src/db/schema.ts` | Drizzle 表结构（认证四表） |
+| `drizzle/` | 迁移文件（`db:generate` / `db:migrate`） |
+| `docs/` | PRD / 架构文档 / 计划 |
+
+---
+
+## 8. 关键设计决策与取舍
+
+1. **内容放 GitHub、会话放 Postgres** —— 创作者完全掌控内容，版本化免费；数据库只承担轻量认证，符合 serverless/低成本诉求。
+2. **统一 `ContentStore` 抽象** —— 目前只有 `GitHubContentStore`，但接口预留了未来 `DbContentStore`（镜像到 Postgres）的接缝。
+3. **slug 派生自标题** —— 改标题会产生新路径（旧文件被孤儿化），代码注释明确提示;这是 v0 的取舍。
+4. **Allowlist 门禁只在建号时执行** —— 用户被移出 allowlist 后仍可登录（注释注明权衡，撤销需改 `sign-in` 检查）。
+5. **一切读写走 HTTP** —— 无本地 FS 写入，图片 base64 提交到仓库，天然 serverless 可移植。
+6. **惰性单例 (Proxy)** —— `env / db / auth` 均在首次访问才初始化，避免测试与构建期触发副作用。
+7. **正则校验前置** —— `env.ts` 用 zod 在启动期暴露配置错误（如 `DATABASE_URL`、GitHub 凭据）。
+
+---
+
+## 9. 测试与验证
+
+- **单元测试**: Vitest 18 个文件 / 82 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub store 集成（mock Octokit）、auth 门禁（PGlite 内存库）。
+- **质量门禁**: `pnpm typecheck`、`pnpm test`、`pnpm lint`、`pnpm build`、以及 Docker 冒烟（`docker compose up -d` + `curl :3000` = 200）。
+
+---
+
+## 10. 环境变量一览（`src/lib/env.ts` 强校验）
+
+| 变量 | 必填 | 说明 |
+|---|---|---|
+| `DATABASE_URL` | ✅ | Postgres/Neon 连接串（Docker 默认 `postgresql://sumi:sumi@db:5432/sumi`） |
+| `BETTER_AUTH_SECRET` | ✅ | 会话签名密钥（≥32 字符） |
+| `BETTER_AUTH_URL` | ✅ | 应用公开地址（默认 `http://localhost:3000`） |
+| `BETTER_AUTH_TRUSTED_ORIGINS` | ⭕ | 额外信任的 auth 来源，逗号分隔（如本地代理/自定义域名） |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | ✅ | GitHub OAuth App 凭据 |
+| `ALLOWED_GITHUB_USERS` | ⭕ | 允许登录的用户名，逗号分隔（空 = 拒绝所有人） |
+| `GITHUB_CONTENT_REPO` | ⭕ | 内容仓库 `owner/repo`（未配置则只读页面为空） |
+| `GITHUB_CONTENT_TOKEN` | ⭕ | 公开读取私有/限流仓库的可选 token |
+| `CF_ENABLED` | ⭕ | Cloudflare 运行开关（置 "1" 时命中 CF 内容后端；Docker/VPS 留空） |
+
+---
+
+## 11. 部署目标与运行时存储后端
+
+Sumi 的单一代码库可部署到三种目标，它们共享同一套 `next.config.ts`（`output: "standalone"`）与同一份 zod env schema，互不影响：
+
+| 部署路径 | 命令/方式 | 数据层 | 说明 |
+|---|---|---|---|
+| **1. Docker 一键** | `docker compose up -d --build` | 内置 Postgres + GitHub 内容仓库 | 开箱即用，compose 自动执行迁移后启动应用 |
+| **2. 自定义 VPS** | `bash scripts/deploy-vps.sh` | 自有 Postgres/Neon + GitHub 内容仓库 | 脚本幂等安装 Node/pnpm/PM2、构建、迁移并常驻运行 |
+| **3. Cloudflare (Workers/OpenNext)** | `pnpm cf:build && pnpm cf:deploy` | D1 绑定 `DB` + R2 绑定 `IMAGES` | OpenNext 把 Next 构建成 Worker，数据走 CF 绑定 |
+
+> 备注：Cloudflare 是**可选的第三条路径**，不是强制迁移。默认（Docker/VPS/Vercel）仍走 Postgres + GitHub API。
+
+### 11.1 运行时如何选择存储后端（ContentStore 工厂）
+
+所有内容读写都经由 `src/content/store.ts` 的 `ContentStore` 接口。**具体工厂函数由编排方（orchestrator）负责实现**，本文件仅说明其选择模型：
+
+```text
+env.CF_ENABLED 是否为真？
+├─ 是 → 构造 Cloudflare 后端（D1 绑定 `DB` + R2 绑定 `IMAGES` 传入 Binding 层）
+└─ 否 → 构造 GitHub 后端（GitHubContentStore，走 Octokit 读写内容仓库）
+```
+
+要点：
+- `ContentStore` 接口（`src/content/store.ts`）保持不变；GitHub 实现（`src/content/github-content-store.ts`）与未来 CF 实现都实现同一接口，保证 Server Actions / 页面只依赖抽象。
+- `env.CF_ENABLED` 是唯一提示键（见 §10）。CF 绑定（D1/R2）由 `wrangler.jsonc` 声明并在 Worker 运行时注入，**不会**以 `process.env` 形式出现。
+- 三种目标共用同一套 GitHub OAuth 认证与会话表（Postgres 或 D1 建模由各后端负责）。
+
+### 11.2 Cloudflare 前置资源
+
+`wrangler.jsonc` 声明了以下绑定，部署前需用 wrangler 创建并回填 ID：
+
+```bash
+pnpm dlx wrangler d1 create sumi-db                 # → 回填 database_id 到 wrangler.jsonc
+pnpm dlx wrangler r2 bucket create sumi-opennext-cache
+pnpm dlx wrangler r2 bucket create sumi-images
+```
+
+D1/R2 的运行时访问由 Worker 绑定（`DB` / `IMAGES`）提供，不经过 `src/lib/db.ts` 的 Postgres 驱动。
+
+---
+
+> 相关文档: [PRD](docs/PRD.md) · 设计稿 `docs/superpowers/specs/2026-06-12-open-source-note-platform-design.md` · 使用教程见 `README.md`

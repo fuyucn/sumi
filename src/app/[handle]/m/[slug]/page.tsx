@@ -15,7 +15,7 @@ export default async function MagazinePage({
   if (!handleParam.startsWith("@")) notFound();
   const handle = handleParam.slice(1);
   const magSlug = decodeURIComponent(rawSlug);
-  const store = getReadContentStore();
+  const store = await getReadContentStore();
   if (!store) notFound();
   const mag = await store.getMagazine(handle, magSlug);
   if (!mag) notFound();

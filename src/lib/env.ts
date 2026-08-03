@@ -21,6 +21,11 @@ const schema = z.object({
   // Optional read token for server-side public reads of the content repo.
   // If absent, reads use unauthenticated Octokit (works for public repos).
   GITHUB_CONTENT_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Optional Cloudflare runtime flag. OpenNext injects CF bindings (D1/R2) via
+  // the worker env at runtime, NOT as process.env vars, so this is purely a
+  // hint for the ContentStore factory to select the Cloudflare backend over the
+  // GitHub one. Empty string (common in .env files) disables it.
+  CF_ENABLED: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export type Env = z.infer<typeof schema>;

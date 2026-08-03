@@ -1,5 +1,5 @@
 import type { GitHubClient } from "@/lib/github";
-import type { ContentStore, ListPostsOptions } from "./store";
+import type { ContentStore, ListPostsOptions, TagInfo } from "./store";
 import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, Profile } from "./types";
 import {
   parseComment,
@@ -165,6 +165,23 @@ export class GitHubContentStore implements ContentStore {
     const path = magazineFile(handle, slug);
     const existing = await this.client.getFile(path);
     if (existing) await this.client.deleteFile(path, `Delete magazine: @${handle}/${slug}`, existing.sha);
+  }
+
+
+  async listTags(): Promise<TagInfo[]> {
+    const counts = new Map<string, number>();
+    for (const handle of await this.listHandles()) {
+      for (const meta of await this.listPosts({ handle, status: "published" })) {
+        for (const raw of meta.tags) {
+          const name = raw.trim();
+          if (!name) continue;
+          counts.set(name, (counts.get(name) ?? 0) + 1);
+        }
+      }
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }
 
   async listHandles(): Promise<string[]> {

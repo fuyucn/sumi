@@ -22,6 +22,7 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async getMagazine() { return null; },
     async saveMagazine() { return ""; },
     async deleteMagazine() {},
+    async listTags() { return []; },
   };
 }
 

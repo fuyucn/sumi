@@ -22,5 +22,5 @@ export async function feedFromStore(store: ContentStore | null): Promise<FeedIte
 /** Convenience for pages: builds the feed from the read store. */
 export async function listFeed(): Promise<FeedItem[]> {
   const { getReadContentStore } = await import("./index");
-  return feedFromStore(getReadContentStore());
+  return feedFromStore(await getReadContentStore());
 }

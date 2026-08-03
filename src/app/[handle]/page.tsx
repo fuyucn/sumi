@@ -12,7 +12,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const handleParam = decodeURIComponent(raw);
   if (!handleParam.startsWith("@")) notFound();
   const handle = handleParam.slice(1);
-  const store = getReadContentStore();
+  const store = await getReadContentStore();
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
   const profile = await store.getProfile(handle);

@@ -46,3 +46,13 @@ test("treats an empty GITHUB_CONTENT_TOKEN as unset", () => {
   const env = loadEnv({ ...base, GITHUB_CONTENT_TOKEN: "" });
   expect(env.GITHUB_CONTENT_TOKEN).toBeUndefined();
 });
+
+test("treats an empty CF_ENABLED as unset (optional)", () => {
+  const env = loadEnv({ ...base, CF_ENABLED: "" });
+  expect(env.CF_ENABLED).toBeUndefined();
+});
+
+test("keeps CF_ENABLED when set", () => {
+  const env = loadEnv({ ...base, CF_ENABLED: "1" });
+  expect(env.CF_ENABLED).toBe("1");
+});

@@ -18,6 +18,12 @@ export function Nav() {
           <span className="text-seal transition-colors group-hover:text-seal-soft">墨</span>
         </Link>
         <nav className="flex items-center gap-5 text-sm">
+          <Link
+            href="/tags"
+            className="link-underline text-ink-faint transition-colors hover:text-ink-muted"
+          >
+            Tags
+          </Link>
           {handle ? (
             <>
               <Link

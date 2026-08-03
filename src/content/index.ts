@@ -12,16 +12,42 @@ export function buildContentStore(token: string, repo: string): ContentStore {
   return new GitHubContentStore(githubClientFromToken(token, repo));
 }
 
-/** Build the content store for a signed-in user. Null if no token or repo configured. */
+/**
+ * Build the Cloudflare content store (D1 + R2) when running on Cloudflare and
+ * `CF_ENABLED=1`. Returns null when the CF runtime isn't available, so callers
+ * can fall back to the GitHub-backed store (Docker/VPS keep working).
+ */
+export async function getCloudflareContentStore(): Promise<ContentStore | null> {
+  if (!env.CF_ENABLED) return null;
+  try {
+    const [{ getCloudflareContext }, { CloudflareContentStore }] = await Promise.all([
+      import("@opennextjs/cloudflare"),
+      import("./cloudflare-content-store"),
+    ]);
+    const ctx = getCloudflareContext();
+    const { DB, IMAGES } = ctx.env as { DB?: unknown; IMAGES?: unknown };
+    if (!DB) return null;
+    return new CloudflareContentStore(DB as never, IMAGES as never);
+  } catch {
+    // Not running on Cloudflare (e.g. local Node, Docker, VPS) — caller falls back.
+    return null;
+  }
+}
+
+/** Build the content store for a signed-in user. Null if no backend is configured. */
 export async function getContentStoreForUser(userId: string): Promise<ContentStore | null> {
+  const cf = await getCloudflareContentStore();
+  if (cf) return cf;
   const token = await getGithubToken(userId);
   const repo = env.GITHUB_CONTENT_REPO;
   if (!token || !repo) return null;
   return buildContentStore(token, repo);
 }
 
-/** A content store for PUBLIC reads (no signed-in user needed). Null if no repo configured. */
-export function getReadContentStore(): ContentStore | null {
+/** A content store for PUBLIC reads (no signed-in user needed). Null if none configured. */
+export async function getReadContentStore(): Promise<ContentStore | null> {
+  const cf = await getCloudflareContentStore();
+  if (cf) return cf;
   const repo = env.GITHUB_CONTENT_REPO;
   if (!repo) return null;
   return new GitHubContentStore(readGitHubClient(repo, env.GITHUB_CONTENT_TOKEN));

@@ -1,0 +1,53 @@
+// Cloudflare Workers / OpenNext 部署配置（部署路径 3 of 3）。
+// 由 `@opennextjs/cloudflare` 构建的 worker 使用，通过 `pnpm cf:build` / `pnpm cf:deploy` 驱动。
+// 注意：这是"组合"三个部署目标（Docker / VPS / Cloudflare）之一，不是强制迁移。
+//
+// 部署前需要先创建资源：
+//   pnpm dlx wrangler d1 create sumi-db
+//   pnpm dlx wrangler r2 bucket create sumi-opennext-cache
+//   pnpm dlx wrangler r2 bucket create sumi-images
+// 然后把 D1 的 database_id 填到下方对应的 database_id 字段。
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // OpenNext 构建产物的 worker 入口
+  "main": ".open-next/worker.js",
+  // Worker 名称 —— 按你的需求修改，需与下方 services.self-reference 一致
+  "name": "sumi",
+  "compatibility_date": "2026-07-01",
+  // nodejs_compat: Next/OpenNext 需要 Node 兼容运行时；global_fetch_strictly_public 是 OpenNext 模板推荐项
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // OpenNext 增量缓存/ISR 需要的自引用 service binding，name 必须与 worker 名一致
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "sumi"
+    }
+  ],
+  "r2_buckets": [
+    // OpenNext 增量缓存桶（构建产物缓存）。创建: wrangler r2 bucket create sumi-opennext-cache
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "sumi-opennext-cache"
+    },
+    // 应用内容图片桶（任务要求的 R2 绑定 IMAGES，供 D1/R2 后端存取图片）。
+    // 创建: wrangler r2 bucket create sumi-images
+    {
+      "binding": "IMAGES",
+      "bucket_name": "sumi-images"
+    }
+  ],
+  "d1_databases": [
+    {
+      // 任务要求的 D1 绑定 DB（Cloudflare 后端作为 Postgres 的替代数据层）。
+      // 创建: wrangler d1 create sumi-db，然后把返回的 database_id 填到下面。
+      "binding": "DB",
+      "database_name": "sumi-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "drizzle"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { getReadContentStore } from "@/content";
 
 export async function CreatorProfile({ handle }: { handle: string }) {
-  const profile = await getReadContentStore()?.getProfile(handle);
+  const profile = await (await getReadContentStore())?.getProfile(handle);
   if (!profile) return null;
   const { displayName, bio } = profile;
   if (!displayName && !bio) return null;

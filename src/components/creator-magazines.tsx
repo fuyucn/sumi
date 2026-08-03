@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getReadContentStore } from "@/content";
 
 export async function CreatorMagazines({ handle }: { handle: string }) {
-  const store = getReadContentStore();
+  const store = await getReadContentStore();
   if (!store) return null;
   const magazines = await store.listMagazines(handle);
   if (magazines.length === 0) return null;

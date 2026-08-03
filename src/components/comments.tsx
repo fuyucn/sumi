@@ -6,7 +6,7 @@ import Link from "next/link";
 import { CommentForm } from "@/components/comment-form";
 
 export async function Comments({ handle, slug }: { handle: string; slug: string }) {
-  const comments = (await getReadContentStore()?.listComments(handle, slug)) ?? [];
+  const comments = (await (await getReadContentStore())?.listComments(handle, slug)) ?? [];
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
 

@@ -146,3 +146,30 @@ test("magazines dir does not leak into listPosts", async () => {
   const posts = await store.listPosts({ handle: "alice" });
   expect(posts.map((p) => p.slug)).toEqual(["one"]);
 });
+
+// ---- Tags ----
+test("listTags counts published post tags across handles, drafts excluded, sorted by count desc then name asc", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  await store.savePost("alice", { title: "Alpha", body: "a", tags: ["js", "web"], status: "published" });
+  await store.savePost("alice", { title: "Beta", body: "b", tags: ["js"], status: "published" });
+  // draft tags must NOT be counted
+  await store.savePost("alice", { title: "Gamma", body: "c", tags: ["js", "secret"], status: "draft" });
+  await store.savePost("bob", { title: "Delta", body: "d", tags: ["js", "prose", "web"], status: "published" });
+  await store.savePost("carol", { title: "Epsilon", body: "e", tags: ["art"], status: "published" });
+
+  const tags = await store.listTags();
+  expect(tags).toEqual([
+    { name: "js", count: 3 },
+    { name: "web", count: 2 },
+    { name: "art", count: 1 },
+    { name: "prose", count: 1 },
+  ]);
+});
+
+test("listTags returns empty when there are no published posts", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  await store.savePost("alice", { title: "Only Draft", body: "d", tags: ["js"], status: "draft" });
+  expect(await store.listTags()).toEqual([]);
+});

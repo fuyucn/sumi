@@ -2,12 +2,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Editor } from "./editor";
+import { TagPicker } from "./tag-picker";
 import { savePostAction, uploadImageAction } from "@/app/write/actions";
 
 export function PostForm({ initial }: { initial?: { title: string; tags: string; body: string; publishedAt?: string } }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
-  const [tags, setTags] = useState(initial?.tags ?? "");
+  const [tags, setTags] = useState<string[]>(
+    initial?.tags
+      ? initial.tags.split(",").map((t) => t.trim()).filter(Boolean)
+      : [],
+  );
   const [body, setBody] = useState(initial?.body ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -26,7 +31,7 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
   async function submit(publish: boolean) {
     setBusy(true);
     setError(null);
-    const res = await savePostAction({ title, tags, body, publish, publishedAt: initial?.publishedAt });
+    const res = await savePostAction({ title, tags: tags.join(", "), body, publish, publishedAt: initial?.publishedAt });
     setBusy(false);
     if (!res.ok) {
       setError(res.error);
@@ -43,11 +48,9 @@ export function PostForm({ initial }: { initial?: { title: string; tags: string;
         placeholder="Title"
         className="w-full bg-transparent font-serif text-[2.25rem] font-semibold leading-tight tracking-tight text-ink placeholder:text-ink-faint/60 focus:outline-none"
       />
-      <input
+      <TagPicker
         value={tags}
-        onChange={(e) => setTags(e.target.value)}
-        placeholder="Add tags, comma separated"
-        className="mt-3 w-full bg-transparent text-sm text-ink-muted placeholder:text-ink-faint/70 focus:outline-none"
+        onChange={setTags}
       />
       <Editor initialMarkdown={initial?.body ?? ""} onChange={setBody} uploadImage={handleUploadImage} />
       <div className="mt-2 flex items-center justify-end gap-3 border-t border-line pt-5">

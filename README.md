@@ -19,7 +19,7 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 - **Next.js** (App Router)
 - **Drizzle ORM** with **Neon Postgres** (serverless)
 - **Better Auth** — GitHub OAuth with an allowlist gate
-- **Vercel** — deployment target
+- **Deployment** — Docker compose (one-click), custom VPS script, or Cloudflare Workers (OpenNext); Vercel also supported
 
 ## Local development
 
@@ -78,6 +78,11 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
    DATABASE_URL=<production-url> pnpm db:migrate
    ```
 
+## Docs
+
+- `docs/PRD.md` — product requirements (FR + acceptance criteria)
+- `docs/ARCHITECTURE.md` — system architecture, data model, and core flow diagrams (mermaid)
+
 ## One-click deploy with Docker
 
 Run the whole stack (Postgres + migrations + app) with a single `docker compose` command. The compose file sets up three containers: a bundled `postgres` database, a one-shot migration job, and the Next.js app (built as a standalone image).
@@ -114,17 +119,65 @@ Run the whole stack (Postgres + migrations + app) with a single `docker compose`
    docker compose down -v
    ```
 
+## Deploy to a custom VPS
+
+For a single-node VPS/self-managed server, run the idempotent deploy script. It installs
+Node/pnpm/PM2 (if missing), installs dependencies, applies migrations, builds the standalone
+output, and starts the app with PM2. Requires an existing `.env` in the repo root.
+
+```bash
+cp .env.example .env        # fill in the values first
+bash scripts/deploy-vps.sh
+```
+
+Notes:
+- Same env vars as Docker/Vercel; `DATABASE_URL` points at your own Postgres/Neon.
+- Repeat the script to redeploy; PM2 is restarted with the latest env (`--update-env`).
+- Useful PM2 commands afterward: `pm2 logs sumi`, `pm2 restart sumi`, `pm2 status`.
+
+## Deploy to Cloudflare (Workers via OpenNext)
+
+Cloudflare is an **optional** third path (not a forced migration). It bundles the Next.js app into
+a Cloudflare Worker with OpenNext, using D1 (binding `DB`) and R2 (binding `IMAGES`) instead of
+Postgres + GitHub for the data backend. Config lives in `wrangler.jsonc` + `open-next.config.ts`.
+
+> ⚠️ **Compatibility note**: this repo currently pins `next@16.2.9`, but
+> `@opennextjs/cloudflare` only declares support for `next >= 16.2.11` (or `>=15.5.21 <16`).
+> Until `next` is bumped to `16.2.11+`, running `pnpm cf:build` is **at your own risk** — the
+> Cloudflare scaffolding/files below are the intended layout, not a verified deployment.
+
+Prerequisites (one-time):
+```bash
+pnpm dlx wrangler login
+pnpm dlx wrangler d1 create sumi-db          # → copy database_id into wrangler.jsonc
+pnpm dlx wrangler r2 bucket create sumi-opennext-cache
+pnpm dlx wrangler r2 bucket create sumi-images
+```
+
+Set Worker env vars (secret + GitHub OAuth + allowlist, matching the Docker list) and build/deploy:
+```bash
+pnpm cf:build      # opennextjs-cloudflare build
+pnpm cf:deploy     # opennextjs-cloudflare deploy
+```
+
+For local Cloudflare testing: `pnpm cf:dev` (builds then runs a Wrangler preview server).
+
 ## Scripts
 
 | Script | Description |
 |---|---|
 | `pnpm dev` | Start Next.js development server |
 | `pnpm build` | Production build |
+| `pnpm start` | Serve a production build (`next start`) |
 | `pnpm test` | Run unit tests (Vitest) |
 | `pnpm typecheck` | TypeScript type check |
 | `pnpm lint` | ESLint |
 | `pnpm db:generate` | Generate a new Drizzle migration from schema changes |
 | `pnpm db:migrate` | Apply pending migrations to the database |
+| `pnpm db:regen` | Wipe `drizzle/` and regenerate migrations from the schema |
+| `pnpm cf:dev` | Build + run the Cloudflare Worker locally (Wrangler preview) |
+| `pnpm cf:build` | Build the Cloudflare Worker output (OpenNext) |
+| `pnpm cf:deploy` | Deploy the built Worker to Cloudflare |
 
 ## Status
 

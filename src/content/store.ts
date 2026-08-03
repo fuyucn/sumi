@@ -5,6 +5,11 @@ export interface ListPostsOptions {
   status?: PostStatus;
 }
 
+export interface TagInfo {
+  name: string;
+  count: number;
+}
+
 export interface ContentStore {
   /** All creator handles that have content. */
   listHandles(): Promise<string[]>;
@@ -21,4 +26,6 @@ export interface ContentStore {
   getMagazine(handle: string, slug: string): Promise<Magazine | null>;
   saveMagazine(handle: string, magazine: NewMagazine): Promise<string>;
   deleteMagazine(handle: string, slug: string): Promise<void>;
+  /** All tags in use (published posts) with their post counts, most-used first. */
+  listTags(): Promise<TagInfo[]>;
 }

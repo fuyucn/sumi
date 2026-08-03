@@ -18,6 +18,7 @@ function fakeStore(): ContentStore {
     async getMagazine() { return null; },
     async saveMagazine(handle, m) { return m.title.toLowerCase().replace(/\s+/g, "-"); },
     async deleteMagazine() {},
+    async listTags() { return []; },
   };
 }
 
