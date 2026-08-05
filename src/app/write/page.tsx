@@ -2,7 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
-import { getContentStoreForUser } from "@/content";
+import { getContentStoreForUser, getReadContentStore } from "@/content";
+import { AgentDraftActions } from "@/components/agent-draft-actions";
+import { db } from "@/lib/db";
+import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
 
 export const dynamic = "force-dynamic";
@@ -52,10 +55,65 @@ function PostRow({ post, handle, isDraft }: { post: PostMeta; handle: string; is
   );
 }
 
+interface AgentDraftGroup {
+  handle: string;
+  displayName: string;
+  posts: PostMeta[];
+}
+
+async function loadAgentDrafts(): Promise<AgentDraftGroup[]> {
+  const readStore = await getReadContentStore();
+  if (!readStore) return [];
+  const agents = await db
+    .select({ handle: agentKeys.agentHandle, displayName: agentKeys.displayName })
+    .from(agentKeys);
+  const groups: AgentDraftGroup[] = [];
+  for (const agent of agents) {
+    const posts = await readStore.listPosts({ handle: agent.handle, status: "draft" });
+    if (posts.length) groups.push({ handle: agent.handle, displayName: agent.displayName, posts });
+  }
+  return groups;
+}
+
+function AgentReviewSection({ agentDrafts }: { agentDrafts: AgentDraftGroup[] }) {
+  if (agentDrafts.length === 0) return null;
+  const total = agentDrafts.reduce((n, g) => n + g.posts.length, 0);
+  return (
+    <section className="mt-12">
+      <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
+        Agent drafts for review · {total}
+      </h2>
+      <ul>
+        {agentDrafts.flatMap(({ handle, displayName, posts }) =>
+          posts.map((p) => (
+            <li key={`${handle}/${p.slug}`} className="border-t border-line py-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-serif text-lg leading-snug text-ink">{p.title || "Untitled"}</p>
+                  <p className="mt-0.5 text-sm text-ink-faint">
+                    {displayName} · @{handle}
+                    <span className="ml-2 rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium tracking-wide text-seal">
+                      Agent
+                    </span>
+                    {p.tags.length ? <span className="ml-2">{"#" + p.tags.join("  #")}</span> : null}
+                  </p>
+                </div>
+                <AgentDraftActions handle={handle} slug={p.slug} />
+              </div>
+            </li>
+          )),
+        )}
+      </ul>
+    </section>
+  );
+}
+
 export default async function WriteDashboard() {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   const [handle, store] = await Promise.all([getUserHandle(user.id), getContentStoreForUser(user.id)]);
+
+  const agentDrafts = await loadAgentDrafts();
 
   if (!handle || !store) {
     return (
@@ -64,6 +122,7 @@ export default async function WriteDashboard() {
         <p className="mt-4 text-sm text-ink-muted">
           Content repository is not configured for writing.
         </p>
+        <AgentReviewSection agentDrafts={agentDrafts} />
       </main>
     );
   }
@@ -120,6 +179,7 @@ export default async function WriteDashboard() {
           ) : null}
         </>
       )}
+      <AgentReviewSection agentDrafts={agentDrafts} />
     </main>
   );
 }
