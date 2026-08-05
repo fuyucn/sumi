@@ -30,6 +30,12 @@ export interface ContentStore {
   listLikes(postHandle: string, slug: string): Promise<string[]>;
   addLike(postHandle: string, slug: string, likerHandle: string, now: Date): Promise<void>;
   removeLike(postHandle: string, slug: string, likerHandle: string): Promise<void>;
+  /** Handles that follow the given creator (followers of `handle`). */
+  listFollowers(handle: string): Promise<string[]>;
+  /** Handles the given user is following. */
+  listFollowing(handle: string): Promise<string[]>;
+  addFollow(followerHandle: string, followeeHandle: string, now: Date): Promise<void>;
+  removeFollow(followerHandle: string, followeeHandle: string): Promise<void>;
   getProfile(handle: string): Promise<Profile | null>;
   saveProfile(handle: string, profile: Profile): Promise<void>;
   listMagazines(handle: string): Promise<Magazine[]>;

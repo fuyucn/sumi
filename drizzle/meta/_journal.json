@@ -57,6 +57,13 @@
       "when": 1785959941780,
       "tag": "0007_fulltext_search_index",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785968634156,
+      "tag": "0008_real_blindfold",
+      "breakpoints": true
     }
   ]
 }

@@ -105,6 +105,17 @@ export const sumiLikes = pgTable(
   (t) => [primaryKey({ columns: [t.postHandle, t.postSlug, t.likerHandle] })],
 );
 
+// A follow relation: one row per (follower, followee). Directional.
+export const sumiFollows = pgTable(
+  "sumi_follows",
+  {
+    followerHandle: text("follower_handle").notNull(),
+    followeeHandle: text("followee_handle").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.followerHandle, t.followeeHandle] })],
+);
+
 export const sumiMagazines = pgTable("sumi_magazines", {
   handle: text("handle").notNull(),
   slug: text("slug").notNull(),
@@ -159,6 +170,7 @@ export const schema = {
   sumiPosts,
   sumiComments,
   sumiLikes,
+  sumiFollows,
   sumiMagazines,
   sumiProfiles,
   sumiImages,

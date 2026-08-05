@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment } from "@/content/types";
-import { runAddComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleLike } from "./actions-core";
+import { runAddComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -16,6 +16,10 @@ function fakeStore(): ContentStore {
     async listLikes() { return []; },
     async addLike() {},
     async removeLike() {},
+    async listFollowers() { return []; },
+    async listFollowing() { return []; },
+    async addFollow() {},
+    async removeFollow() {},
     async getProfile() { return null; },
     async saveProfile() {},
     async listMagazines() { return []; },
@@ -79,6 +83,40 @@ function storeWithLikes(likedBy: string[]) {
     async removeLike(_h, _s, handle) { likedBy.splice(likedBy.indexOf(handle), 1); },
   } as ContentStore;
 }
+
+function storeWithFollows(follows: string[]) {
+  return {
+    ...fakeStore(),
+    async listFollowing() { return [...follows]; },
+    async listFollowers() { return [...follows]; },
+    async addFollow(_f, e) { follows.push(e); },
+    async removeFollow(_f, e) { follows.splice(follows.indexOf(e), 1); },
+  } as ContentStore;
+}
+
+test("toggleFollow follows then unfollows and reports follower count", async () => {
+  const store = storeWithFollows([]);
+  const d = { userId: "u1", handle: "alice", store };
+  const now = new Date("2026-01-01T00:00:00Z");
+  const on = await runToggleFollow(d, { followee: "bob" }, now);
+  expect(on.ok).toBe(true);
+  if (on.ok) expect(on.data).toEqual({ following: true, count: 1 });
+  const off = await runToggleFollow(d, { followee: "bob" }, now);
+  expect(off.ok).toBe(true);
+  if (off.ok) expect(off.data).toEqual({ following: false, count: 0 });
+});
+
+test("toggleFollow rejects following yourself and unsigned", async () => {
+  const store = storeWithFollows([]);
+  const now = new Date("2026-01-01T00:00:00Z");
+  const self = await runToggleFollow({ userId: "u1", handle: "alice", store }, { followee: "alice" }, now);
+  expect(self.ok).toBe(false);
+  if (!self.ok) expect(self.error).toContain("yourself");
+  const unsigned = await runToggleFollow({ userId: null, handle: null, store: null }, { followee: "bob" }, now);
+  expect(unsigned.ok).toBe(false);
+  const bad = await runToggleFollow({ userId: "u1", handle: "alice", store }, {}, now);
+  expect(bad.ok).toBe(false);
+});
 
 test("toggleLike likes, toggling back unlikes", async () => {
   const store = storeWithLikes([]);

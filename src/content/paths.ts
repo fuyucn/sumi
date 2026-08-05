@@ -52,6 +52,9 @@ export function commentFile(postHandle: string, slug: string, filename: string):
 export function likesFile(postHandle: string, slug: string): string {
   return `${postDir(postHandle, slug)}/likes.json`;
 }
+export function followingFile(handle: string): string {
+  return `${userDir(handle)}/following.json`;
+}
 export function magazinesDir(handle: string): string {
   return `${userDir(handle)}/magazines`;
 }

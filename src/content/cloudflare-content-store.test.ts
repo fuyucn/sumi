@@ -72,6 +72,12 @@ CREATE TABLE IF NOT EXISTS likes (
   created_at TEXT NOT NULL,
   PRIMARY KEY (post_handle, post_slug, liker_handle)
 );
+CREATE TABLE IF NOT EXISTS follows (
+  follower_handle TEXT NOT NULL,
+  followee_handle TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (follower_handle, followee_handle)
+);
 CREATE TABLE IF NOT EXISTS magazines (
   handle TEXT NOT NULL,
   slug TEXT NOT NULL,
@@ -184,6 +190,19 @@ test("likes toggle, dedupe, and cascade on delete", async () => {
   expect(await store.listLikes("alice", "hi")).toEqual(["carol"]);
   await store.deletePost("alice", "hi");
   expect(await store.listLikes("alice", "hi")).toEqual([]);
+});
+
+test("follows toggle, dedupe, and directional follower/following lists", async () => {
+  const { store } = inMemoryStore();
+  expect(await store.listFollowing("bob")).toEqual([]);
+  await store.addFollow("bob", "alice", new Date("2026-06-01T00:00:00Z"));
+  await store.addFollow("bob", "alice", new Date("2026-06-01T00:00:00Z"));
+  await store.addFollow("carol", "alice", new Date("2026-06-01T00:00:00Z"));
+  expect(await store.listFollowing("bob")).toEqual(["alice"]);
+  expect(await store.listFollowers("alice")).toEqual(["bob", "carol"]);
+  await store.removeFollow("bob", "alice");
+  expect(await store.listFollowers("alice")).toEqual(["carol"]);
+  expect(await store.listFollowing("bob")).toEqual([]);
 });
 
 test("listTags counts tags across published posts, count desc then name asc", async () => {

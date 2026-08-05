@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { schema as dbSchema } from "@/db/schema";
 import {
   sumiComments,
+  sumiFollows,
   sumiImages,
   sumiLikes,
   sumiMagazines,
@@ -235,6 +236,46 @@ export class DbContentStore implements ContentStore {
           eq(sumiLikes.postHandle, postHandle),
           eq(sumiLikes.postSlug, slug),
           eq(sumiLikes.likerHandle, likerHandle),
+        ),
+      );
+  }
+
+  // ---- Follows ----
+
+  async listFollowers(handle: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ followerHandle: sumiFollows.followerHandle })
+      .from(sumiFollows)
+      .where(eq(sumiFollows.followeeHandle, handle));
+    return rows.map((r) => r.followerHandle);
+  }
+
+  async listFollowing(handle: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ followeeHandle: sumiFollows.followeeHandle })
+      .from(sumiFollows)
+      .where(eq(sumiFollows.followerHandle, handle));
+    return rows.map((r) => r.followeeHandle);
+  }
+
+  async addFollow(followerHandle: string, followeeHandle: string, now: Date): Promise<void> {
+    await this.db
+      .insert(sumiFollows)
+      .values({
+        followerHandle,
+        followeeHandle,
+        createdAt: now.toISOString(),
+      })
+      .onConflictDoNothing();
+  }
+
+  async removeFollow(followerHandle: string, followeeHandle: string): Promise<void> {
+    await this.db
+      .delete(sumiFollows)
+      .where(
+        and(
+          eq(sumiFollows.followerHandle, followerHandle),
+          eq(sumiFollows.followeeHandle, followeeHandle),
         ),
       );
   }

@@ -5,6 +5,7 @@ import {
   runDeleteMagazine,
   runSaveMagazine,
   runSaveProfile,
+  runToggleFollow,
   runToggleLike,
 } from "./actions-core";
 
@@ -26,4 +27,8 @@ export async function deleteMagazineAction(slug: string) {
 
 export async function toggleLikeAction(form: unknown) {
   return runToggleLike(await resolveDeps(), form, new Date());
+}
+
+export async function toggleFollowAction(form: unknown) {
+  return runToggleFollow(await resolveDeps(), form, new Date());
 }

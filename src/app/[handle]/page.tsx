@@ -3,6 +3,9 @@ import { getReadContentStore } from "@/content";
 import { PostCard } from "@/components/post-card";
 import { CreatorProfile } from "@/components/creator-profile";
 import { CreatorMagazines } from "@/components/creator-magazines";
+import { FollowButton } from "@/components/follow-button";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserHandle } from "@/lib/user";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +20,13 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const posts = await store.listPosts({ handle, status: "published" });
   const profile = await store.getProfile(handle);
   const hasProfile = !!(profile && (profile.displayName || profile.bio));
+  const user = await getCurrentUser();
+  const signedInHandle = user ? await getUserHandle(user.id) : null;
+  const followers = await store.listFollowers(handle);
+  const following =
+    signedInHandle !== null && signedInHandle !== handle
+      ? (await store.listFollowing(signedInHandle)).includes(handle)
+      : false;
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-10">
@@ -27,9 +37,19 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
             @{handle}
           </h1>
         )}
-        <p className="mt-2 text-sm text-ink-faint">
-          {posts.length} {posts.length === 1 ? "post" : "posts"}
-        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-4">
+          <p className="text-sm text-ink-faint">
+            {posts.length} {posts.length === 1 ? "post" : "posts"} · {followers.length}{" "}
+            {followers.length === 1 ? "follower" : "followers"}
+          </p>
+          {signedInHandle !== null && signedInHandle !== handle ? (
+            <FollowButton
+              handle={handle}
+              initialCount={followers.length}
+              initialFollowing={following}
+            />
+          ) : null}
+        </div>
       </header>
       {posts.length === 0 ? (
         <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">

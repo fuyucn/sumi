@@ -28,6 +28,10 @@ export const likeFormSchema = z.object({
   slug: z.string().trim().min(1),
 });
 
+export const followFormSchema = z.object({
+  followee: z.string().trim().min(1),
+});
+
 export async function runAddComment(
   deps: SessionDeps,
   form: unknown,
@@ -150,4 +154,28 @@ export async function runGetLikeState(
   }
   const current = await deps.store!.listLikes(f.postHandle, f.slug);
   return { ok: true, data: { liked: current.includes(deps.handle!), count: current.length } };
+}
+
+/** Follow or unfollow a creator. Cannot follow yourself. Returns new follower count of the followee. */
+export async function runToggleFollow(
+  deps: SessionDeps,
+  form: unknown,
+  now: Date,
+): Promise<ActionResult<{ following: boolean; count: number }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = followFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const me = deps.handle!;
+  if (me === f.followee) return { ok: false, error: "You cannot follow yourself." };
+  const followee = f.followee;
+  const following = (await deps.store!.listFollowing(me)).includes(followee);
+  if (following) await deps.store!.removeFollow(me, followee);
+  else await deps.store!.addFollow(me, followee, now);
+  const count = (await deps.store!.listFollowers(followee)).length;
+  return { ok: true, data: { following: !following, count } };
 }

@@ -109,7 +109,11 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 
 ## 9. Open questions / future
 
-- Likes(スキ) and follows → store in Neon later.
-- Notifications; full-text search index tuning / DB-backed ranking (future).
+- Likes (スキ) and follows: implemented, stored in the Postgres/DB mirror
+  (`sumi_likes`, `sumi_follows`) plus per-post `likes.json` and per-user
+  `following.json` files on the GitHub backend. Neon remark from the original
+  design no longer applies — it all lives where the content lives.
+- Notifications; full-text search index tuning / DB-backed ranking (done:
+  relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads; comment nesting is capped at a depth of
   4 (enforced server-side across all backends, still renders replies as threaded).

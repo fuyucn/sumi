@@ -249,6 +249,39 @@ export class CloudflareContentStore implements ContentStore {
     );
   }
 
+  // ---- Follows ----
+
+  async listFollowers(handle: string): Promise<string[]> {
+    const rows = await this.rows<{ follower_handle: string }>(
+      `SELECT follower_handle FROM follows WHERE followee_handle = ?`,
+      handle,
+    );
+    return rows.map((r) => r.follower_handle);
+  }
+
+  async listFollowing(handle: string): Promise<string[]> {
+    const rows = await this.rows<{ followee_handle: string }>(
+      `SELECT followee_handle FROM follows WHERE follower_handle = ?`,
+      handle,
+    );
+    return rows.map((r) => r.followee_handle);
+  }
+
+  async addFollow(followerHandle: string, followeeHandle: string, now: Date): Promise<void> {
+    await this.run(
+      `INSERT OR IGNORE INTO follows (follower_handle, followee_handle, created_at)
+       VALUES (?, ?, ?)`,
+      followerHandle, followeeHandle, now.toISOString(),
+    );
+  }
+
+  async removeFollow(followerHandle: string, followeeHandle: string): Promise<void> {
+    await this.run(
+      `DELETE FROM follows WHERE follower_handle = ? AND followee_handle = ?`,
+      followerHandle, followeeHandle,
+    );
+  }
+
   // ---- Profile ----
 
   async getProfile(handle: string): Promise<Profile | null> {

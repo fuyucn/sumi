@@ -65,6 +65,12 @@ CREATE TABLE "sumi_likes" (
   "created_at" text NOT NULL,
   CONSTRAINT "sumi_likes_post_handle_post_slug_liker_handle_pk" PRIMARY KEY("post_handle","post_slug","liker_handle")
 );
+CREATE TABLE "sumi_follows" (
+  "follower_handle" text NOT NULL,
+  "followee_handle" text NOT NULL,
+  "created_at" text NOT NULL,
+  CONSTRAINT "sumi_follows_follower_handle_followee_handle_pk" PRIMARY KEY("follower_handle","followee_handle")
+);
 `;
 
 async function makeStore() {
@@ -191,4 +197,17 @@ test("likes toggle, dedupe, and cascade on delete", async () => {
   expect(await store.listLikes("alice", "hi")).toEqual(["carol"]);
   await store.deletePost("alice", "hi");
   expect(await store.listLikes("alice", "hi")).toEqual([]);
+});
+
+test("follows toggle, dedupe, and directional follower/following lists", async () => {
+  const { store } = await makeStore();
+  expect(await store.listFollowing("bob")).toEqual([]);
+  await store.addFollow("bob", "alice", new Date("2026-06-01T00:00:00Z"));
+  await store.addFollow("bob", "alice", new Date("2026-06-01T00:00:00Z"));
+  await store.addFollow("carol", "alice", new Date("2026-06-01T00:00:00Z"));
+  expect(await store.listFollowing("bob")).toEqual(["alice"]);
+  expect(await store.listFollowers("alice")).toEqual(["bob", "carol"]);
+  await store.removeFollow("bob", "alice");
+  expect(await store.listFollowers("alice")).toEqual(["carol"]);
+  expect(await store.listFollowing("bob")).toEqual([]);
 });

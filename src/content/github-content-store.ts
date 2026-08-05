@@ -15,6 +15,7 @@ import {
   CONTENT_DIR,
   commentDir,
   commentFile,
+  followingFile,
   imagePath,
   likesFile,
   magazineFile,
@@ -136,6 +137,64 @@ export class GitHubContentStore implements ContentStore {
       path,
       JSON.stringify({ likes: update(handles) }, null, 2),
       `Like on @${postHandle}/${slug}`,
+      existing?.sha,
+    );
+  }
+
+  async listFollowers(handle: string): Promise<string[]> {
+    const followers: string[] = [];
+    for (const h of await this.listHandles()) {
+      if (h === handle) continue;
+      const following = await this.listFollowing(h);
+      if (following.includes(handle)) followers.push(h);
+    }
+    return followers;
+  }
+
+  async listFollowing(handle: string): Promise<string[]> {
+    const file = await this.client.getFile(followingFile(handle));
+    if (!file) return [];
+    try {
+      const parsed: { following?: unknown } = JSON.parse(file.content);
+      const arr = Array.isArray(parsed.following) ? parsed.following : null;
+      return arr ? arr.filter((x: unknown): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async addFollow(followerHandle: string, followeeHandle: string): Promise<void> {
+    await this.writeFollowing(followerHandle, (handles) =>
+      handles.includes(followeeHandle) ? handles : [...handles, followeeHandle],
+    );
+  }
+
+  async removeFollow(followerHandle: string, followeeHandle: string): Promise<void> {
+    await this.writeFollowing(followerHandle, (handles) =>
+      handles.filter((h) => h !== followeeHandle),
+    );
+  }
+
+  private async writeFollowing(
+    handle: string,
+    update: (current: string[]) => string[],
+  ): Promise<void> {
+    const path = followingFile(handle);
+    const existing = await this.client.getFile(path);
+    let handles: string[] = [];
+    if (existing) {
+      try {
+        const parsed: { following?: unknown } = JSON.parse(existing.content);
+        if (Array.isArray(parsed.following))
+          handles = parsed.following.filter((x: unknown): x is string => typeof x === "string");
+      } catch {
+        /* treat unreadable following file as empty */
+      }
+    }
+    await this.client.putTextFile(
+      path,
+      JSON.stringify({ following: update(handles) }, null, 2),
+      `Follows for @${handle}`,
       existing?.sha,
     );
   }
