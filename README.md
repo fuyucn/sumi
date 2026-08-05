@@ -12,6 +12,7 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 - **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article in the content repo.
 - **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
+- **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
 - **Own your content** — every article, image, comment, and magazine is committed to a GitHub repo you control (portable, version-controlled).
 - **Optional Postgres mirror** — set `DB_MIRROR=1` to serve reads/search from Postgres (`DbContentStore`) instead of GitHub.
 
