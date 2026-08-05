@@ -5,6 +5,7 @@ import {
   runDeleteMagazine,
   runSaveMagazine,
   runSaveProfile,
+  runToggleLike,
 } from "./actions-core";
 
 export async function addCommentAction(form: unknown) {
@@ -21,4 +22,8 @@ export async function saveMagazineAction(form: unknown) {
 
 export async function deleteMagazineAction(slug: string) {
   return runDeleteMagazine(await resolveDeps(), slug);
+}
+
+export async function toggleLikeAction(form: unknown) {
+  return runToggleLike(await resolveDeps(), form, new Date());
 }

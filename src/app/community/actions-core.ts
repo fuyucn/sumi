@@ -23,6 +23,11 @@ export const magazineFormSchema = z.object({
   items: z.array(z.string().trim().min(1)).default([]),
 });
 
+export const likeFormSchema = z.object({
+  postHandle: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+});
+
 export async function runAddComment(
   deps: SessionDeps,
   form: unknown,
@@ -103,4 +108,46 @@ export async function runDeleteMagazine(deps: SessionDeps, slug: string): Promis
   if (!slug) return { ok: false, error: "Missing magazine slug." };
   await deps.store!.deleteMagazine(deps.handle!, slug);
   return { ok: true, data: null };
+}
+
+/** Like or unlike a post as the signed-in creator. Returns the new like count. */
+export async function runToggleLike(
+  deps: SessionDeps,
+  form: unknown,
+  now: Date,
+): Promise<ActionResult<{ liked: boolean; count: number }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = likeFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const handle = deps.handle!;
+  const current = await deps.store!.listLikes(f.postHandle, f.slug);
+  const liked = current.includes(handle);
+  if (liked) {
+    await deps.store!.removeLike(f.postHandle, f.slug, handle);
+  } else {
+    await deps.store!.addLike(f.postHandle, f.slug, handle, now);
+  }
+  return { ok: true, data: { liked: !liked, count: liked ? current.length - 1 : current.length + 1 } };
+}
+
+/** Read the current like state for a signed-in user without mutating. */
+export async function runGetLikeState(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ liked: boolean; count: number }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = likeFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const current = await deps.store!.listLikes(f.postHandle, f.slug);
+  return { ok: true, data: { liked: current.includes(deps.handle!), count: current.length } };
 }

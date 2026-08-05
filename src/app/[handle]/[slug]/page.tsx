@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
 import { Comments } from "@/components/comments";
+import { LikeButton } from "@/components/like-button";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserHandle } from "@/lib/user";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +19,7 @@ async function load(handleRaw: string, slugRaw: string) {
   const handle = handleParam.slice(1);
   const post = await store.getPost(handle, decodeURIComponent(slugRaw));
   if (!post || post.status !== "published") return null;
-  return { handle, post };
+  return { handle, post, store };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string; slug: string }> }): Promise<Metadata> {
@@ -33,6 +36,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const { post } = data;
   const repo = env.GITHUB_CONTENT_REPO;
   const decodedSlug = decodeURIComponent(slug);
+  const user = await getCurrentUser();
+  const signedInHandle = user ? await getUserHandle(user.id) : null;
+  const likers = await data.store.listLikes(data.handle, decodedSlug);
   const imageBase = repo
     ? `https://raw.githubusercontent.com/${repo}/main/content/@${data.handle}/${decodedSlug}/`
     : undefined;
@@ -90,6 +96,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           ))}
         </footer>
       ) : null}
+      <div className="mt-8">
+        <LikeButton
+          postHandle={data.handle}
+          slug={decodedSlug}
+          initialCount={likers.length}
+          initialLiked={signedInHandle !== null && likers.includes(signedInHandle)}
+        />
+      </div>
       <Comments handle={data.handle} slug={decodedSlug} />
     </main>
   );

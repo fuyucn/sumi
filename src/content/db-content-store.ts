@@ -1,10 +1,11 @@
-import { and, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { randomUUID } from "node:crypto";
 import { schema as dbSchema } from "@/db/schema";
 import {
   sumiComments,
   sumiImages,
+  sumiLikes,
   sumiMagazines,
   sumiPosts,
   sumiProfiles,
@@ -142,6 +143,9 @@ export class DbContentStore implements ContentStore {
     await this.db
       .delete(sumiComments)
       .where(sql`${sumiComments.postHandle} = ${handle} AND ${sumiComments.postSlug} = ${slug}`);
+    await this.db
+      .delete(sumiLikes)
+      .where(sql`${sumiLikes.postHandle} = ${handle} AND ${sumiLikes.postSlug} = ${slug}`);
     await this.db.delete(sumiPosts).where(sql`${sumiPosts.handle} = ${handle} AND ${sumiPosts.slug} = ${slug}`);
   }
 
@@ -198,6 +202,40 @@ export class DbContentStore implements ContentStore {
       createdAt: full.date,
     });
     return full;
+  }
+
+  // ---- Likes ----
+
+  async listLikes(postHandle: string, slug: string): Promise<string[]> {
+    const rows = await this.db
+      .select({ likerHandle: sumiLikes.likerHandle })
+      .from(sumiLikes)
+      .where(and(eq(sumiLikes.postHandle, postHandle), eq(sumiLikes.postSlug, slug)));
+    return rows.map((r) => r.likerHandle);
+  }
+
+  async addLike(postHandle: string, slug: string, likerHandle: string, now: Date): Promise<void> {
+    await this.db
+      .insert(sumiLikes)
+      .values({
+        postHandle,
+        postSlug: slug,
+        likerHandle,
+        createdAt: now.toISOString(),
+      })
+      .onConflictDoNothing();
+  }
+
+  async removeLike(postHandle: string, slug: string, likerHandle: string): Promise<void> {
+    await this.db
+      .delete(sumiLikes)
+      .where(
+        and(
+          eq(sumiLikes.postHandle, postHandle),
+          eq(sumiLikes.postSlug, slug),
+          eq(sumiLikes.likerHandle, likerHandle),
+        ),
+      );
   }
 
   // ---- Profile ----

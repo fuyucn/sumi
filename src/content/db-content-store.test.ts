@@ -58,6 +58,13 @@ CREATE TABLE "sumi_images" (
   "bytes" "bytea" NOT NULL,
   "created_at" text NOT NULL
 );
+CREATE TABLE "sumi_likes" (
+  "post_handle" text NOT NULL,
+  "post_slug" text NOT NULL,
+  "liker_handle" text NOT NULL,
+  "created_at" text NOT NULL,
+  CONSTRAINT "sumi_likes_post_handle_post_slug_liker_handle_pk" PRIMARY KEY("post_handle","post_slug","liker_handle")
+);
 `;
 
 async function makeStore() {
@@ -170,4 +177,18 @@ test("uploadImage stores bytes in sumi_images and returns a serving path", async
   expect(rows[0].mime).toBe("image/png");
   expect(rows[0].handle).toBe("alice");
   expect(Buffer.from(rows[0].bytes as Uint8Array)).toEqual(Buffer.from([1, 2, 3]));
+});
+
+test("likes toggle, dedupe, and cascade on delete", async () => {
+  const { store } = await makeStore();
+  await store.savePost("alice", { title: "Hi", body: "x", status: "published" });
+  expect(await store.listLikes("alice", "hi")).toEqual([]);
+  await store.addLike("alice", "hi", "bob", new Date("2026-06-01T00:00:00Z"));
+  await store.addLike("alice", "hi", "bob", new Date("2026-06-01T00:00:00Z"));
+  await store.addLike("alice", "hi", "carol", new Date("2026-06-01T00:00:00Z"));
+  expect(await store.listLikes("alice", "hi")).toEqual(["bob", "carol"]);
+  await store.removeLike("alice", "hi", "bob");
+  expect(await store.listLikes("alice", "hi")).toEqual(["carol"]);
+  await store.deletePost("alice", "hi");
+  expect(await store.listLikes("alice", "hi")).toEqual([]);
 });

@@ -65,6 +65,13 @@ CREATE TABLE IF NOT EXISTS comments (
   parent_id TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS likes (
+  post_handle TEXT NOT NULL,
+  post_slug TEXT NOT NULL,
+  liker_handle TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (post_handle, post_slug, liker_handle)
+);
 CREATE TABLE IF NOT EXISTS magazines (
   handle TEXT NOT NULL,
   slug TEXT NOT NULL,
@@ -163,6 +170,20 @@ test("deletePost removes the post and its comments", async () => {
   await store.deletePost("alice", "bye");
   expect(await store.getPost("alice", "bye")).toBeNull();
   expect(await store.listComments("alice", "bye")).toEqual([]);
+});
+
+test("likes toggle, dedupe, and cascade on delete", async () => {
+  const { store } = inMemoryStore();
+  await store.savePost("alice", { title: "Hi", body: "x", status: "published" });
+  expect(await store.listLikes("alice", "hi")).toEqual([]);
+  await store.addLike("alice", "hi", "bob", new Date("2026-06-01T00:00:00Z"));
+  await store.addLike("alice", "hi", "bob", new Date("2026-06-01T00:00:00Z"));
+  await store.addLike("alice", "hi", "carol", new Date("2026-06-01T00:00:00Z"));
+  expect(await store.listLikes("alice", "hi")).toEqual(["bob", "carol"]);
+  await store.removeLike("alice", "hi", "bob");
+  expect(await store.listLikes("alice", "hi")).toEqual(["carol"]);
+  await store.deletePost("alice", "hi");
+  expect(await store.listLikes("alice", "hi")).toEqual([]);
 });
 
 test("listTags counts tags across published posts, count desc then name asc", async () => {

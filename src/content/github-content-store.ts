@@ -16,6 +16,7 @@ import {
   commentDir,
   commentFile,
   imagePath,
+  likesFile,
   magazineFile,
   magazinesDir,
   postDir,
@@ -86,6 +87,56 @@ export class GitHubContentStore implements ContentStore {
     const existing = await this.client.getFile(path);
     await this.client.putBinaryFile(path, bytes, `Upload image: ${filename}`, existing?.sha);
     return `images/${filename}`;
+  }
+
+  // ---- Likes ----
+
+  async listLikes(postHandle: string, slug: string): Promise<string[]> {
+    const file = await this.client.getFile(likesFile(postHandle, slug));
+    if (!file) return [];
+    try {
+      const parsed: { likes?: unknown } = JSON.parse(file.content);
+      const arr = Array.isArray(parsed.likes) ? parsed.likes : null;
+      return arr ? arr.filter((x: unknown): x is string => typeof x === "string") : [];
+    } catch {
+      return [];
+    }
+  }
+
+  async addLike(postHandle: string, slug: string, likerHandle: string): Promise<void> {
+    await this.writeLikes(postHandle, slug, (handles) =>
+      handles.includes(likerHandle) ? handles : [...handles, likerHandle],
+    );
+  }
+
+  async removeLike(postHandle: string, slug: string, likerHandle: string): Promise<void> {
+    await this.writeLikes(postHandle, slug, (handles) =>
+      handles.filter((h) => h !== likerHandle),
+    );
+  }
+
+  private async writeLikes(
+    postHandle: string,
+    slug: string,
+    update: (current: string[]) => string[],
+  ): Promise<void> {
+    const path = likesFile(postHandle, slug);
+    const existing = await this.client.getFile(path);
+    let handles: string[] = [];
+    if (existing) {
+      try {
+        const parsed: { likes?: unknown } = JSON.parse(existing.content);
+        if (Array.isArray(parsed.likes)) handles = parsed.likes.filter((x: unknown): x is string => typeof x === "string");
+      } catch {
+        /* treat unreadable likes file as empty */
+      }
+    }
+    await this.client.putTextFile(
+      path,
+      JSON.stringify({ likes: update(handles) }, null, 2),
+      `Like on @${postHandle}/${slug}`,
+      existing?.sha,
+    );
   }
 
   // ---- Comments ----

@@ -93,6 +93,18 @@ export const sumiComments = pgTable("sumi_comments", {
   createdAt: text("created_at").notNull(),
 });
 
+// A like on a post by a signed-in handle. One row per (post, liker).
+export const sumiLikes = pgTable(
+  "sumi_likes",
+  {
+    postHandle: text("post_handle").notNull(),
+    postSlug: text("post_slug").notNull(),
+    likerHandle: text("liker_handle").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.postHandle, t.postSlug, t.likerHandle] })],
+);
+
 export const sumiMagazines = pgTable("sumi_magazines", {
   handle: text("handle").notNull(),
   slug: text("slug").notNull(),
@@ -146,6 +158,7 @@ export const schema = {
   verification,
   sumiPosts,
   sumiComments,
+  sumiLikes,
   sumiMagazines,
   sumiProfiles,
   sumiImages,

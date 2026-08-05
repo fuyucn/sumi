@@ -26,6 +26,10 @@ export interface ContentStore {
   uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string>;
   listComments(postHandle: string, slug: string): Promise<Comment[]>;
   addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment>;
+  /** Handles that liked a post (no particular order). */
+  listLikes(postHandle: string, slug: string): Promise<string[]>;
+  addLike(postHandle: string, slug: string, likerHandle: string, now: Date): Promise<void>;
+  removeLike(postHandle: string, slug: string, likerHandle: string): Promise<void>;
   getProfile(handle: string): Promise<Profile | null>;
   saveProfile(handle: string, profile: Profile): Promise<void>;
   listMagazines(handle: string): Promise<Magazine[]>;

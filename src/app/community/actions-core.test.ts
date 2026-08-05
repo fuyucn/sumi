@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment } from "@/content/types";
-import { runAddComment, runDeleteMagazine, runSaveMagazine, runSaveProfile } from "./actions-core";
+import { runAddComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -13,6 +13,9 @@ function fakeStore(): ContentStore {
     async uploadImage() { return ""; },
     async listComments() { return []; },
     async addComment(_p, _s, c, author, now) { return { id: "cid", ...c, handle: author, date: now.toISOString() }; },
+    async listLikes() { return []; },
+    async addLike() {},
+    async removeLike() {},
     async getProfile() { return null; },
     async saveProfile() {},
     async listMagazines() { return []; },
@@ -67,6 +70,42 @@ test("magazine save + delete", async () => {
 function storeWithComments(listComments: () => Promise<Comment[]>, addComment: () => Promise<Comment>) {
   return { ...fakeStore(), listComments, addComment } as ContentStore;
 }
+
+function storeWithLikes(likedBy: string[]) {
+  return {
+    ...fakeStore(),
+    async listLikes() { return [...likedBy]; },
+    async addLike(_h, _s, handle) { likedBy.push(handle); },
+    async removeLike(_h, _s, handle) { likedBy.splice(likedBy.indexOf(handle), 1); },
+  } as ContentStore;
+}
+
+test("toggleLike likes, toggling back unlikes", async () => {
+  const store = storeWithLikes([]);
+  const d = { userId: "u1", handle: "alice", store };
+  const on = await runToggleLike(d, { postHandle: "bob", slug: "hello" }, new Date("2025-01-01T00:00:00.000Z"));
+  expect(on.ok).toBe(true);
+  if (on.ok) expect(on.data).toEqual({ liked: true, count: 1 });
+  const off = await runToggleLike(d, { postHandle: "bob", slug: "hello" }, new Date("2025-01-01T00:00:00.000Z"));
+  expect(off.ok).toBe(true);
+  if (off.ok) expect(off.data).toEqual({ liked: false, count: 0 });
+});
+
+test("runGetLikeState reports whether signed-in user has liked", async () => {
+  const store = storeWithLikes(["bob", "carol"]);
+  const res = await runGetLikeState({ userId: "u1", handle: "carol", store }, { postHandle: "bob", slug: "hello" });
+  expect(res.ok).toBe(true);
+  if (res.ok) expect(res.data).toEqual({ liked: true, count: 2 });
+});
+
+test("like/toggle are guarded and validated when unsigned", async () => {
+  const guarded = await runToggleLike({ userId: null, handle: null, store: null }, { postHandle: "bob", slug: "x" }, new Date());
+  expect(guarded.ok).toBe(false);
+  const bad = await runToggleLike({ userId: "u1", handle: "alice", store: fakeStore() }, {}, new Date());
+  expect(bad.ok).toBe(false);
+  const stateGuarded = await runGetLikeState({ userId: null, handle: null, store: null }, { postHandle: "bob", slug: "x" });
+  expect(stateGuarded.ok).toBe(false);
+});
 
 const chain: Comment[] = [
   { id: "r1", handle: "a", date: "t", body: "" },

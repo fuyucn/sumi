@@ -49,6 +49,9 @@ export function commentDir(postHandle: string, slug: string): string {
 export function commentFile(postHandle: string, slug: string, filename: string): string {
   return `${commentDir(postHandle, slug)}/${filename}`;
 }
+export function likesFile(postHandle: string, slug: string): string {
+  return `${postDir(postHandle, slug)}/likes.json`;
+}
 export function magazinesDir(handle: string): string {
   return `${userDir(handle)}/magazines`;
 }

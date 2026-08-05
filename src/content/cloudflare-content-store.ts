@@ -171,6 +171,7 @@ export class CloudflareContentStore implements ContentStore {
 
   async deletePost(handle: string, slug: string): Promise<void> {
     await this.run(`DELETE FROM comments WHERE post_handle = ? AND post_slug = ?`, handle, slug);
+    await this.run(`DELETE FROM likes WHERE post_handle = ? AND post_slug = ?`, handle, slug);
     await this.run(`DELETE FROM posts WHERE handle = ? AND slug = ?`, handle, slug);
   }
 
@@ -219,6 +220,32 @@ export class CloudflareContentStore implements ContentStore {
       ...(comment.parentId !== undefined ? { parentId: comment.parentId } : {}),
     };
     return full;
+  }
+
+  // ---- Likes ----
+
+  async listLikes(postHandle: string, slug: string): Promise<string[]> {
+    const rows = await this.rows<{ liker_handle: string }>(
+      `SELECT liker_handle FROM likes WHERE post_handle = ? AND post_slug = ?`,
+      postHandle,
+      slug,
+    );
+    return rows.map((r) => r.liker_handle);
+  }
+
+  async addLike(postHandle: string, slug: string, likerHandle: string, now: Date): Promise<void> {
+    await this.run(
+      `INSERT OR IGNORE INTO likes (post_handle, post_slug, liker_handle, created_at)
+       VALUES (?, ?, ?, ?)`,
+      postHandle, slug, likerHandle, now.toISOString(),
+    );
+  }
+
+  async removeLike(postHandle: string, slug: string, likerHandle: string): Promise<void> {
+    await this.run(
+      `DELETE FROM likes WHERE post_handle = ? AND post_slug = ? AND liker_handle = ?`,
+      postHandle, slug, likerHandle,
+    );
   }
 
   // ---- Profile ----
