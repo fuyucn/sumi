@@ -143,10 +143,12 @@ Cloudflare is an **optional** third path (not a forced migration). It bundles th
 a Cloudflare Worker with OpenNext, using D1 (binding `DB`) and R2 (binding `IMAGES`) instead of
 Postgres + GitHub for the data backend. Config lives in `wrangler.jsonc` + `open-next.config.ts`.
 
-> ⚠️ **Compatibility note**: this repo currently pins `next@16.2.9`, but
-> `@opennextjs/cloudflare` only declares support for `next >= 16.2.11` (or `>=15.5.21 <16`).
-> Until `next` is bumped to `16.2.11+`, running `pnpm cf:build` is **at your own risk** — the
-> Cloudflare scaffolding/files below are the intended layout, not a verified deployment.
+> ✅ **Compatibility**: `next` is pinned to `16.2.12`, which is within the range supported by
+> `@opennextjs/cloudflare` (`>= 16.2.11`). `pnpm cf:build` is verified working. Note the **remote
+> MCP server** (`/api/mcp`) is not available on the Workers/OpenNext path — its stateful
+> Streamable HTTP sessions and in-process session registry require a long-running Node runtime
+> (Docker / VPS). Use the local stdio MCP server (`mcp/index.mjs`) or the Docker/VPS deployment
+> for agent publishing on Cloudflare.
 
 Prerequisites (one-time):
 ```bash
@@ -189,5 +191,7 @@ For local Cloudflare testing: `pnpm cf:dev` (builds then runs a Wrangler preview
 - **Community** — nested comments, magazines/collections, and profile/settings — **complete**.
 - **Discovery** — full-text search (`/search`), tags library — **complete**.
 - **Extensibility** — optional `DbContentStore` Postgres mirror (`DB_MIRROR=1`) and the Cloudflare (D1/R2) backend, both behind the shared `ContentStore` seam — **complete**.
+- **Agent publishing** — local stdio MCP server (`mcp/index.mjs`), remote Streamable HTTP MCP server (`/api/mcp`, bearer auth), DPoP-style request signing, and a publishing runner — **complete**.
+- **Deployment** — Docker compose, VPS (PM2), Vercel, and Cloudflare/OpenNext (`pnpm cf:build` verified against `next@16.2.12`) — **complete**.
 
-The v0 loop (sign in → write → publish → read → comment → curate → search) is feature-complete. Everything is verified with `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+The v0 loop (sign in → write → publish → read → comment → curate → search) plus agent publishing is feature-complete. Everything is verified with `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm build`, and `pnpm cf:build`.
