@@ -4,6 +4,8 @@ import { NextRequest } from "next/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { authenticateBearer, type AgentAuth } from "@/lib/agent-auth";
+import { registry, makeCapacity, touch } from "./session-registry";
+import type { TrackedSession } from "./session-registry";
 import { getAgentContentStore, getReadContentStore } from "@/content";
 import { buildNewPost } from "@/content/post-input";
 import {
@@ -30,24 +32,58 @@ export const dynamic = "force-dynamic";
 type Session = {
   transport: WebStandardStreamableHTTPServerTransport;
   getSessionId: () => string;
-  /** Epoch ms of the last request that touched this session. */
-  lastActiveAt: number;
 };
 
-const sessions = new Map<string, Session>();
+/** Registry entry for a live session — carries the transport for request routing. */
+type RuntimeSession = TrackedSession & { transport: WebStandardStreamableHTTPServerTransport };
 
-/** Idle sessions are dropped after this long (a client that never sends DELETE). */
-const SESSION_TTL_MS = 30 * 60 * 1000;
-/** Hard cap on concurrent sessions to bound memory in a long-running server. */
-const MAX_SESSIONS = 64;
+function createSession(agent: Extract<AgentAuth, { ok: true }>): Session {
+  let sessionId = "";
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: () => {
+      sessionId = randomUUID();
+      return sessionId;
+    },
+    enableJsonResponse: true,
+  });
+  transport.onclose = () => {
+    if (sessionId) registry.delete(sessionId);
+  };
+  const server = buildServer(agent);
+  void server.connect(transport).catch(() => {});
+  return { transport, getSessionId: () => sessionId };
+}
 
-function sweepSessions(now = Date.now()): void {
-  for (const [id, session] of sessions) {
-    if (now - session.lastActiveAt > SESSION_TTL_MS) {
-      void session.transport.close().catch(() => {});
-      sessions.delete(id);
+async function handleMCPRequest(req: NextRequest): Promise<Response> {
+  const sessionId = req.headers.get("mcp-session-id");
+  if (sessionId) {
+    const existing = registry.get(sessionId) as RuntimeSession | undefined;
+    if (existing) {
+      touch(sessionId);
+      return existing.transport.handleRequest(req);
     }
   }
+
+  if (req.method === "POST") {
+    const auth = await authenticateBearer(req.headers.get("authorization"));
+    if (!auth.ok) return jsonError(401, auth.error);
+    makeCapacity();
+    const session = createSession(auth);
+    const res = await session.transport.handleRequest(req);
+    const sid = session.getSessionId() || res.headers.get("mcp-session-id");
+    if (sid) {
+      const entry: RuntimeSession = {
+        lastActiveAt: Date.now(),
+        close: () => session.transport.close(),
+        transport: session.transport,
+      };
+      registry.set(sid, entry);
+    }
+    return res;
+  }
+
+  // GET (SSE) / DELETE with an unknown or missing session id.
+  return jsonError(400, "Missing or invalid MCP session");
 }
 
 function toolText(text: string) {
@@ -179,60 +215,6 @@ function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
   );
 
   return server;
-}
-
-function createSession(agent: Extract<AgentAuth, { ok: true }>): Session {
-  let sessionId = "";
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    sessionIdGenerator: () => {
-      sessionId = randomUUID();
-      return sessionId;
-    },
-    enableJsonResponse: true,
-  });
-  transport.onclose = () => {
-    if (sessionId) sessions.delete(sessionId);
-  };
-  const server = buildServer(agent);
-  void server.connect(transport).catch(() => {});
-  return { transport, getSessionId: () => sessionId, lastActiveAt: Date.now() };
-}
-
-async function handleMCPRequest(req: NextRequest): Promise<Response> {
-  const sessionId = req.headers.get("mcp-session-id");
-  if (sessionId) {
-    const existing = sessions.get(sessionId);
-    if (existing) {
-      existing.lastActiveAt = Date.now();
-      return existing.transport.handleRequest(req);
-    }
-  }
-
-  if (req.method === "POST") {
-    const auth = await authenticateBearer(req.headers.get("authorization"));
-    if (!auth.ok) return jsonError(401, auth.error);
-    acquireCapacity();
-    const session = createSession(auth);
-    const res = await session.transport.handleRequest(req);
-    const sid = session.getSessionId() || res.headers.get("mcp-session-id");
-    if (sid) sessions.set(sid, session);
-    return res;
-  }
-
-  // GET (SSE) / DELETE with an unknown or missing session id.
-  return jsonError(400, "Missing or invalid MCP session");
-}
-
-/** Drop expired sessions and, if still over the cap, the oldest idle ones. */
-function acquireCapacity(now = Date.now()): void {
-  sweepSessions(now);
-  if (sessions.size < MAX_SESSIONS) return;
-  const byIdle = [...sessions.entries()].sort((a, b) => a[1].lastActiveAt - b[1].lastActiveAt);
-  const overflow = sessions.size - (MAX_SESSIONS - 1);
-  for (const [id, session] of byIdle.slice(0, overflow)) {
-    void session.transport.close().catch(() => {});
-    sessions.delete(id);
-  }
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
