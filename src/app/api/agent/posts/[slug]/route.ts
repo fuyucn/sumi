@@ -7,7 +7,7 @@ type RouteContext = { params: Promise<{ slug: string }> };
 
 export async function PUT(req: NextRequest, { params }: RouteContext): Promise<NextResponse> {
   const { auth, body } = await agentRequest(req);
-  if (!auth.ok) return apiError(401, auth.error);
+  if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
   const { slug } = await params;
   const parsed = agentPostUpdateSchema.safeParse(JSON.parse(body || "{}") as unknown);
@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext): Promise<N
 
 export async function DELETE(req: NextRequest, { params }: RouteContext): Promise<NextResponse> {
   const { auth } = await agentRequest(req);
-  if (!auth.ok) return apiError(401, auth.error);
+  if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
   const { slug } = await params;
   const store = await getAgentContentStore();

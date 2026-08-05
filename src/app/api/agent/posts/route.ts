@@ -5,7 +5,7 @@ import { agentPostSchema, toWriteForm, agentRequest, apiError } from "../shared"
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
   const { auth } = await agentRequest(req);
-  if (!auth.ok) return apiError(401, auth.error);
+  if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
   const store = await getAgentContentStore();
   if (!store) return apiError(503, "No content backend configured");
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const { auth, body } = await agentRequest(req);
-  if (!auth.ok) return apiError(401, auth.error);
+  if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
   const parsed = agentPostSchema.safeParse(JSON.parse(body || "{}") as unknown);
   if (!parsed.success) return apiError(400, parsed.error.issues[0]?.message ?? "Invalid body");

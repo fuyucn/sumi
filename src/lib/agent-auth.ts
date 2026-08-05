@@ -4,7 +4,9 @@ import { agentKeys } from "@/db/schema";
 import { hashApiKey } from "@/lib/agent-keys";
 import { timestampInWindow, verifySignature } from "@/lib/agent-signature";
 
-export type AgentAuth = { ok: true; agentHandle: string; displayName: string } | { ok: false; error: string };
+export type AgentAuth =
+  | { ok: true; agentHandle: string; displayName: string }
+  | { ok: false; error: string; status?: number };
 
 export { generateApiKey, hashApiKey } from "@/lib/agent-keys";
 

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { NextRequest, NextResponse } from "next/server";
 import { authenticateAgent, type AgentAuth } from "@/lib/agent-auth";
+import { AGENT_API_LIMIT, rateLimit } from "@/lib/rate-limit";
 
 /** Agent write payload. `tags` accepts an array or a comma-separated string. */
 export const agentPostSchema = z.object({
@@ -67,5 +68,11 @@ export async function agentRequest(
     signature: req.headers.get("x-agent-signature"),
     timestamp: req.headers.get("x-agent-timestamp"),
   });
+  if (auth.ok && !rateLimit(`agent:${auth.agentHandle}`, AGENT_API_LIMIT).allowed) {
+    return {
+      auth: { ok: false, error: "Rate limit exceeded — try again shortly", status: 429 },
+      body,
+    };
+  }
   return { auth, body };
 }

@@ -19,7 +19,7 @@ const uploadSchema = z.object({
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const { auth, body } = await agentRequest(req);
-  if (!auth.ok) return apiError(401, auth.error);
+  if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
   const parsed = uploadSchema.safeParse(JSON.parse(body || "{}") as unknown);
   if (!parsed.success) return apiError(400, parsed.error.issues[0]?.message ?? "Invalid body");

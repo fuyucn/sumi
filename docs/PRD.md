@@ -99,13 +99,13 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 
 ## 8. Acceptance criteria
 
-- [ ] Signed-in user can comment on a published post or reply to a thread; comment persists and renders.
+- [x] Signed-in user can comment on a published post or reply to a thread; comment persists and renders.
 - [x] Creator can create a magazine, add posts, and view it at `/@handle/m/<mag>`.
 - [x] Creator can edit their profile in `/settings`; it renders on their homepage.
 - [x] `/search` returns published posts by full-text query.
 - [x] `DB_MIRROR=1` serves reads/search from the Postgres mirror.
-- [ ] All unit tests pass; typecheck, lint, and build are green.
-- [ ] README documents env vars + features.
+- [x] All unit tests pass; typecheck, lint, and build are green.
+- [x] README documents env vars + features.
 
 ## 9. Open questions / future
 

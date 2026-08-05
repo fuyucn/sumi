@@ -9,6 +9,7 @@ import type { TrackedSession } from "./session-registry";
 import { getAgentContentStore, getReadContentStore } from "@/content";
 import { buildNewPost } from "@/content/post-input";
 import { safeImageName, slugify } from "@/content/paths";
+import { MCP_LIMIT, rateLimit } from "@/lib/rate-limit";
 import {
   agentPostSchema,
   agentPostUpdateSchema,
@@ -36,7 +37,10 @@ type Session = {
 };
 
 /** Registry entry for a live session — carries the transport for request routing. */
-type RuntimeSession = TrackedSession & { transport: WebStandardStreamableHTTPServerTransport };
+type RuntimeSession = TrackedSession & {
+  transport: WebStandardStreamableHTTPServerTransport;
+  agentHandle: string;
+};
 
 function createSession(agent: Extract<AgentAuth, { ok: true }>): Session {
   let sessionId = "";
@@ -60,6 +64,9 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
   if (sessionId) {
     const existing = registry.get(sessionId) as RuntimeSession | undefined;
     if (existing) {
+      if (!rateLimit(`agent:${existing.agentHandle}`, MCP_LIMIT).allowed) {
+        return jsonError(429, "Rate limit exceeded — try again shortly");
+      }
       touch(sessionId);
       return existing.transport.handleRequest(req);
     }
@@ -68,6 +75,9 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
   if (req.method === "POST") {
     const auth = await authenticateBearer(req.headers.get("authorization"));
     if (!auth.ok) return jsonError(401, auth.error);
+    if (!rateLimit(`agent:${auth.agentHandle}`, MCP_LIMIT).allowed) {
+      return jsonError(429, "Rate limit exceeded — try again shortly");
+    }
     makeCapacity();
     const session = createSession(auth);
     const res = await session.transport.handleRequest(req);
@@ -77,6 +87,7 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
         lastActiveAt: Date.now(),
         close: () => session.transport.close(),
         transport: session.transport,
+        agentHandle: auth.agentHandle,
       };
       registry.set(sid, entry);
     }
