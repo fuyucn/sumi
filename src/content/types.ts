@@ -28,9 +28,12 @@ export interface NewPost {
 
 export interface NewComment {
   body: string;
+  /** Optional parent comment id for nested/reply comments. */
+  parentId?: string;
 }
 
 export interface Comment extends NewComment {
+  id: string; // stable comment id (used as the parent reference)
   handle: string; // author handle
   date: string; // ISO 8601
 }

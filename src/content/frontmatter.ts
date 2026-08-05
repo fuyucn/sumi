@@ -30,17 +30,31 @@ export function parsePost(md: string, slug: string): Post {
 
 // ---- Comments ----
 
-export function serializeComment(comment: { handle: string; date: string; body: string }): string {
-  return matter.stringify(comment.body, { author: comment.handle, date: comment.date });
+export function serializeComment(comment: {
+  handle: string;
+  date: string;
+  body: string;
+  parentId?: string;
+}): string {
+  const data: Record<string, unknown> = { author: comment.handle, date: comment.date };
+  if (comment.parentId !== undefined && comment.parentId !== "") data.parent = comment.parentId;
+  return matter.stringify(comment.body, data);
 }
 
-export function parseComment(md: string, handle: string, fallbackDate: string): { handle: string; date: string; body: string } {
+export function parseComment(
+  md: string,
+  id: string,
+  fallbackDate: string,
+): { id: string; handle: string; date: string; body: string; parentId?: string } {
   const { data, content } = matter(md);
-  return {
-    handle: typeof data.author === "string" && data.author ? data.author : handle,
+  const out: { id: string; handle: string; date: string; body: string; parentId?: string } = {
+    id,
+    handle: typeof data.author === "string" && data.author ? data.author : id,
     date: typeof data.date === "string" ? data.date : fallbackDate,
     body: content,
   };
+  if (typeof data.parent === "string" && data.parent) out.parentId = data.parent;
+  return out;
 }
 
 // ---- Magazines ----

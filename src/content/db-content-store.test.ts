@@ -1,0 +1,137 @@
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
+import { expect, test } from "vitest";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { schema } from "@/db/schema";
+import { DbContentStore } from "./db-content-store";
+
+// The Postgres mirror tables as DDL (mirrors drizzle/0001_grey_aqueduct.sql).
+const DDL = `
+CREATE TABLE "sumi_posts" (
+  "handle" text NOT NULL,
+  "slug" text NOT NULL,
+  "title" text NOT NULL,
+  "body" text NOT NULL,
+  "tags" text DEFAULT '[]' NOT NULL,
+  "excerpt" text,
+  "cover_image" text,
+  "status" text DEFAULT 'draft' NOT NULL,
+  "published_at" text,
+  "created_at" text NOT NULL,
+  "updated_at" text NOT NULL,
+  CONSTRAINT "sumi_posts_handle_slug_pk" PRIMARY KEY("handle","slug")
+);
+CREATE TABLE "sumi_comments" (
+  "id" text PRIMARY KEY NOT NULL,
+  "post_handle" text NOT NULL,
+  "post_slug" text NOT NULL,
+  "author_handle" text NOT NULL,
+  "body" text NOT NULL,
+  "date" text NOT NULL,
+  "parent_id" text,
+  "created_at" text NOT NULL
+);
+CREATE TABLE "sumi_magazines" (
+  "handle" text NOT NULL,
+  "slug" text NOT NULL,
+  "title" text NOT NULL,
+  "description" text,
+  "items" text DEFAULT '[]' NOT NULL,
+  "created_at" text NOT NULL,
+  "updated_at" text NOT NULL,
+  CONSTRAINT "sumi_magazines_handle_slug_pk" PRIMARY KEY("handle","slug")
+);
+CREATE TABLE "sumi_profiles" (
+  "handle" text PRIMARY KEY NOT NULL,
+  "display_name" text,
+  "bio" text,
+  "updated_at" text NOT NULL
+);
+`;
+
+async function makeStore() {
+  const client = new PGlite();
+  await client.exec(DDL);
+  const db = drizzle(client, { schema }) as unknown as PostgresJsDatabase<typeof schema>;
+  return new DbContentStore(db);
+}
+
+test("savePost + getPost + listPosts round-trip with tags/status/searchable body", async () => {
+  const store = await makeStore();
+  const slug = await store.savePost("alice", {
+    title: "My First Post",
+    body: "# Hi\n\nmirror notes",
+    tags: ["intro", "db"],
+    status: "published",
+    publishedAt: "2026-06-12T00:00:00.000Z",
+  });
+  expect(slug).toBe("my-first-post");
+
+  const post = await store.getPost("alice", "my-first-post");
+  expect(post?.title).toBe("My First Post");
+  expect(post?.tags).toEqual(["intro", "db"]);
+  expect(post?.status).toBe("published");
+
+  const all = await store.listPosts({ handle: "alice" });
+  expect(all.map((p) => p.slug)).toEqual(["my-first-post"]);
+  expect(all[0]).not.toHaveProperty("body");
+});
+
+test("searchPosts matches title/body/excerpt/tags, published only, newest first", async () => {
+  const store = await makeStore();
+  await store.savePost("alice", { title: "Postgres", body: "mirror notes", tags: ["db"], status: "published", publishedAt: "2026-06-10T00:00:00.000Z" });
+  await store.savePost("alice", { title: "Cooking", body: "ramen recipe", excerpt: "noodles", tags: ["food"], status: "published", publishedAt: "2026-06-11T00:00:00.000Z" });
+  await store.savePost("alice", { title: "Secret", body: "mirror mirror", tags: ["db"], status: "draft" });
+
+  expect((await store.searchPosts("mirror")).map((r) => r.post.slug)).toEqual(["postgres"]);
+  expect((await store.searchPosts("noodles")).map((r) => r.post.slug)).toEqual(["cooking"]);
+  expect((await store.searchPosts("db")).map((r) => r.post.slug)).toEqual(["postgres"]);
+  expect(await store.searchPosts("missing")).toEqual([]);
+  expect(await store.searchPosts("   ")).toEqual([]);
+});
+
+test("comments list/add/nest round-trip", async () => {
+  const store = await makeStore();
+  expect(await store.listComments("alice", "hello")).toEqual([]);
+  const root = await store.addComment("alice", "hello", { body: "root" }, "bob", new Date("2026-06-13T01:00:00Z"));
+  const reply = await store.addComment("alice", "hello", { body: "reply", parentId: root.id }, "carol", new Date("2026-06-13T02:00:00Z"));
+  const comments = await store.listComments("alice", "hello");
+  expect(comments.map((c) => c.date)).toEqual([root.date, reply.date]);
+  expect(comments.find((c) => c.id === root.id)?.parentId).toBeUndefined();
+  expect(comments.find((c) => c.id === reply.id)?.parentId).toBe(root.id);
+});
+
+test("profile + magazine round-trip", async () => {
+  const store = await makeStore();
+  expect(await store.getProfile("alice")).toBeNull();
+  await store.saveProfile("alice", { displayName: "Alice", bio: "hi" });
+  expect(await store.getProfile("alice")).toEqual({ displayName: "Alice", bio: "hi" });
+
+  const slug = await store.saveMagazine("alice", { title: "My Zine", description: "d", items: ["one", "two"] });
+  expect(slug).toBe("my-zine");
+  expect(await store.getMagazine("alice", "my-zine")).toEqual({
+    slug: "my-zine",
+    title: "My Zine",
+    description: "d",
+    items: ["one", "two"],
+  });
+  await store.deleteMagazine("alice", "my-zine");
+  expect(await store.getMagazine("alice", "my-zine")).toBeNull();
+});
+
+test("listTags counts published posts only, newest-used sort, drafts excluded", async () => {
+  const store = await makeStore();
+  await store.savePost("alice", { title: "A", body: "a", tags: ["js", "web"], status: "published" });
+  await store.savePost("alice", { title: "B", body: "b", tags: ["js"], status: "published" });
+  await store.savePost("alice", { title: "C", body: "c", tags: ["js", "secret"], status: "draft" });
+  const tags = await store.listTags();
+  expect(tags).toEqual([
+    { name: "js", count: 2 },
+    { name: "web", count: 1 },
+  ]);
+});
+
+test("uploadImage is unsupported on the Postgres mirror", async () => {
+  const store = await makeStore();
+  await expect(store.uploadImage("alice", "p", "cover.png", new Uint8Array([1]))).rejects.toThrow(/not supported/);
+});

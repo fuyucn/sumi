@@ -7,10 +7,14 @@ export function CommentForm({
   postHandle,
   slug,
   authorHandle,
+  parentId,
+  onDone,
 }: {
   postHandle: string;
   slug: string;
   authorHandle: string;
+  parentId?: string;
+  onDone?: () => void;
 }) {
   const router = useRouter();
   const [body, setBody] = useState("");
@@ -23,22 +27,28 @@ export function CommentForm({
         e.preventDefault();
         setError(null);
         startTransition(async () => {
-          const result = await addCommentAction({ postHandle, slug, body });
+          const result = await addCommentAction({
+            postHandle,
+            slug,
+            body,
+            ...(parentId ? { parentId } : {}),
+          });
           if (result.ok) {
             setBody("");
+            onDone?.();
             router.refresh();
           } else {
             setError(result.error);
           }
         });
       }}
-      className="mt-6"
+      className={`${parentId ? "" : "mt-6"} min-w-0`}
     >
-      <label className="block text-sm text-ink-muted" htmlFor={`comment-${postHandle}-${slug}`}>
+      <label className="block text-sm text-ink-muted" htmlFor={`comment-${postHandle}-${slug}${parentId ? "-" + parentId : ""}`}>
         Reply as @{authorHandle}
       </label>
       <textarea
-        id={`comment-${postHandle}-${slug}`}
+        id={`comment-${postHandle}-${slug}${parentId ? "-" + parentId : ""}`}
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
@@ -46,7 +56,7 @@ export function CommentForm({
         className="mt-2 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
       />
       {error ? <p className="mt-2 text-sm text-seal">{error}</p> : null}
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
           disabled={isPending || body.trim().length === 0}
@@ -54,6 +64,15 @@ export function CommentForm({
         >
           {isPending ? "Posting…" : "Comment"}
         </button>
+        {parentId ? (
+          <button
+            type="button"
+            onClick={onDone}
+            className="text-sm text-ink-faint transition-colors hover:text-ink-muted"
+          >
+            Cancel
+          </button>
+        ) : null}
       </div>
     </form>
   );

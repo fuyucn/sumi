@@ -8,11 +8,12 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 ## Features
 
 - **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (committed to the content repo).
-- **Reading** — search-free discovery: newest-first home feed, per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
-- **Comments** — signed-in creators can leave plain comments on any published post, stored per-article in the content repo.
+- **Reading** — search-free discovery: newest-first home feed, full-text search (`/search`), per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
+- **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article in the content repo.
 - **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Own your content** — every article, image, comment, and magazine is committed to a GitHub repo you control (portable, version-controlled).
+- **Optional Postgres mirror** — set `DB_MIRROR=1` to serve reads/search from Postgres (`DbContentStore`) instead of GitHub.
 
 ## Tech stack
 
@@ -184,6 +185,8 @@ For local Cloudflare testing: `pnpm cf:dev` (builds then runs a Wrangler preview
 - **Foundation** — Next.js scaffold, GitHub OAuth via Better Auth with an allowlist gate, Drizzle + Neon, Vercel deploy config — **complete**.
 - **Content engine** — GitHub-API-backed `ContentStore` (markdown + frontmatter), per-creator content layout — **complete**.
 - **Writing & reading** — TipTap editor, drafts/publish, image upload, article/creator/tag/home pages — **complete**.
-- **Community** — comments, magazines/collections, and profile/settings — **complete**.
+- **Community** — nested comments, magazines/collections, and profile/settings — **complete**.
+- **Discovery** — full-text search (`/search`), tags library — **complete**.
+- **Extensibility** — optional `DbContentStore` Postgres mirror (`DB_MIRROR=1`) and the Cloudflare (D1/R2) backend, both behind the shared `ContentStore` seam — **complete**.
 
-The v0 loop (sign in → write → publish → read → comment → curate) is feature-complete. Everything is verified with `pnpm typecheck`, `pnpm test`, and `pnpm build`.
+The v0 loop (sign in → write → publish → read → comment → curate → search) is feature-complete. Everything is verified with `pnpm typecheck`, `pnpm test`, and `pnpm build`.

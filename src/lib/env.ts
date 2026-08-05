@@ -26,6 +26,10 @@ const schema = z.object({
   // hint for the ContentStore factory to select the Cloudflare backend over the
   // GitHub one. Empty string (common in .env files) disables it.
   CF_ENABLED: z.preprocess(emptyToUndefined, z.string().optional()),
+  // Optional Postgres content mirror flag. When set (e.g. "1"), reads/search
+  // are served from the `sumi_*` Postgres mirror tables (DbContentStore) instead
+  // of the GitHub repo. Writes via DbContentStore only affect the mirror.
+  DB_MIRROR: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
 export type Env = z.infer<typeof schema>;

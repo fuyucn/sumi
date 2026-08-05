@@ -19,6 +19,12 @@ export function Nav() {
         </Link>
         <nav className="flex items-center gap-5 text-sm">
           <Link
+            href="/search"
+            className="link-underline text-ink-faint transition-colors hover:text-ink-muted"
+          >
+            Search
+          </Link>
+          <Link
             href="/tags"
             className="link-underline text-ink-faint transition-colors hover:text-ink-muted"
           >

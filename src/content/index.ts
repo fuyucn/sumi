@@ -13,6 +13,17 @@ export function buildContentStore(token: string, repo: string): ContentStore {
 }
 
 /**
+ * Build the Postgres mirror content store (DbContentStore) when `DB_MIRROR=1`
+ * and a DATABASE_URL is configured. Returns null when the mirror is disabled.
+ */
+export async function getDbContentStore(): Promise<ContentStore | null> {
+  if (!env.DB_MIRROR) return null;
+  const { createDb } = await import("@/lib/db");
+  const { DbContentStore } = await import("./db-content-store");
+  return new DbContentStore(createDb(env.DATABASE_URL) as never);
+}
+
+/**
  * Build the Cloudflare content store (D1 + R2) when running on Cloudflare and
  * `CF_ENABLED=1`. Returns null when the CF runtime isn't available, so callers
  * can fall back to the GitHub-backed store (Docker/VPS keep working).
@@ -38,6 +49,8 @@ export async function getCloudflareContentStore(): Promise<ContentStore | null> 
 export async function getContentStoreForUser(userId: string): Promise<ContentStore | null> {
   const cf = await getCloudflareContentStore();
   if (cf) return cf;
+  const db = await getDbContentStore();
+  if (db) return db;
   const token = await getGithubToken(userId);
   const repo = env.GITHUB_CONTENT_REPO;
   if (!token || !repo) return null;
@@ -48,6 +61,8 @@ export async function getContentStoreForUser(userId: string): Promise<ContentSto
 export async function getReadContentStore(): Promise<ContentStore | null> {
   const cf = await getCloudflareContentStore();
   if (cf) return cf;
+  const db = await getDbContentStore();
+  if (db) return db;
   const repo = env.GITHUB_CONTENT_REPO;
   if (!repo) return null;
   return new GitHubContentStore(readGitHubClient(repo, env.GITHUB_CONTENT_TOKEN));

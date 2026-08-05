@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS comments (
   author_handle TEXT NOT NULL,
   body TEXT NOT NULL,
   date TEXT NOT NULL,
+  parent_id TEXT,
   created_at TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS magazines (
@@ -209,6 +210,29 @@ test("comments list/add round-trip sorted by date", async () => {
   await store.addComment("alice", "hello", { body: "later" }, "carol", new Date("2026-06-13T01:00:00Z"));
   const comments = await store.listComments("alice", "hello");
   expect(comments.map((c) => c.body)).toEqual(["later", "first"]);
+});
+
+test("comments support nesting via a parent id", async () => {
+  const { store } = inMemoryStore();
+  const root = await store.addComment("alice", "hello", { body: "root" }, "bob", new Date("2026-06-13T01:00:00Z"));
+  const reply = await store.addComment("alice", "hello", { body: "reply", parentId: root.id }, "carol", new Date("2026-06-13T02:00:00Z"));
+  expect(root.id).toBeTruthy();
+  expect(reply.parentId).toBe(root.id);
+  const comments = await store.listComments("alice", "hello");
+  expect(comments.find((c) => c.id === root.id)?.parentId).toBeUndefined();
+  expect(comments.find((c) => c.id === reply.id)?.parentId).toBe(root.id);
+});
+
+test("searchPosts matches title/body/excerpt/tags, published only, newest first", async () => {
+  const { store } = inMemoryStore();
+  await store.savePost("alice", { title: "Postgres", body: "mirror notes", tags: ["db"], status: "published", publishedAt: "2026-06-10T00:00:00.000Z" });
+  await store.savePost("alice", { title: "Cooking", body: "ramen recipe", excerpt: "noodles", tags: ["food"], status: "published", publishedAt: "2026-06-11T00:00:00.000Z" });
+  await store.savePost("alice", { title: "Secret", body: "mirror mirror", tags: ["db"], status: "draft" });
+
+  expect((await store.searchPosts("mirror")).map((r) => r.post.slug)).toEqual(["postgres"]);
+  expect((await store.searchPosts("ramen")).map((r) => r.post.slug)).toEqual(["cooking"]);
+  expect((await store.searchPosts("db")).map((r) => r.post.slug)).toEqual(["postgres"]);
+  expect((await store.searchPosts("missing")).map((r) => r.handle)).toEqual([]);
 });
 
 test("listHandles returns handles with any content, distinct and sorted", async () => {

@@ -1,0 +1,324 @@
+import { and, sql } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { schema as dbSchema } from "@/db/schema";
+import {
+  sumiComments,
+  sumiMagazines,
+  sumiPosts,
+  sumiProfiles,
+} from "@/db/schema";
+import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
+import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
+import { slugify } from "./paths";
+
+type Db = PostgresJsDatabase<typeof dbSchema>;
+
+interface PostRow {
+  handle: string;
+  slug: string;
+  title: string;
+  body: string;
+  tags: string;
+  excerpt: string | null;
+  coverImage: string | null;
+  status: string;
+  publishedAt: string | null;
+}
+
+interface MagazineRow {
+  handle: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  items: string;
+}
+
+function parseJsonList(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.filter((t): t is string => typeof t === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * ContentStore backed by Postgres (drizzle), mirroring the shapes used by the
+ * GitHub/Cloudflare stores. Enable with `DB_MIRROR=1`; the mirror tables are
+ * created by `pnpm db:migrate` (see `drizzle/0001_sumi_mirror.sql`).
+ */
+export class DbContentStore implements ContentStore {
+  constructor(private readonly db: Db) {}
+
+  // ---- Posts ----
+
+  async listHandles(): Promise<string[]> {
+    const rows = await this.db
+      .selectDistinct({ handle: sumiPosts.handle })
+      .from(sumiPosts)
+      .unionAll(this.db.selectDistinct({ handle: sumiMagazines.handle }).from(sumiMagazines))
+      .unionAll(this.db.selectDistinct({ handle: sumiProfiles.handle }).from(sumiProfiles));
+    const handles = new Set(rows.map((r) => r.handle));
+    return [...handles].sort();
+  }
+
+  async listPosts(opts: ListPostsOptions = {}): Promise<PostMeta[]> {
+    const conditions: ReturnType<typeof sql>[] = [];
+    if (opts.handle !== undefined) conditions.push(sql`${sumiPosts.handle} = ${opts.handle}`);
+    if (opts.status !== undefined) conditions.push(sql`${sumiPosts.status} = ${opts.status}`);
+    const rows = await this.db
+      .select()
+      .from(sumiPosts)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(sql`${sumiPosts.createdAt} DESC`);
+    return rows.map((r) => toPostMeta(r));
+  }
+
+  async getPost(handle: string, slug: string): Promise<Post | null> {
+    const row = await this.db
+      .select()
+      .from(sumiPosts)
+      .where(sql`${sumiPosts.handle} = ${handle} AND ${sumiPosts.slug} = ${slug}`)
+      .limit(1);
+    return row.length ? toPost(row[0]) : null;
+  }
+
+  async savePost(handle: string, post: NewPost): Promise<string> {
+    const slug = slugify(post.title);
+    const now = new Date().toISOString();
+    const full: PostRow = {
+      handle,
+      slug,
+      title: post.title,
+      body: post.body,
+      tags: JSON.stringify(post.tags ?? []),
+      excerpt: post.excerpt ?? null,
+      coverImage: post.coverImage ?? null,
+      status: post.status ?? "draft",
+      publishedAt: post.publishedAt ?? null,
+    };
+    await this.db
+      .insert(sumiPosts)
+      .values({ ...full, createdAt: now, updatedAt: now })
+      .onConflictDoUpdate({
+        target: [sumiPosts.handle, sumiPosts.slug],
+        set: {
+          title: post.title,
+          body: post.body,
+          tags: full.tags,
+          excerpt: full.excerpt,
+          coverImage: full.coverImage,
+          status: full.status,
+          publishedAt: full.publishedAt,
+          updatedAt: now,
+        },
+      });
+    return slug;
+  }
+
+  async deletePost(handle: string, slug: string): Promise<void> {
+    await this.db
+      .delete(sumiComments)
+      .where(sql`${sumiComments.postHandle} = ${handle} AND ${sumiComments.postSlug} = ${slug}`);
+    await this.db.delete(sumiPosts).where(sql`${sumiPosts.handle} = ${handle} AND ${sumiPosts.slug} = ${slug}`);
+  }
+
+  async uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string> {
+    // Postgres mirror has no object store; images live in GitHub/R2. Callers that
+    // need image writes must use a store that owns one (GitHub/Cloudflare).
+    void handle; void slug; void filename; void bytes;
+    throw new Error("DbContentStore: image uploads are not supported (images live in GitHub/R2)");
+  }
+
+  // ---- Comments ----
+
+  async listComments(postHandle: string, slug: string): Promise<Comment[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiComments)
+      .where(sql`${sumiComments.postHandle} = ${postHandle} AND ${sumiComments.postSlug} = ${slug}`)
+      .orderBy(sql`${sumiComments.date} ASC`);
+    return rows.map((r) => ({
+      id: r.id,
+      handle: r.authorHandle,
+      date: r.date,
+      body: r.body,
+      ...(r.parentId ? { parentId: r.parentId } : {}),
+    }));
+  }
+
+  async addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment> {
+    const full: Comment = {
+      id: now.toISOString().replace(/[:.]/g, "-") + "-" + (slugify(authorHandle) || "user"),
+      handle: authorHandle,
+      date: now.toISOString(),
+      body: comment.body,
+      ...(comment.parentId !== undefined ? { parentId: comment.parentId } : {}),
+    };
+    await this.db.insert(sumiComments).values({
+      id: full.id,
+      postHandle,
+      postSlug: slug,
+      authorHandle,
+      body: comment.body,
+      date: full.date,
+      parentId: full.parentId ?? null,
+      createdAt: full.date,
+    });
+    return full;
+  }
+
+  // ---- Profile ----
+
+  async getProfile(handle: string): Promise<Profile | null> {
+    const rows = await this.db
+      .select()
+      .from(sumiProfiles)
+      .where(sql`${sumiProfiles.handle} = ${handle}`)
+      .limit(1);
+    if (!rows.length) return null;
+    const r = rows[0];
+    return {
+      ...(r.displayName ? { displayName: r.displayName } : {}),
+      ...(r.bio ? { bio: r.bio } : {}),
+    };
+  }
+
+  async saveProfile(handle: string, profile: Profile): Promise<void> {
+    await this.db
+      .insert(sumiProfiles)
+      .values({
+        handle,
+        displayName: profile.displayName ?? null,
+        bio: profile.bio ?? null,
+        updatedAt: new Date().toISOString(),
+      })
+      .onConflictDoUpdate({
+        target: sumiProfiles.handle,
+        set: {
+          displayName: profile.displayName ?? null,
+          bio: profile.bio ?? null,
+          updatedAt: new Date().toISOString(),
+        },
+      });
+  }
+
+  // ---- Magazines ----
+
+  async listMagazines(handle: string): Promise<Magazine[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiMagazines)
+      .where(sql`${sumiMagazines.handle} = ${handle}`)
+      .orderBy(sql`${sumiMagazines.createdAt} ASC`);
+    return rows.map((r) => toMagazine(r));
+  }
+
+  async getMagazine(handle: string, slug: string): Promise<Magazine | null> {
+    const rows = await this.db
+      .select()
+      .from(sumiMagazines)
+      .where(sql`${sumiMagazines.handle} = ${handle} AND ${sumiMagazines.slug} = ${slug}`)
+      .limit(1);
+    return rows.length ? toMagazine(rows[0]) : null;
+  }
+
+  async saveMagazine(handle: string, magazine: NewMagazine): Promise<string> {
+    const slug = slugify(magazine.title);
+    const now = new Date().toISOString();
+    await this.db
+      .insert(sumiMagazines)
+      .values({
+        handle,
+        slug,
+        title: magazine.title,
+        description: magazine.description ?? null,
+        items: JSON.stringify(magazine.items ?? []),
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [sumiMagazines.handle, sumiMagazines.slug],
+        set: {
+          title: magazine.title,
+          description: magazine.description ?? null,
+          items: JSON.stringify(magazine.items ?? []),
+          updatedAt: now,
+        },
+      });
+    return slug;
+  }
+
+  async deleteMagazine(handle: string, slug: string): Promise<void> {
+    await this.db
+      .delete(sumiMagazines)
+      .where(sql`${sumiMagazines.handle} = ${handle} AND ${sumiMagazines.slug} = ${slug}`);
+  }
+
+  // ---- Tags ----
+
+  async listTags(): Promise<TagInfo[]> {
+    const rows = await this.db
+      .select({ tags: sumiPosts.tags })
+      .from(sumiPosts)
+      .where(sql`${sumiPosts.status} = 'published'`);
+    const counts = new Map<string, number>();
+    for (const row of rows) {
+      for (const raw of parseJsonList(row.tags)) {
+        const name = raw.trim();
+        if (!name) continue;
+        counts.set(name, (counts.get(name) ?? 0) + 1);
+      }
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  // ---- Search ----
+
+  async searchPosts(query: string): Promise<SearchResult[]> {
+    const needle = query.trim();
+    if (!needle) return [];
+    const like = `%${needle}%`;
+    const rows = await this.db
+      .select()
+      .from(sumiPosts)
+      .where(
+        sql`${sumiPosts.status} = 'published' AND (
+          ${sumiPosts.title} ILIKE ${like}
+          OR ${sumiPosts.body} ILIKE ${like}
+          OR ${sumiPosts.excerpt} ILIKE ${like}
+          OR ${sumiPosts.tags} ILIKE ${like}
+        )`,
+      )
+      .orderBy(sql`${sumiPosts.createdAt} DESC`);
+    return rows.map((r) => ({ handle: r.handle, post: toPostMeta(r) }));
+  }
+}
+
+function toPostMeta(r: PostRow): PostMeta {
+  return {
+    title: r.title,
+    slug: r.slug,
+    tags: parseJsonList(r.tags),
+    status: r.status as PostStatus,
+    ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
+    ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),
+    ...(r.publishedAt !== null ? { publishedAt: r.publishedAt } : {}),
+  };
+}
+
+function toPost(r: PostRow): Post {
+  return { ...toPostMeta(r), body: r.body };
+}
+
+function toMagazine(r: MagazineRow): Magazine {
+  return {
+    slug: r.slug,
+    title: r.title,
+    items: parseJsonList(r.items),
+    ...(r.description !== null ? { description: r.description } : {}),
+  };
+}

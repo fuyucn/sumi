@@ -21,6 +21,7 @@ function fakeStore(): ContentStore {
     saveMagazine: vi.fn().mockResolvedValue("zine"),
     deleteMagazine: vi.fn().mockResolvedValue(undefined),
     listTags: vi.fn().mockResolvedValue([]),
+    searchPosts: vi.fn().mockResolvedValue([]),
   };
 }
 

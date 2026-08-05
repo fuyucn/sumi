@@ -8,6 +8,7 @@ export const commentFormSchema = z.object({
   postHandle: z.string().trim().min(1),
   slug: z.string().trim().min(1),
   body: z.string().trim().min(1, "Comment is required").max(4000),
+  parentId: z.string().trim().optional(),
 });
 
 export const profileFormSchema = z.object({
@@ -34,7 +35,13 @@ export async function runAddComment(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
   }
-  const comment = await deps.store!.addComment(f.postHandle, f.slug, { body: f.body }, deps.handle!, now);
+  const comment = await deps.store!.addComment(
+    f.postHandle,
+    f.slug,
+    { body: f.body, ...(f.parentId ? { parentId: f.parentId } : {}) },
+    deps.handle!,
+    now,
+  );
   return { ok: true, data: comment };
 }
 

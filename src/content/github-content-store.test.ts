@@ -112,6 +112,52 @@ test("listComments returns nothing when there are no comments", async () => {
   expect(await store.listComments("alice", "hello")).toEqual([]);
 });
 
+test("addComment stores a stable id and preserves a parent reference", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const parent = await store.addComment("alice", "hello", { body: "root" }, "bob", new Date("2026-06-13T01:02:03.000Z"));
+  const child = await store.addComment("alice", "hello", { body: "reply", parentId: parent.id }, "carol", new Date("2026-06-13T01:03:00.000Z"));
+  expect(parent.id).toBeTruthy();
+  expect(child.parentId).toBe(parent.id);
+  const comments = await store.listComments("alice", "hello");
+  expect(comments).toHaveLength(2);
+  const root = comments.find((c) => c.id === parent.id)!;
+  const reply = comments.find((c) => c.id === child.id)!;
+  expect(root.parentId).toBeUndefined();
+  expect(reply.parentId).toBe(parent.id);
+});
+
+// ---- Search ----
+test("searchPosts matches title, body, excerpt, and tags across published posts", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  await store.savePost("alice", {
+    title: "Postgres notes", body: "about the mirror", tags: ["db"],
+    status: "published", publishedAt: "2026-06-10T00:00:00.000Z",
+  });
+  await store.savePost("alice", {
+    title: "Cooking", body: "a recipe for ramen", excerpt: "noodles", tags: ["food"],
+    status: "published", publishedAt: "2026-06-11T00:00:00.000Z",
+  });
+  // drafts must never appear
+  await store.savePost("alice", {
+    title: "Secret notes", body: "draft mirror draft", tags: ["db"],
+    status: "draft",
+  });
+
+  expect((await store.searchPosts("mirror")).map((r) => r.post.slug)).toEqual(["postgres-notes"]);
+  expect((await store.searchPosts("ramen")).map((r) => r.post.slug)).toEqual(["cooking"]);
+  expect((await store.searchPosts("db")).map((r) => r.post.slug)).toEqual(["postgres-notes"]);
+  expect(await store.searchPosts("nope")).toEqual([]);
+  expect(await store.searchPosts("   ")).toEqual([]);
+});
+
+test("searchPosts returns newest-first and includes the handle", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  await store.savePost("alice", { title: "Note A", body: "keyword", status: "published", publishedAt: "2026-06-01T00:00:00.000Z" });
+  await store.savePost("bob", { title: "Note B", body: "keyword", status: "published", publishedAt: "2026-06-10T00:00:00.000Z" });
+  const results = await store.searchPosts("keyword");
+  expect(results.map((r) => `${r.handle}/${r.post.slug}`)).toEqual(["bob/note-b", "alice/note-a"]);
+});
+
 // ---- Profile ----
 test("getProfile returns null when absent, saveProfile round-trips", async () => {
   const client = fakeClient();

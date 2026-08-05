@@ -10,6 +10,12 @@ export interface TagInfo {
   count: number;
 }
 
+/** A search hit: the owning handle plus the published post metadata. */
+export interface SearchResult {
+  handle: string;
+  post: PostMeta;
+}
+
 export interface ContentStore {
   /** All creator handles that have content. */
   listHandles(): Promise<string[]>;
@@ -28,4 +34,6 @@ export interface ContentStore {
   deleteMagazine(handle: string, slug: string): Promise<void>;
   /** All tags in use (published posts) with their post counts, most-used first. */
   listTags(): Promise<TagInfo[]>;
+  /** Full-text search across published posts (title, body, excerpt, tags). Newest first. */
+  searchPosts(query: string): Promise<SearchResult[]>;
 }

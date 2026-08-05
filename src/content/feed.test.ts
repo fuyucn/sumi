@@ -15,7 +15,7 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async deletePost() {},
     async uploadImage() { return ""; },
     async listComments() { return []; },
-    async addComment() { return { body: "", handle: "", date: "" }; },
+    async addComment() { return { id: "", body: "", handle: "", date: "" }; },
     async getProfile() { return null; },
     async saveProfile() {},
     async listMagazines() { return []; },
@@ -23,6 +23,7 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async saveMagazine() { return ""; },
     async deleteMagazine() {},
     async listTags() { return []; },
+    async searchPosts() { return []; },
   };
 }
 

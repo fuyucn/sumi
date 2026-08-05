@@ -57,10 +57,13 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 - Creator homepage `/@handle`; home feed (newest published); tag pages `/tag/<slug>`.
 - Image upload committed to the content repo.
 
-### FR-3 Comments (NEW — this PRD)
+### FR-3 Comments
 - Any signed-in user may comment on any published post.
 - Comment stored as `content/@<handle>/<slug>/comments/<ts>-<author>.md`
   with frontmatter (`author`, `date`) + body; flat, time-ordered.
+- **Nested replies** (NEW): a comment may carry an optional `parent` reference
+  (its `id` = the comment filename). Threads render as an indented tree with an
+  inline "Reply" composer per comment.
 - Comments render under the article; a small form allows signed-in users to add one.
 - Anonymous/unsigned visitors see comments but not the form.
 
@@ -75,8 +78,17 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 - `/settings` page lets the signed-in creator edit their own profile.
 - Creator homepage renders their profile (display name + bio).
 
-### FR-6 Docs & deploy (NEW — this PRD)
+### FR-6 Docs & deploy
 - Update README with full env-var table, migration steps, and feature list.
+
+### FR-7 Search (NEW)
+- Full-text search page `/search` (`?q=...`), matching title, body, excerpt, and tags.
+- Only published posts; results newest-first with the owning creator handle.
+
+### FR-8 Postgres mirror (NEW)
+- Optional `DbContentStore` mirrors content into the `sumi_*` Postgres tables
+  (created by the `0001` migration). Enabled with `DB_MIRROR=1`; reads/search
+  then come from Postgres instead of GitHub.
 
 ## 7. Non-functional requirements
 
@@ -87,14 +99,16 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 
 ## 8. Acceptance criteria
 
-- [ ] Signed-in user can comment on a published post; comment persists and renders.
-- [ ] Creator can create a magazine, add posts, and view it at `/@handle/m/<mag>`.
-- [ ] Creator can edit their profile in `/settings`; it renders on their homepage.
+- [ ] Signed-in user can comment on a published post or reply to a thread; comment persists and renders.
+- [x] Creator can create a magazine, add posts, and view it at `/@handle/m/<mag>`.
+- [x] Creator can edit their profile in `/settings`; it renders on their homepage.
+- [x] `/search` returns published posts by full-text query.
+- [x] `DB_MIRROR=1` serves reads/search from the Postgres mirror.
 - [ ] All unit tests pass; typecheck, lint, and build are green.
 - [ ] README documents env vars + features.
 
 ## 9. Open questions / future
 
 - Likes(スキ) and follows → store in Neon later.
-- Optional mirror of content into Postgres (`DbContentStore`).
-- Nested comments, full-text search, notifications (future).
+- Notifications; full-text search index tuning / DB-backed ranking (future).
+- Nesting depth limit / moderation for comment threads (future).

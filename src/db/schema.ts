@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -52,4 +52,53 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const schema = { user, session, account, verification };
+// ---- Sumi content mirror (DbContentStore) ----
+
+// These tables optionally mirror the GitHub-published content into Postgres so a
+// deployment can serve reads/search from SQL without touching GitHub. The
+// ContentStore interface (`src/content/store.ts`) is shared across the GitHub,
+// Cloudflare (D1) and Postgres (DbContentStore) backends.
+
+export const sumiPosts = pgTable("sumi_posts", {
+  handle: text("handle").notNull(),
+  slug: text("slug").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").notNull().default("[]"),
+  excerpt: text("excerpt"),
+  coverImage: text("cover_image"),
+  status: text("status").notNull().default("draft"),
+  publishedAt: text("published_at"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (t) => [primaryKey({ columns: [t.handle, t.slug] })]);
+
+export const sumiComments = pgTable("sumi_comments", {
+  id: text("id").primaryKey(),
+  postHandle: text("post_handle").notNull(),
+  postSlug: text("post_slug").notNull(),
+  authorHandle: text("author_handle").notNull(),
+  body: text("body").notNull(),
+  date: text("date").notNull(),
+  parentId: text("parent_id"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const sumiMagazines = pgTable("sumi_magazines", {
+  handle: text("handle").notNull(),
+  slug: text("slug").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  items: text("items").notNull().default("[]"),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (t) => [primaryKey({ columns: [t.handle, t.slug] })]);
+
+export const sumiProfiles = pgTable("sumi_profiles", {
+  handle: text("handle").primaryKey(),
+  displayName: text("display_name"),
+  bio: text("bio"),
+  updatedAt: text("updated_at").notNull(),
+});
+
+export const schema = { user, session, account, verification, sumiPosts, sumiComments, sumiMagazines, sumiProfiles };

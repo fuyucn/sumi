@@ -1,5 +1,5 @@
 import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
-import type { ContentStore, ListPostsOptions, TagInfo } from "./store";
+import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import { slugify } from "./paths";
 import { buildImageUrl, R2Store, type R2BucketLike } from "@/lib/r2";
 
@@ -40,6 +40,7 @@ interface CommentRow {
   author_handle: string;
   body: string;
   date: string;
+  parent_id: string | null;
 }
 
 interface MagazineRow {
@@ -190,16 +191,33 @@ export class CloudflareContentStore implements ContentStore {
       postHandle,
       slug,
     );
-    return rows.map((r) => ({ handle: r.author_handle, date: r.date, body: r.body }));
+    return rows.map((r) => ({
+      id: String(r.id),
+      handle: r.author_handle,
+      date: r.date,
+      body: r.body,
+      ...(r.parent_id !== null ? { parentId: r.parent_id } : {}),
+    }));
   }
 
   async addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment> {
-    const full: Comment = { handle: authorHandle, date: now.toISOString(), body: comment.body };
+    const date = now.toISOString();
     await this.run(
-      `INSERT INTO comments (post_handle, post_slug, author_handle, body, date, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      postHandle, slug, full.handle, full.body, full.date, full.date,
+      `INSERT INTO comments (post_handle, post_slug, author_handle, body, date, parent_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      postHandle, slug, authorHandle, comment.body, date, comment.parentId ?? null, date,
     );
+    const row = await this.row<CommentRow>(
+      `SELECT * FROM comments WHERE post_handle = ? AND post_slug = ? AND author_handle = ? AND date = ? LIMIT 1`,
+      postHandle, slug, authorHandle, date,
+    );
+    const full: Comment = {
+      id: row ? String(row.id) : `${Date.now()}-${authorHandle}`,
+      handle: authorHandle,
+      date,
+      body: comment.body,
+      ...(comment.parentId !== undefined ? { parentId: comment.parentId } : {}),
+    };
     return full;
   }
 
@@ -283,6 +301,20 @@ export class CloudflareContentStore implements ContentStore {
     return [...counts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  async searchPosts(query: string): Promise<SearchResult[]> {
+    const needle = query.trim();
+    if (!needle) return [];
+    const like = `%${needle}%`;
+    const rows = await this.rows<PostRow>(
+      `SELECT * FROM posts
+       WHERE status = 'published'
+         AND (title LIKE ? OR body LIKE ? OR excerpt LIKE ? OR tags LIKE ?)
+       ORDER BY created_at DESC`,
+      like, like, like, like,
+    );
+    return rows.map((r) => ({ handle: r.handle, post: toPostMeta(r) }));
   }
 
   // ---- D1 helpers ----

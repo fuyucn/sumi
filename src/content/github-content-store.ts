@@ -1,5 +1,5 @@
 import type { GitHubClient } from "@/lib/github";
-import type { ContentStore, ListPostsOptions, TagInfo } from "./store";
+import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, Profile } from "./types";
 import {
   parseComment,
@@ -96,7 +96,8 @@ export class GitHubContentStore implements ContentStore {
       if (entry.type !== "file") continue;
       const file = await this.client.getFile(entry.path);
       if (!file) continue;
-      out.push(parseComment(file.content, entry.name, ""));
+      const id = entry.name.endsWith(".md") ? entry.name.slice(0, -3) : entry.name;
+      out.push(parseComment(file.content, id, ""));
     }
     out.sort((a, b) => a.date.localeCompare(b.date));
     return out;
@@ -104,7 +105,14 @@ export class GitHubContentStore implements ContentStore {
 
   async addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment> {
     const name = safeCommentName(now, authorHandle);
-    const full: Comment = { handle: authorHandle, date: now.toISOString(), body: comment.body };
+    const id = name.endsWith(".md") ? name.slice(0, -3) : name;
+    const full: Comment = {
+      id,
+      handle: authorHandle,
+      date: now.toISOString(),
+      body: comment.body,
+      ...(comment.parentId !== undefined ? { parentId: comment.parentId } : {}),
+    };
     await this.client.putTextFile(
       commentFile(postHandle, slug, name),
       serializeComment(full),
@@ -182,6 +190,33 @@ export class GitHubContentStore implements ContentStore {
     return [...counts.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }
+
+  async searchPosts(query: string): Promise<SearchResult[]> {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return [];
+    const matches: SearchResult[] = [];
+    for (const handle of await this.listHandles()) {
+      for (const meta of await this.listPosts({ handle, status: "published" })) {
+        const post = await this.getPost(handle, meta.slug);
+        if (!post) continue;
+        const haystack = [
+          post.title,
+          post.body,
+          post.excerpt ?? "",
+          post.tags.join(" "),
+        ]
+          .join("\n")
+          .toLowerCase();
+        if (haystack.includes(needle)) {
+          const { body: _body, ...m } = post;
+          void _body;
+          matches.push({ handle, post: m });
+        }
+      }
+    }
+    matches.sort((a, b) => (b.post.publishedAt ?? "").localeCompare(a.post.publishedAt ?? ""));
+    return matches;
   }
 
   async listHandles(): Promise<string[]> {

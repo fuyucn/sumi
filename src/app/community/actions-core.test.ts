@@ -11,7 +11,7 @@ function fakeStore(): ContentStore {
     async deletePost() {},
     async uploadImage() { return ""; },
     async listComments() { return []; },
-    async addComment(_p, _s, c, author, now) { return { ...c, handle: author, date: now.toISOString() }; },
+    async addComment(_p, _s, c, author, now) { return { id: "cid", ...c, handle: author, date: now.toISOString() }; },
     async getProfile() { return null; },
     async saveProfile() {},
     async listMagazines() { return []; },
@@ -19,6 +19,7 @@ function fakeStore(): ContentStore {
     async saveMagazine(handle, m) { return m.title.toLowerCase().replace(/\s+/g, "-"); },
     async deleteMagazine() {},
     async listTags() { return []; },
+    async searchPosts() { return []; },
   };
 }
 
