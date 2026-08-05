@@ -8,6 +8,7 @@ export const agentPostSchema = z.object({
   body: z.string().default(""),
   tags: z.array(z.string().trim()).or(z.string()).default([]),
   publish: z.boolean().default(false),
+  coverImage: z.string().optional(),
 });
 
 export type AgentPostInput = z.input<typeof agentPostSchema>;
@@ -18,6 +19,7 @@ export const agentPostUpdateSchema = z.object({
   body: z.string().optional(),
   tags: z.array(z.string().trim()).or(z.string()).optional(),
   publish: z.boolean().optional(),
+  coverImage: z.string().optional(),
 });
 
 export type AgentPostUpdateInput = z.input<typeof agentPostUpdateSchema>;
@@ -33,12 +35,14 @@ export function toWriteForm(input: {
   body: string;
   tags: string | string[];
   publish: boolean;
-}): { title: string; body: string; tags: string; publish: boolean } {
+  coverImage?: string;
+}): { title: string; body: string; tags: string; publish: boolean; coverImage?: string } {
   return {
     title: input.title,
     body: input.body,
     tags: Array.isArray(input.tags) ? input.tags.join(",") : input.tags,
     publish: input.publish,
+    ...(input.coverImage ? { coverImage: input.coverImage } : {}),
   };
 }
 

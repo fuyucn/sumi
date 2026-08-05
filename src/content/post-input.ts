@@ -7,6 +7,7 @@ export const writeFormSchema = z.object({
   tags: z.string().default(""),
   publish: z.boolean().default(false),
   publishedAt: z.string().optional(),
+  coverImage: z.string().optional(),
 });
 
 export type WriteForm = z.input<typeof writeFormSchema>;
@@ -22,6 +23,7 @@ export function buildNewPost(form: unknown, now: Date): NewPost {
     body: f.body,
     tags,
     status: f.publish ? "published" : "draft",
+    ...(f.coverImage ? { coverImage: f.coverImage } : {}),
     ...(publishedAt ? { publishedAt } : {}),
   };
 }

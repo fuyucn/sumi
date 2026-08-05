@@ -8,6 +8,7 @@ import { registry, makeCapacity, touch } from "./session-registry";
 import type { TrackedSession } from "./session-registry";
 import { getAgentContentStore, getReadContentStore } from "@/content";
 import { buildNewPost } from "@/content/post-input";
+import { safeImageName, slugify } from "@/content/paths";
 import {
   agentPostSchema,
   agentPostUpdateSchema,
@@ -115,12 +116,13 @@ function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
         body: z.string().default(""),
         tags: z.array(z.string()).optional(),
         publish: z.boolean().default(false),
+        coverImage: z.string().optional(),
       },
     },
-    async ({ title, body = "", tags, publish }) => {
+    async ({ title, body = "", tags, publish, coverImage }) => {
       const store = await getAgentContentStore();
       if (!store) return toolError("No content backend configured");
-      const parsed = agentPostSchema.safeParse({ title, body, tags, publish });
+      const parsed = agentPostSchema.safeParse({ title, body, tags, publish, coverImage });
       if (!parsed.success) return toolError(parsed.error.issues[0]?.message ?? "Invalid body");
       const newPost = { ...buildNewPost(toWriteForm(parsed.data), new Date()), agent: true };
       const slug = await store.savePost(agent.agentHandle, newPost);
@@ -140,6 +142,7 @@ function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
         body: z.string().optional(),
         tags: z.array(z.string()).optional(),
         publish: z.boolean().optional(),
+        coverImage: z.string().optional(),
       },
     },
     async ({ slug, ...patch }) => {
@@ -156,6 +159,7 @@ function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
         tags: tagsToCommaString(parsed.data.tags, existing.tags.join(",")),
         publish: parsed.data.publish ?? existing.status === "published",
         publishedAt: existing.publishedAt,
+        ...(parsed.data.coverImage !== undefined ? { coverImage: parsed.data.coverImage } : {}),
       };
       const newPost = { ...buildNewPost(merged, new Date()), agent: true };
       const newSlug = await store.savePost(agent.agentHandle, newPost);
@@ -193,6 +197,42 @@ function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
           2,
         ),
       );
+    },
+  );
+
+  server.registerTool(
+    "sumi_upload_image",
+    {
+      title: "Upload an image",
+      description:
+        "Upload an image for a post and get back a path you can set as coverImage or embed in markdown. Pass bytes as base64 (optionally a data: URL).",
+      inputSchema: {
+        title: z.string().min(1).max(200),
+        filename: z.string().min(1).max(255),
+        data: z.string().min(1),
+      },
+    },
+    async ({ title, filename, data }) => {
+      const store = await getAgentContentStore();
+      if (!store) return toolError("No content backend configured");
+      const base64 = data.includes(",") ? data.slice(data.indexOf(",") + 1) : data;
+      if (!/^[A-Za-z0-9+/=_-]+$/.test(base64)) return toolError("Data is not valid base64");
+      let bytes: Uint8Array;
+      try {
+        bytes = Uint8Array.from(Buffer.from(base64, "base64"));
+      } catch {
+        return toolError("Data is not valid base64");
+      }
+      if (bytes.byteLength === 0) return toolError("Decoded image is empty");
+      if (bytes.byteLength > 10 * 1024 * 1024) return toolError("Image exceeds 10MB");
+      const slug = slugify(title);
+      const safeName = safeImageName(filename);
+      try {
+        const path = await store.uploadImage(agent.agentHandle, slug, safeName, bytes);
+        return toolText(JSON.stringify({ ok: true, path }, null, 2));
+      } catch (err) {
+        return toolError(err instanceof Error ? err.message : "Image upload failed");
+      }
     },
   );
 

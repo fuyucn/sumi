@@ -25,6 +25,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext): Promise<N
     tags: tagsToCommaString(parsed.data.tags, existing.tags.join(",")),
     publish: parsed.data.publish ?? existing.status === "published",
     publishedAt: existing.publishedAt,
+    ...(parsed.data.coverImage !== undefined ? { coverImage: parsed.data.coverImage } : {}),
   };
   const newPost = { ...buildNewPost(merged, new Date()), agent: true };
   const newSlug = await store.savePost(auth.agentHandle, newPost);

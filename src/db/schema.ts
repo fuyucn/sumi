@@ -1,4 +1,12 @@
-import { boolean, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, customType, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+
+// drizzle-orm/pg-core has no built-in bytea helper; use a custom type so the
+// DB mirror can store raw image bytes.
+export const bytea = customType<{ data: Uint8Array; driverData: unknown }>({
+  dataType() {
+    return "bytea";
+  },
+});
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -102,6 +110,20 @@ export const sumiProfiles = pgTable("sumi_profiles", {
   updatedAt: text("updated_at").notNull(),
 });
 
+// Images stored by the Postgres mirror backend (DbContentStore). The GitHub /
+// Cloudflare backends own their own object stores; the DB mirror needs a home
+// for agent/user-uploaded images so the whole publishing flow works on
+// self-hosted Docker (DB_MIRROR=1) without GitHub/R2.
+export const sumiImages = pgTable("sumi_images", {
+  id: text("id").primaryKey(),
+  handle: text("handle").notNull(),
+  slug: text("slug").notNull(),
+  filename: text("filename").notNull(),
+  mime: text("mime").notNull(),
+  bytes: bytea("bytes").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
 // ---- Agent publishing (agent_keys) ----
 
 // API keys that let an autonomous agent publish as its own creator handle.
@@ -126,5 +148,6 @@ export const schema = {
   sumiComments,
   sumiMagazines,
   sumiProfiles,
+  sumiImages,
   agentKeys,
 };

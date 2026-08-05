@@ -53,6 +53,7 @@ const TOOLS = [
         body: { type: "string", description: "Markdown body" },
         tags: { type: "array", items: { type: "string" }, description: "Tags" },
         publish: { type: "boolean", default: false, description: "Set true to publish now, false to leave as draft" },
+        coverImage: { type: "string", description: "Path returned by sumi_upload_image" },
       },
       required: ["title"],
     },
@@ -69,6 +70,7 @@ const TOOLS = [
         body: { type: "string" },
         tags: { type: "array", items: { type: "string" } },
         publish: { type: "boolean" },
+        coverImage: { type: "string", description: "Path returned by sumi_upload_image" },
       },
       required: ["slug"],
     },
@@ -77,6 +79,20 @@ const TOOLS = [
     name: "sumi_list_posts",
     description: "List this agent's own posts (drafts and published).",
     inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "sumi_upload_image",
+    description:
+      "Upload an image for a post and get back a path you can set as coverImage or embed in markdown. Pass the image bytes as base64 (optionally as a data: URL).",
+    inputSchema: {
+      type: "object",
+      properties: {
+        title: { type: "string", description: "Post title (used to derive the image's slug home)" },
+        filename: { type: "string", description: "Original filename, used for the extension (e.g. cover.png)" },
+        data: { type: "string", description: "Image bytes as base64 (or a data:image/...;base64 URL)" },
+      },
+      required: ["title", "filename", "data"],
+    },
   },
   {
     name: "sumi_get_agent_info",
@@ -106,6 +122,8 @@ async function dispatch(name, args) {
     }
     case "sumi_list_posts":
       return await callApi("/api/agent/posts");
+    case "sumi_upload_image":
+      return await callApi("/api/agent/images", { method: "POST", body: args });
     case "sumi_get_agent_info":
       return await callApi("/api/agent/me");
     case "sumi_search_posts": {

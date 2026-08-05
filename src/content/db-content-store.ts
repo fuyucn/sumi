@@ -1,8 +1,10 @@
 import { and, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import { randomUUID } from "node:crypto";
 import { schema as dbSchema } from "@/db/schema";
 import {
   sumiComments,
+  sumiImages,
   sumiMagazines,
   sumiPosts,
   sumiProfiles,
@@ -12,6 +14,22 @@ import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMet
 import { slugify } from "./paths";
 
 type Db = PostgresJsDatabase<typeof dbSchema>;
+
+const MIME_BY_EXT: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  svg: "image/svg+xml",
+};
+
+function mimeForFilename(filename: string): string {
+  const dot = filename.lastIndexOf(".");
+  const ext = dot >= 0 ? filename.slice(dot + 1).toLowerCase() : "";
+  return MIME_BY_EXT[ext] ?? "application/octet-stream";
+}
 
 interface PostRow {
   handle: string;
@@ -128,10 +146,20 @@ export class DbContentStore implements ContentStore {
   }
 
   async uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string> {
-    // Postgres mirror has no object store; images live in GitHub/R2. Callers that
-    // need image writes must use a store that owns one (GitHub/Cloudflare).
-    void handle; void slug; void filename; void bytes;
-    throw new Error("DbContentStore: image uploads are not supported (images live in GitHub/R2)");
+    // The Postgres mirror has no GitHub/R2 object store, so images live in a
+    // `sumi_images` BYTEA table and are served by `/api/images/:id`.
+    const mime = mimeForFilename(filename);
+    const id = randomUUID();
+    await this.db.insert(sumiImages).values({
+      id,
+      handle,
+      slug,
+      filename,
+      mime,
+      bytes,
+      createdAt: new Date().toISOString(),
+    });
+    return `/api/images/${id}`;
   }
 
   // ---- Comments ----

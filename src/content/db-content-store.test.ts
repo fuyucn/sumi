@@ -1,8 +1,9 @@
+import { eq } from "drizzle-orm";
 import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { expect, test } from "vitest";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { schema } from "@/db/schema";
+import { schema, sumiImages } from "@/db/schema";
 import { DbContentStore } from "./db-content-store";
 
 // The Postgres mirror tables as DDL (mirrors drizzle/0001_grey_aqueduct.sql).
@@ -48,17 +49,26 @@ CREATE TABLE "sumi_profiles" (
   "bio" text,
   "updated_at" text NOT NULL
 );
+CREATE TABLE "sumi_images" (
+  "id" text PRIMARY KEY NOT NULL,
+  "handle" text NOT NULL,
+  "slug" text NOT NULL,
+  "filename" text NOT NULL,
+  "mime" text NOT NULL,
+  "bytes" "bytea" NOT NULL,
+  "created_at" text NOT NULL
+);
 `;
 
 async function makeStore() {
   const client = new PGlite();
   await client.exec(DDL);
   const db = drizzle(client, { schema }) as unknown as PostgresJsDatabase<typeof schema>;
-  return new DbContentStore(db);
+  return { store: new DbContentStore(db), db };
 }
 
 test("savePost + getPost + listPosts round-trip with tags/status/searchable body", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   const slug = await store.savePost("alice", {
     title: "My First Post",
     body: "# Hi\n\nmirror notes",
@@ -79,7 +89,7 @@ test("savePost + getPost + listPosts round-trip with tags/status/searchable body
 });
 
 test("agent flag round-trips through savePost/getPost/listPosts", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   const slug = await store.savePost("agent-foo", {
     title: "Agent Post",
     body: "written by an agent",
@@ -97,7 +107,7 @@ test("agent flag round-trips through savePost/getPost/listPosts", async () => {
 });
 
 test("searchPosts matches title/body/excerpt/tags, published only, newest first", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.savePost("alice", { title: "Postgres", body: "mirror notes", tags: ["db"], status: "published", publishedAt: "2026-06-10T00:00:00.000Z" });
   await store.savePost("alice", { title: "Cooking", body: "ramen recipe", excerpt: "noodles", tags: ["food"], status: "published", publishedAt: "2026-06-11T00:00:00.000Z" });
   await store.savePost("alice", { title: "Secret", body: "mirror mirror", tags: ["db"], status: "draft" });
@@ -110,7 +120,7 @@ test("searchPosts matches title/body/excerpt/tags, published only, newest first"
 });
 
 test("comments list/add/nest round-trip", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   expect(await store.listComments("alice", "hello")).toEqual([]);
   const root = await store.addComment("alice", "hello", { body: "root" }, "bob", new Date("2026-06-13T01:00:00Z"));
   const reply = await store.addComment("alice", "hello", { body: "reply", parentId: root.id }, "carol", new Date("2026-06-13T02:00:00Z"));
@@ -121,7 +131,7 @@ test("comments list/add/nest round-trip", async () => {
 });
 
 test("profile + magazine round-trip", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   expect(await store.getProfile("alice")).toBeNull();
   await store.saveProfile("alice", { displayName: "Alice", bio: "hi" });
   expect(await store.getProfile("alice")).toEqual({ displayName: "Alice", bio: "hi" });
@@ -139,7 +149,7 @@ test("profile + magazine round-trip", async () => {
 });
 
 test("listTags counts published posts only, newest-used sort, drafts excluded", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.savePost("alice", { title: "A", body: "a", tags: ["js", "web"], status: "published" });
   await store.savePost("alice", { title: "B", body: "b", tags: ["js"], status: "published" });
   await store.savePost("alice", { title: "C", body: "c", tags: ["js", "secret"], status: "draft" });
@@ -150,7 +160,14 @@ test("listTags counts published posts only, newest-used sort, drafts excluded", 
   ]);
 });
 
-test("uploadImage is unsupported on the Postgres mirror", async () => {
-  const store = await makeStore();
-  await expect(store.uploadImage("alice", "p", "cover.png", new Uint8Array([1]))).rejects.toThrow(/not supported/);
+test("uploadImage stores bytes in sumi_images and returns a serving path", async () => {
+  const { store, db } = await makeStore();
+  const path = await store.uploadImage("alice", "p", "cover.png", new Uint8Array([1, 2, 3]));
+  expect(path).toMatch(/^\/api\/images\/[-\w]+$/);
+  const id = path.split("/").pop()!;
+  const rows = await db.select().from(sumiImages).where(eq(sumiImages.id, id)).limit(1);
+  expect(rows).toHaveLength(1);
+  expect(rows[0].mime).toBe("image/png");
+  expect(rows[0].handle).toBe("alice");
+  expect(Buffer.from(rows[0].bytes as Uint8Array)).toEqual(Buffer.from([1, 2, 3]));
 });
