@@ -30,9 +30,25 @@ export const dynamic = "force-dynamic";
 type Session = {
   transport: WebStandardStreamableHTTPServerTransport;
   getSessionId: () => string;
+  /** Epoch ms of the last request that touched this session. */
+  lastActiveAt: number;
 };
 
 const sessions = new Map<string, Session>();
+
+/** Idle sessions are dropped after this long (a client that never sends DELETE). */
+const SESSION_TTL_MS = 30 * 60 * 1000;
+/** Hard cap on concurrent sessions to bound memory in a long-running server. */
+const MAX_SESSIONS = 64;
+
+function sweepSessions(now = Date.now()): void {
+  for (const [id, session] of sessions) {
+    if (now - session.lastActiveAt > SESSION_TTL_MS) {
+      void session.transport.close().catch(() => {});
+      sessions.delete(id);
+    }
+  }
+}
 
 function toolText(text: string) {
   return { content: [{ type: "text" as const, text }] };
@@ -179,19 +195,23 @@ function createSession(agent: Extract<AgentAuth, { ok: true }>): Session {
   };
   const server = buildServer(agent);
   void server.connect(transport).catch(() => {});
-  return { transport, getSessionId: () => sessionId };
+  return { transport, getSessionId: () => sessionId, lastActiveAt: Date.now() };
 }
 
 async function handleMCPRequest(req: NextRequest): Promise<Response> {
   const sessionId = req.headers.get("mcp-session-id");
   if (sessionId) {
     const existing = sessions.get(sessionId);
-    if (existing) return existing.transport.handleRequest(req);
+    if (existing) {
+      existing.lastActiveAt = Date.now();
+      return existing.transport.handleRequest(req);
+    }
   }
 
   if (req.method === "POST") {
     const auth = await authenticateBearer(req.headers.get("authorization"));
     if (!auth.ok) return jsonError(401, auth.error);
+    acquireCapacity();
     const session = createSession(auth);
     const res = await session.transport.handleRequest(req);
     const sid = session.getSessionId() || res.headers.get("mcp-session-id");
@@ -201,6 +221,18 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
 
   // GET (SSE) / DELETE with an unknown or missing session id.
   return jsonError(400, "Missing or invalid MCP session");
+}
+
+/** Drop expired sessions and, if still over the cap, the oldest idle ones. */
+function acquireCapacity(now = Date.now()): void {
+  sweepSessions(now);
+  if (sessions.size < MAX_SESSIONS) return;
+  const byIdle = [...sessions.entries()].sort((a, b) => a[1].lastActiveAt - b[1].lastActiveAt);
+  const overflow = sessions.size - (MAX_SESSIONS - 1);
+  for (const [id, session] of byIdle.slice(0, overflow)) {
+    void session.transport.close().catch(() => {});
+    sessions.delete(id);
+  }
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
