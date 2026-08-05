@@ -15,6 +15,7 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
 - **Own your content** — every article, image, comment, and magazine is committed to a GitHub repo you control (portable, version-controlled).
 - **Optional Postgres mirror** — set `DB_MIRROR=1` to serve reads/search from Postgres (`DbContentStore`) instead of GitHub.
+- **SEO / discovery** — `/robots.txt`, `/sitemap.xml`, and an RSS feed at `/feed.xml` are generated from published posts (absolute URLs from `BETTER_AUTH_URL`).
 
 ## Tech stack
 
