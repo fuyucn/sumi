@@ -31,12 +31,12 @@ services:
       context: .
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3005:3000"
     env_file:
       - .env
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://sumi:sumi@db:5432/sumi}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3005}
     depends_on:
       migrate:
         condition: service_completed_successfully
