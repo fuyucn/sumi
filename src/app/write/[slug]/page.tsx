@@ -16,7 +16,11 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
   if (!post) notFound();
   return (
     <main className="max-w-2xl mx-auto px-5 py-10">
-      <PostForm initial={{ title: post.title, tags: post.tags.join(", "), body: post.body, publishedAt: post.publishedAt }} />
+      <PostForm
+        key={slug}
+        draftKey={slug}
+        initial={{ title: post.title, tags: post.tags.join(", "), body: post.body, publishedAt: post.publishedAt }}
+      />
     </main>
   );
 }

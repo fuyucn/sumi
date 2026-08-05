@@ -15,6 +15,20 @@
       "when": 1785895668765,
       "tag": "0001_grey_aqueduct",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785908872312,
+      "tag": "0002_mighty_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785909069070,
+      "tag": "0003_thankful_drax",
+      "breakpoints": true
     }
   ]
 }

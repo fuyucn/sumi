@@ -1,0 +1,1 @@
+ALTER TABLE "sumi_posts" ADD COLUMN "agent" boolean DEFAULT false NOT NULL;

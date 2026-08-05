@@ -51,6 +51,7 @@ export class GitHubContentStore implements ContentStore {
       ...(post.excerpt !== undefined ? { excerpt: post.excerpt } : {}),
       ...(post.coverImage !== undefined ? { coverImage: post.coverImage } : {}),
       ...(post.publishedAt !== undefined ? { publishedAt: post.publishedAt } : {}),
+      ...(post.agent ? { agent: true } : {}),
     };
     const path = postFile(handle, slug);
     const existing = await this.client.getFile(path);

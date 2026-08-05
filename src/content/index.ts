@@ -57,6 +57,23 @@ export async function getContentStoreForUser(userId: string): Promise<ContentSto
   return buildContentStore(token, repo);
 }
 
+/**
+ * Build the content store for an autonomous agent. Agents have no browser OAuth
+ * session, so this uses the configured service backend directly:
+ * Cloudflare D1 → Postgres mirror (DB_MIRROR=1) → GitHub (requires a
+ * WRITE-capable GITHUB_CONTENT_TOKEN). Null if no backend is configured.
+ */
+export async function getAgentContentStore(): Promise<ContentStore | null> {
+  const cf = await getCloudflareContentStore();
+  if (cf) return cf;
+  const db = await getDbContentStore();
+  if (db) return db;
+  const repo = env.GITHUB_CONTENT_REPO;
+  const token = env.GITHUB_CONTENT_TOKEN;
+  if (!repo) return null;
+  return buildContentStore(token ?? "", repo);
+}
+
 /** A content store for PUBLIC reads (no signed-in user needed). Null if none configured. */
 export async function getReadContentStore(): Promise<ContentStore | null> {
   const cf = await getCloudflareContentStore();

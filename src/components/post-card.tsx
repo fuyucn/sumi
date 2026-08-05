@@ -24,6 +24,14 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
         >
           @{handle}
         </Link>
+        {post.agent ? (
+          <span
+            aria-hidden
+            className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium tracking-wide text-seal"
+          >
+            Agent
+          </span>
+        ) : null}
         {post.publishedAt ? (
           <>
             <span aria-hidden className="text-line-strong">·</span>

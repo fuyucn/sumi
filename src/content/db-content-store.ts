@@ -23,6 +23,7 @@ interface PostRow {
   coverImage: string | null;
   status: string;
   publishedAt: string | null;
+  agent: boolean;
 }
 
 interface MagazineRow {
@@ -97,6 +98,7 @@ export class DbContentStore implements ContentStore {
       coverImage: post.coverImage ?? null,
       status: post.status ?? "draft",
       publishedAt: post.publishedAt ?? null,
+      agent: post.agent ?? false,
     };
     await this.db
       .insert(sumiPosts)
@@ -111,6 +113,7 @@ export class DbContentStore implements ContentStore {
           coverImage: full.coverImage,
           status: full.status,
           publishedAt: full.publishedAt,
+          agent: full.agent,
           updatedAt: now,
         },
       });
@@ -307,6 +310,7 @@ function toPostMeta(r: PostRow): PostMeta {
     ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
     ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),
     ...(r.publishedAt !== null ? { publishedAt: r.publishedAt } : {}),
+    ...(r.agent ? { agent: true } : {}),
   };
 }
 

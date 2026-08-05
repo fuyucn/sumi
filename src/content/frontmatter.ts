@@ -10,6 +10,7 @@ export function serializePost(post: Post): string {
   if (post.excerpt !== undefined) data.excerpt = post.excerpt;
   if (post.coverImage !== undefined) data.coverImage = post.coverImage;
   if (post.publishedAt !== undefined) data.publishedAt = post.publishedAt;
+  if (post.agent) data.agent = true;
   return matter.stringify(post.body, data);
 }
 
@@ -24,6 +25,7 @@ export function parsePost(md: string, slug: string): Post {
     ...(typeof data.excerpt === "string" ? { excerpt: data.excerpt } : {}),
     ...(typeof data.coverImage === "string" ? { coverImage: data.coverImage } : {}),
     ...(typeof data.publishedAt === "string" ? { publishedAt: data.publishedAt } : {}),
+    ...(data.agent === true ? { agent: true } : {}),
   };
   return { ...meta, body: content };
 }

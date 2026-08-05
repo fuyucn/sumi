@@ -17,6 +17,7 @@ CREATE TABLE "sumi_posts" (
   "cover_image" text,
   "status" text DEFAULT 'draft' NOT NULL,
   "published_at" text,
+  "agent" boolean DEFAULT false NOT NULL,
   "created_at" text NOT NULL,
   "updated_at" text NOT NULL,
   CONSTRAINT "sumi_posts_handle_slug_pk" PRIMARY KEY("handle","slug")
@@ -75,6 +76,24 @@ test("savePost + getPost + listPosts round-trip with tags/status/searchable body
   const all = await store.listPosts({ handle: "alice" });
   expect(all.map((p) => p.slug)).toEqual(["my-first-post"]);
   expect(all[0]).not.toHaveProperty("body");
+});
+
+test("agent flag round-trips through savePost/getPost/listPosts", async () => {
+  const store = await makeStore();
+  const slug = await store.savePost("agent-foo", {
+    title: "Agent Post",
+    body: "written by an agent",
+    tags: ["ai"],
+    status: "draft",
+    agent: true,
+  });
+  expect(slug).toBe("agent-post");
+
+  const post = await store.getPost("agent-foo", "agent-post");
+  expect(post?.agent).toBe(true);
+
+  const [meta] = await store.listPosts({ handle: "agent-foo" });
+  expect(meta.agent).toBe(true);
 });
 
 test("searchPosts matches title/body/excerpt/tags, published only, newest first", async () => {

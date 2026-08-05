@@ -69,6 +69,7 @@ export const sumiPosts = pgTable("sumi_posts", {
   coverImage: text("cover_image"),
   status: text("status").notNull().default("draft"),
   publishedAt: text("published_at"),
+  agent: boolean("agent").notNull().default(false),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 }, (t) => [primaryKey({ columns: [t.handle, t.slug] })]);
@@ -101,4 +102,28 @@ export const sumiProfiles = pgTable("sumi_profiles", {
   updatedAt: text("updated_at").notNull(),
 });
 
-export const schema = { user, session, account, verification, sumiPosts, sumiComments, sumiMagazines, sumiProfiles };
+// ---- Agent publishing (agent_keys) ----
+
+// API keys that let an autonomous agent publish as its own creator handle.
+// Only the SHA-256 hash is stored; the plaintext key is shown once at creation
+// (scripts/create-agent.ts) and can never be recovered.
+export const agentKeys = pgTable("agent_keys", {
+  id: text("id").primaryKey(),
+  agentHandle: text("agent_handle").notNull().unique(),
+  displayName: text("display_name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  lastUsedAt: timestamp("last_used_at"),
+});
+
+export const schema = {
+  user,
+  session,
+  account,
+  verification,
+  sumiPosts,
+  sumiComments,
+  sumiMagazines,
+  sumiProfiles,
+  agentKeys,
+};

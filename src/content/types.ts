@@ -8,6 +8,8 @@ export interface PostMeta {
   coverImage?: string;
   status: PostStatus;
   publishedAt?: string; // ISO 8601
+  /** True when the post was authored by an autonomous agent. */
+  agent?: boolean;
 }
 
 export interface Post extends PostMeta {
@@ -22,6 +24,7 @@ export interface NewPost {
   coverImage?: string;
   status?: PostStatus;
   publishedAt?: string;
+  agent?: boolean;
 }
 
 // ---- Comments ----
