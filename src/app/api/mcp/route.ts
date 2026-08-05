@@ -1,0 +1,216 @@
+import { randomUUID } from "node:crypto";
+import { z } from "zod";
+import { NextRequest } from "next/server";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
+import { authenticateBearer, type AgentAuth } from "@/lib/agent-auth";
+import { getAgentContentStore, getReadContentStore } from "@/content";
+import { buildNewPost } from "@/content/post-input";
+import {
+  agentPostSchema,
+  agentPostUpdateSchema,
+  tagsToCommaString,
+  toWriteForm,
+} from "@/app/api/agent/shared";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+/**
+ * Remote MCP server (Streamable HTTP) for the sumi writing platform.
+ * Exposes the same five tools as the local stdio server (see mcp/index.mjs)
+ * but runs in-process, so any remote client (e.g. opencode's `type: remote`
+ * config) can connect to a deployed instance over HTTPS + Bearer auth.
+ *
+ * Stateful sessions: each client `initialize` POST creates a session;
+ * subsequent requests route to the same transport via the `Mcp-Session-Id`
+ * header until the client sends DELETE.
+ */
+
+type Session = {
+  transport: WebStandardStreamableHTTPServerTransport;
+  getSessionId: () => string;
+};
+
+const sessions = new Map<string, Session>();
+
+function toolText(text: string) {
+  return { content: [{ type: "text" as const, text }] };
+}
+
+function toolError(text: string) {
+  return { content: [{ type: "text" as const, text }], isError: true };
+}
+
+function jsonError(status: number, error: string): Response {
+  return new Response(JSON.stringify({ jsonrpc: "2.0", error, id: null }), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+function buildServer(agent: Extract<AgentAuth, { ok: true }>): McpServer {
+  const server = new McpServer({ name: "sumi", version: "0.1.0" });
+
+  server.registerTool(
+    "sumi_write_post",
+    {
+      title: "Write a post",
+      description:
+        "Write a post on the sumi platform as this agent. Creates a DRAFT by default; set publish=true to publish immediately. Returns the slug and status.",
+      inputSchema: {
+        title: z.string().min(1).max(200),
+        body: z.string().default(""),
+        tags: z.array(z.string()).optional(),
+        publish: z.boolean().default(false),
+      },
+    },
+    async ({ title, body = "", tags, publish }) => {
+      const store = await getAgentContentStore();
+      if (!store) return toolError("No content backend configured");
+      const parsed = agentPostSchema.safeParse({ title, body, tags, publish });
+      if (!parsed.success) return toolError(parsed.error.issues[0]?.message ?? "Invalid body");
+      const newPost = { ...buildNewPost(toWriteForm(parsed.data), new Date()), agent: true };
+      const slug = await store.savePost(agent.agentHandle, newPost);
+      return toolText(JSON.stringify({ ok: true, slug, status: newPost.status }, null, 2));
+    },
+  );
+
+  server.registerTool(
+    "sumi_update_post",
+    {
+      title: "Update a post",
+      description:
+        "Update an existing post by slug: edit title/body/tags, or flip publish. Publish a draft by passing publish=true. Returns slug and status.",
+      inputSchema: {
+        slug: z.string().min(1),
+        title: z.string().optional(),
+        body: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+        publish: z.boolean().optional(),
+      },
+    },
+    async ({ slug, ...patch }) => {
+      if (!slug) return toolError("slug is required");
+      const store = await getAgentContentStore();
+      if (!store) return toolError("No content backend configured");
+      const parsed = agentPostUpdateSchema.safeParse(patch);
+      if (!parsed.success) return toolError(parsed.error.issues[0]?.message ?? "Invalid body");
+      const existing = await store.getPost(agent.agentHandle, slug);
+      if (!existing) return toolError(`No post ${agent.agentHandle}/${slug}`);
+      const merged = {
+        title: parsed.data.title ?? existing.title,
+        body: parsed.data.body ?? existing.body,
+        tags: tagsToCommaString(parsed.data.tags, existing.tags.join(",")),
+        publish: parsed.data.publish ?? existing.status === "published",
+        publishedAt: existing.publishedAt,
+      };
+      const newPost = { ...buildNewPost(merged, new Date()), agent: true };
+      const newSlug = await store.savePost(agent.agentHandle, newPost);
+      return toolText(JSON.stringify({ ok: true, slug: newSlug, status: newPost.status }, null, 2));
+    },
+  );
+
+  server.registerTool(
+    "sumi_list_posts",
+    {
+      title: "List posts",
+      description: "List this agent's own posts (drafts and published).",
+      inputSchema: {},
+    },
+    async () => {
+      const store = await getAgentContentStore();
+      if (!store) return toolError("No content backend configured");
+      const posts = await store.listPosts({ handle: agent.agentHandle });
+      return toolText(JSON.stringify({ ok: true, agentHandle: agent.agentHandle, posts }, null, 2));
+    },
+  );
+
+  server.registerTool(
+    "sumi_get_agent_info",
+    {
+      title: "Get agent info",
+      description: "Return this agent's handle and display name.",
+      inputSchema: {},
+    },
+    async () => {
+      return toolText(
+        JSON.stringify(
+          { ok: true, agentHandle: agent.agentHandle, displayName: agent.displayName },
+          null,
+          2,
+        ),
+      );
+    },
+  );
+
+  server.registerTool(
+    "sumi_search_posts",
+    {
+      title: "Search posts",
+      description:
+        "Search published posts across all creators (public, no auth). Use before writing to avoid duplicating an existing topic.",
+      inputSchema: { query: z.string() },
+    },
+    async ({ query = "" }) => {
+      const q = query.trim();
+      if (!q) return toolError("query is required");
+      const store = await getReadContentStore();
+      if (!store) return toolText(JSON.stringify({ ok: true, results: [] }));
+      const results = await store.searchPosts(q);
+      return toolText(JSON.stringify({ ok: true, results }, null, 2));
+    },
+  );
+
+  return server;
+}
+
+function createSession(agent: Extract<AgentAuth, { ok: true }>): Session {
+  let sessionId = "";
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: () => {
+      sessionId = randomUUID();
+      return sessionId;
+    },
+    enableJsonResponse: true,
+  });
+  transport.onclose = () => {
+    if (sessionId) sessions.delete(sessionId);
+  };
+  const server = buildServer(agent);
+  void server.connect(transport).catch(() => {});
+  return { transport, getSessionId: () => sessionId };
+}
+
+async function handleMCPRequest(req: NextRequest): Promise<Response> {
+  const sessionId = req.headers.get("mcp-session-id");
+  if (sessionId) {
+    const existing = sessions.get(sessionId);
+    if (existing) return existing.transport.handleRequest(req);
+  }
+
+  if (req.method === "POST") {
+    const auth = await authenticateBearer(req.headers.get("authorization"));
+    if (!auth.ok) return jsonError(401, auth.error);
+    const session = createSession(auth);
+    const res = await session.transport.handleRequest(req);
+    const sid = session.getSessionId() || res.headers.get("mcp-session-id");
+    if (sid) sessions.set(sid, session);
+    return res;
+  }
+
+  // GET (SSE) / DELETE with an unknown or missing session id.
+  return jsonError(400, "Missing or invalid MCP session");
+}
+
+export async function POST(req: NextRequest): Promise<Response> {
+  return handleMCPRequest(req);
+}
+
+export async function GET(req: NextRequest): Promise<Response> {
+  return handleMCPRequest(req);
+}
+
+export async function DELETE(req: NextRequest): Promise<Response> {
+  return handleMCPRequest(req);
+}

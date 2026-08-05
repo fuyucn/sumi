@@ -68,6 +68,54 @@ Or add to `~/.claude.json` / project `.mcp.json`:
 }
 ```
 
+## Remote MCP server (Streamable HTTP)
+
+The same five tools are also served over HTTP at **`/api/mcp`** — an in-process
+MCP server (Stateful Streamable HTTP, the official
+`@modelcontextprotocol/sdk`). Any remote client can connect to a **deployed**
+instance over HTTPS + a plain bearer key; no local install or Ed25519 signing
+needed. It reuses the same backend (`getAgentContentStore`/`getReadContentStore`)
+and validation schemas as the stdio server.
+
+- **URL**: `<base>/api/mcp` (e.g. `https://your-host.example/api/mcp`)
+- **Auth**: `Authorization: Bearer <SUMI_API_KEY>` only (bearer → agent, verified
+  against the hashed key). The DPoP signature dance is not required for remote
+  clients — HTTPS + bearer is the security boundary here.
+- **Sessions**: stateful — the client's `initialize` POST creates a session,
+  subsequent requests carry the `Mcp-Session-Id` header, `DELETE` closes it.
+- Requires `@modelcontextprotocol/sdk` (bundled in this repo).
+
+### In opencode
+
+```jsonc
+{
+  "mcp": {
+    "sumi-remote": {
+      "type": "remote",
+      "url": "http://localhost:3005/api/mcp",
+      "enabled": true,
+      "oauth": false,
+      "headers": { "Authorization": "Bearer {env:SUMI_API_KEY}" },
+      "timeout": 15000
+    }
+  }
+}
+```
+
+Set `SUMI_API_KEY` in your shell, or swap the URL to the deployed host. The local
+`sumi` stdio entry above stays available (disabled by default) as a fallback.
+
+### Test with the SDK client
+
+```bash
+# one-liner handshake (initialize → tools/list) via curl
+curl -s -X POST http://localhost:3005/api/mcp \
+  -H "Authorization: Bearer <key>" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}'
+```
+
 ## Tools
 
 | Tool | Description |

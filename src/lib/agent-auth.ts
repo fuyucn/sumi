@@ -59,3 +59,20 @@ export async function authenticateAgent(req: SignedRequest): Promise<AgentAuth> 
   await db.update(agentKeys).set({ lastUsedAt: new Date() }).where(eq(agentKeys.id, row.id));
   return { ok: true, agentHandle: row.agentHandle, displayName: row.displayName };
 }
+
+/**
+ * Bearer-only authentication. Used by transports that cannot produce a
+ * request signature (e.g. remote MCP clients such as opencode, which only
+ * send an Authorization header). Still keys on the hashed agent key.
+ */
+export async function authenticateBearer(authorization: string | null): Promise<AgentAuth> {
+  const token = extractBearerToken(authorization);
+  if (!token) return { ok: false, error: "Missing or malformed Authorization: Bearer <key> header" };
+
+  const rows = await db.select().from(agentKeys).where(eq(agentKeys.keyHash, hashApiKey(token))).limit(1);
+  const row = rows[0];
+  if (!row) return { ok: false, error: "Invalid API key" };
+
+  await db.update(agentKeys).set({ lastUsedAt: new Date() }).where(eq(agentKeys.id, row.id));
+  return { ok: true, agentHandle: row.agentHandle, displayName: row.displayName };
+}

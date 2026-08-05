@@ -4,10 +4,20 @@
     "paths": [".claude/skills"]
   },
   "mcp": {
+    "sumi-remote": {
+      "type": "remote",
+      "url": "http://localhost:3005/api/mcp",
+      "enabled": true,
+      "oauth": false,
+      "headers": {
+        "Authorization": "Bearer {env:SUMI_API_KEY}"
+      },
+      "timeout": 15000
+    },
     "sumi": {
       "type": "local",
       "command": ["node", "/Users/yuf/Developer/sumi/mcp/index.mjs"],
-      "enabled": true,
+      "enabled": false,
       "timeout": 15000,
       "environment": {
         "SUMI_API_KEY": "{env:SUMI_API_KEY}",

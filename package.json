@@ -18,6 +18,7 @@
     "cf:deploy": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@octokit/rest": "^22.0.1",
     "@tailwindcss/postcss": "^4.3.1",
     "@tailwindcss/typography": "^0.5.20",
