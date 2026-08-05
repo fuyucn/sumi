@@ -50,6 +50,13 @@
       "when": 1785958597846,
       "tag": "0006_complex_speed",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785959941780,
+      "tag": "0007_fulltext_search_index",
+      "breakpoints": true
     }
   ]
 }

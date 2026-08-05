@@ -26,6 +26,7 @@ import {
   slugify,
   userDir,
 } from "./paths";
+import { rankRows, type RankablePost } from "./search-rank";
 
 export class GitHubContentStore implements ContentStore {
   constructor(private readonly client: GitHubClient) {}
@@ -245,30 +246,25 @@ export class GitHubContentStore implements ContentStore {
   }
 
   async searchPosts(query: string): Promise<SearchResult[]> {
-    const needle = query.trim().toLowerCase();
+    const needle = query.trim();
     if (!needle) return [];
-    const matches: SearchResult[] = [];
+    const includeCandidates: Array<{ row: Post; rank: RankablePost; handle: string }> = [];
     for (const handle of await this.listHandles()) {
       for (const meta of await this.listPosts({ handle, status: "published" })) {
         const post = await this.getPost(handle, meta.slug);
         if (!post) continue;
-        const haystack = [
-          post.title,
-          post.body,
-          post.excerpt ?? "",
-          post.tags.join(" "),
-        ]
+        const haystack = [post.title, post.body, post.excerpt ?? "", post.tags.join(" ")]
           .join("\n")
           .toLowerCase();
-        if (haystack.includes(needle)) {
-          const { body: _body, ...m } = post;
-          void _body;
-          matches.push({ handle, post: m });
-        }
+        if (haystack.includes(needle.toLowerCase()))
+          includeCandidates.push({ row: post, rank: post, handle });
       }
     }
-    matches.sort((a, b) => (b.post.publishedAt ?? "").localeCompare(a.post.publishedAt ?? ""));
-    return matches;
+    return rankRows(includeCandidates, needle).map(({ row, handle }) => {
+      const { body: _body, ...m } = row;
+      void _body;
+      return { handle, post: m };
+    });
   }
 
   async listHandles(): Promise<string[]> {

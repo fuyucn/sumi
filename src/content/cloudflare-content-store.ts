@@ -1,6 +1,7 @@
 import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import { slugify } from "./paths";
+import { rankRows } from "./search-rank";
 import { buildImageUrl, R2Store, type R2BucketLike } from "@/lib/r2";
 
 /**
@@ -337,11 +338,23 @@ export class CloudflareContentStore implements ContentStore {
     const rows = await this.rows<PostRow>(
       `SELECT * FROM posts
        WHERE status = 'published'
-         AND (title LIKE ? OR body LIKE ? OR excerpt LIKE ? OR tags LIKE ?)
-       ORDER BY created_at DESC`,
+         AND (title LIKE ? OR body LIKE ? OR excerpt LIKE ? OR tags LIKE ?)`,
       like, like, like, like,
     );
-    return rows.map((r) => ({ handle: r.handle, post: toPostMeta(r) }));
+    return rankRows(
+      rows.map((r) => ({
+        row: r,
+        rank: {
+          title: r.title,
+          body: r.body,
+          excerpt: r.excerpt,
+          tags: parseTags(r.tags),
+          publishedAt: r.published_at,
+          createdAt: r.created_at,
+        },
+      })),
+      needle,
+    ).map(({ row }) => ({ handle: row.handle, post: toPostMeta(row) }));
   }
 
   // ---- D1 helpers ----

@@ -13,6 +13,7 @@ import {
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
 import { slugify } from "./paths";
+import { rankRows } from "./search-rank";
 
 type Db = PostgresJsDatabase<typeof dbSchema>;
 
@@ -351,7 +352,7 @@ export class DbContentStore implements ContentStore {
     const needle = query.trim();
     if (!needle) return [];
     const like = `%${needle}%`;
-    const rows = await this.db
+    const candidates = await this.db
       .select()
       .from(sumiPosts)
       .where(
@@ -361,9 +362,21 @@ export class DbContentStore implements ContentStore {
           OR ${sumiPosts.excerpt} ILIKE ${like}
           OR ${sumiPosts.tags} ILIKE ${like}
         )`,
-      )
-      .orderBy(sql`${sumiPosts.createdAt} DESC`);
-    return rows.map((r) => ({ handle: r.handle, post: toPostMeta(r) }));
+      );
+    return rankRows(
+      candidates.map((r) => ({
+        row: r,
+        rank: {
+          title: r.title,
+          body: r.body,
+          excerpt: r.excerpt,
+          tags: parseJsonList(r.tags),
+          publishedAt: r.publishedAt,
+          createdAt: r.createdAt,
+        },
+      })),
+      needle,
+    ).map(({ row }) => ({ handle: row.handle, post: toPostMeta(row) }));
   }
 }
 
