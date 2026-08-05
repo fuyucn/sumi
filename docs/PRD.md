@@ -111,4 +111,5 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 
 - Likes(スキ) and follows → store in Neon later.
 - Notifications; full-text search index tuning / DB-backed ranking (future).
-- Nesting depth limit / moderation for comment threads (future).
+- Moderation tooling for comment threads; comment nesting is capped at a depth of
+  4 (enforced server-side across all backends, still renders replies as threaded).

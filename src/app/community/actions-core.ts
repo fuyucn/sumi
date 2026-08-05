@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Comment, Profile } from "@/content/types";
 import { guard, type SessionDeps } from "@/lib/session";
+import { commentDepth, MAX_COMMENT_DEPTH } from "@/lib/comment-depth";
 
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -35,6 +36,21 @@ export async function runAddComment(
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
   }
+
+  // Reject replies that would exceed the max nesting depth (or reference a
+  // comment that no longer exists). Runs on the server so it holds across all
+  // backends, not just whatever the UI renders.
+  if (f.parentId) {
+    const existing = await deps.store!.listComments(f.postHandle, f.slug);
+    const parent = existing.find((c) => c.id === f.parentId);
+    if (!parent) {
+      return { ok: false, error: "Comment you are replying to no longer exists" };
+    }
+    if (commentDepth(existing, f.parentId) >= MAX_COMMENT_DEPTH) {
+      return { ok: false, error: `Comments nest to a maximum depth of ${MAX_COMMENT_DEPTH} levels` };
+    }
+  }
+
   const comment = await deps.store!.addComment(
     f.postHandle,
     f.slug,

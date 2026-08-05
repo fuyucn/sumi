@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
+import type { Comment } from "@/content/types";
 import { runAddComment, runDeleteMagazine, runSaveMagazine, runSaveProfile } from "./actions-core";
 
 function fakeStore(): ContentStore {
@@ -61,4 +62,55 @@ test("magazine save + delete", async () => {
   expect(del.ok).toBe(true);
   const guardDel = await runDeleteMagazine({ userId: null, handle: null, store: null }, "my-zine");
   expect(guardDel.ok).toBe(false);
+});
+
+function storeWithComments(listComments: () => Promise<Comment[]>, addComment: () => Promise<Comment>) {
+  return { ...fakeStore(), listComments, addComment } as ContentStore;
+}
+
+const chain: Comment[] = [
+  { id: "r1", handle: "a", date: "t", body: "" },
+  { id: "r2", handle: "a", date: "t", body: "", parentId: "r1" },
+  { id: "r3", handle: "a", date: "t", body: "", parentId: "r2" },
+  { id: "r4", handle: "a", date: "t", body: "", parentId: "r3" },
+];
+
+test("addComment allows a reply within the max depth", async () => {
+  const store = storeWithComments(
+    async () => chain,
+    async () => ({ id: "new", handle: "alice", date: "t", body: "deep" }),
+  );
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store },
+    { postHandle: "p", slug: "s", body: "ok", parentId: "r3" },
+    new Date(),
+  );
+  expect(res.ok).toBe(true);
+});
+
+test("addComment rejects a reply that would exceed the max depth", async () => {
+  const store = storeWithComments(
+    async () => chain,
+    async () => ({ id: "new", handle: "alice", date: "t", body: "deep" }),
+  );
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store },
+    { postHandle: "p", slug: "s", body: "too deep", parentId: "r4" },
+    new Date(),
+  );
+  expect(res.ok).toBe(false);
+  if (!res.ok) expect(res.error).toContain("maximum depth");
+});
+
+test("addComment rejects a reply to a missing parent", async () => {
+  const store = storeWithComments(
+    async () => chain,
+    async () => ({ id: "new", handle: "alice", date: "t", body: "" }),
+  );
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store },
+    { postHandle: "p", slug: "s", body: "x", parentId: "ghost" },
+    new Date(),
+  );
+  expect(res.ok).toBe(false);
 });

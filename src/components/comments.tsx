@@ -5,6 +5,7 @@ import { Markdown } from "@/components/markdown";
 import Link from "next/link";
 import { CommentForm } from "@/components/comment-form";
 import { ReplyComposer } from "@/components/reply-composer";
+import { replyAllowed } from "@/lib/comment-depth";
 import type { Comment } from "@/content/types";
 
 function indexByParent(comments: Comment[]): Map<string | null, Comment[]> {
@@ -21,12 +22,14 @@ function indexByParent(comments: Comment[]): Map<string | null, Comment[]> {
 function CommentNode({
   comment,
   replies,
+  allComments,
   postHandle,
   slug,
   signedInHandle,
 }: {
   comment: Comment;
   replies: Comment[];
+  allComments: Comment[];
   postHandle: string;
   slug: string;
   signedInHandle: string | null;
@@ -52,7 +55,7 @@ function CommentNode({
         <div className="mt-2 text-sm leading-relaxed text-ink">
           <Markdown>{comment.body}</Markdown>
         </div>
-        {signedInHandle ? (
+        {signedInHandle && replyAllowed(allComments, comment) ? (
           <ReplyComposer
             postHandle={postHandle}
             slug={slug}
@@ -68,6 +71,7 @@ function CommentNode({
               key={child.id}
               comment={child}
               replies={indexByParent(replies).get(child.id) ?? []}
+              allComments={allComments}
               postHandle={postHandle}
               slug={slug}
               signedInHandle={signedInHandle}
@@ -97,6 +101,7 @@ export async function Comments({ handle, slug }: { handle: string; slug: string 
               key={root.id}
               comment={root}
               replies={byParent.get(root.id) ?? []}
+              allComments={comments}
               postHandle={handle}
               slug={slug}
               signedInHandle={signedInHandle}
