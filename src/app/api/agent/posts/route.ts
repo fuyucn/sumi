@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateAgent } from "@/lib/agent-auth";
 import { getAgentContentStore } from "@/content";
 import { buildNewPost } from "@/content/post-input";
-import { agentPostSchema, toWriteForm, apiError } from "../shared";
+import { agentPostSchema, toWriteForm, agentRequest, apiError } from "../shared";
 
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const auth = await authenticateAgent(req.headers.get("authorization"));
+  const { auth } = await agentRequest(req);
   if (!auth.ok) return apiError(401, auth.error);
 
   const store = await getAgentContentStore();
@@ -16,10 +15,10 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const auth = await authenticateAgent(req.headers.get("authorization"));
+  const { auth, body } = await agentRequest(req);
   if (!auth.ok) return apiError(401, auth.error);
 
-  const parsed = agentPostSchema.safeParse(await req.json().catch(() => null));
+  const parsed = agentPostSchema.safeParse(JSON.parse(body || "{}") as unknown);
   if (!parsed.success) return apiError(400, parsed.error.issues[0]?.message ?? "Invalid body");
 
   const store = await getAgentContentStore();

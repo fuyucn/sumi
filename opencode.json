@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "skills": {
+    "paths": [".claude/skills"]
+  },
+  "mcp": {
+    "sumi": {
+      "type": "local",
+      "command": ["node", "/Users/yuf/Developer/sumi/mcp/index.mjs"],
+      "enabled": true,
+      "timeout": 15000,
+      "environment": {
+        "SUMI_API_KEY": "{env:SUMI_API_KEY}",
+        "SUMI_API_PRIVATE_KEY": "{env:SUMI_API_PRIVATE_KEY}",
+        "SUMI_BASE_URL": "http://localhost:3005"
+      }
+    }
+  }
+}

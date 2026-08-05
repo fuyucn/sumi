@@ -112,6 +112,7 @@ export const agentKeys = pgTable("agent_keys", {
   agentHandle: text("agent_handle").notNull().unique(),
   displayName: text("display_name").notNull(),
   keyHash: text("key_hash").notNull(),
+  publicKey: text("public_key"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   lastUsedAt: timestamp("last_used_at"),
 });

@@ -6,14 +6,18 @@ agent HTTP API (`/api/agent/*`), so auth, validation and backend selection
 (GitHub / Postgres mirror / Cloudflare) all stay in one place.
 
 - **Zero dependencies** — plain Node ESM (`index.mjs`), uses global `fetch`.
-- **Auth** — `Authorization: Bearer <agent key>`. Keys are hashed in the DB;
-  the plaintext is printed once at creation.
+- **Two-factor agent auth (DPoP-style)**: every request is both identified by a
+  bearer key AND signed with an Ed25519 private key. The server verifies the
+  signature against the agent's registered public key over a canonical
+  `method + path + body-hash + timestamp` string. **A leaked bearer key alone
+  cannot impersonate the agent.**
 - **Safe by default** — `sumi_write_post` creates a **draft** unless you pass
   `publish: true`. Drafts show up in the human's `/write` dashboard.
 
 ## Setup
 
-1. Create an agent + key (run against the deployed DB):
+1. Create an agent + credentials (run against the deployed DB). One agent gets
+   a bearer key (identifier) AND an Ed25519 private JWK (the real credential):
 
    ```bash
    docker run --rm --network sumi_default \
@@ -26,18 +30,24 @@ agent HTTP API (`/api/agent/*`), so auth, validation and backend selection
        scripts/create-agent.test.ts
    ```
 
-   The test prints `=== AGENT KEY (show once, store securely) ===`. Save it —
-   it cannot be recovered later.
+   The test prints `SUMI_API_KEY` and `SUMI_API_PRIVATE_KEY` exactly once —
+   save both; they cannot be recovered later.
 
-2. Give the key to your agent via `SUMI_API_KEY`. `SUMI_BASE_URL` defaults to
-   `http://localhost:3005`.
+2. Give both to your agent:
+   - `SUMI_API_KEY` — the bearer key
+   - `SUMI_API_PRIVATE_KEY` — the Ed25519 private JWK `{"x":"...","d":"..."}`
+   - `SUMI_BASE_URL` defaults to `http://localhost:3005`
 
 ## Register in Claude Code
 
 `claude mcp add` (needs an absolute path to this dir):
 
 ```bash
-claude mcp add --transport stdio --env "SUMI_API_KEY=<key>" --env "SUMI_BASE_URL=http://localhost:3005" sumi node /Users/yuf/Developer/sumi/mcp/index.mjs
+claude mcp add --transport stdio \
+  --env "SUMI_API_KEY=<key>" \
+  --env "SUMI_API_PRIVATE_KEY='{\"x\":\"...\",\"d\":\"...\"}'" \
+  --env "SUMI_BASE_URL=http://localhost:3005" \
+  sumi node /Users/yuf/Developer/sumi/mcp/index.mjs
 ```
 
 Or add to `~/.claude.json` / project `.mcp.json`:
@@ -50,6 +60,7 @@ Or add to `~/.claude.json` / project `.mcp.json`:
       "args": ["/Users/yuf/Developer/sumi/mcp/index.mjs"],
       "env": {
         "SUMI_API_KEY": "<key>",
+        "SUMI_API_PRIVATE_KEY": "{\"x\":\"...\",\"d\":\"...\"}",
         "SUMI_BASE_URL": "http://localhost:3005"
       }
     }
@@ -77,7 +88,8 @@ runner that turns a prompt into a drafted post through any OpenAI-compatible
 LLM endpoint:
 
 ```bash
-export SUMI_API_KEY='<agent key>'
+export SUMI_API_KEY='<agent bearer key>'
+export SUMI_API_PRIVATE_KEY='{"x":"...","d":"..."}'
 export SUMI_LLM_API_KEY='<llm key>'
 node scripts/agent-publish.mjs "完成 Docker 部署后总结一下踩的坑"
 node scripts/agent-publish.mjs --file=notes.md --publish
@@ -99,5 +111,5 @@ dashboard under **Agent drafts for review** with Approve & publish / Delete.
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"sumi_get_agent_info","arguments":{}}}' \
-| SUMI_API_KEY='<key>' node mcp/index.mjs
+| SUMI_API_KEY='<key>' SUMI_API_PRIVATE_KEY='{"x":"...","d":"..."}' node mcp/index.mjs
 ```

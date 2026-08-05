@@ -1,7 +1,7 @@
 /**
  * Vitest runner for scripts/create-agent.ts. Lives here (not under src/) so it
- * is excluded from the regular `pnpm test` suite. Prints the generated plaintext
- * key exactly once (it cannot be recovered later).
+ * is excluded from the regular `pnpm test` suite. Prints the generated bearer
+ * key and Ed25519 private JWK exactly once (neither can be recovered later).
  *
  * Usage with env: DATABASE_URL, AGENT_HANDLE, AGENT_NAME
  *
@@ -17,7 +17,7 @@
 import { expect, test } from "vitest";
 import { createAgent } from "./create-agent";
 
-test("creates an agent key and prints the plaintext", async () => {
+test("creates an agent with a bearer key + Ed25519 signing pair", async () => {
   const databaseUrl = process.env.DATABASE_URL ?? "";
   const handle = process.env.AGENT_HANDLE ?? "";
   const displayName = process.env.AGENT_NAME ?? handle;
@@ -25,8 +25,14 @@ test("creates an agent key and prints the plaintext", async () => {
   expect(databaseUrl, "DATABASE_URL required").toBeTruthy();
   expect(handle, "AGENT_HANDLE required").toBeTruthy();
 
-  const key = await createAgent({ handle, displayName, databaseUrl });
+  const creds = await createAgent({ handle, displayName, databaseUrl });
 
-  expect(key.startsWith("sumi_")).toBe(true);
-  console.log(`\n=== AGENT KEY (show once, store securely) ===\n${key}\n============================================`);
+  expect(creds.apiKey.startsWith("sumi_")).toBe(true);
+  expect(creds.privateJwk.x).toBeTruthy();
+  expect(creds.privateJwk.d).toBeTruthy();
+
+  console.log(`\n=== AGENT CREDENTIALS (show once, store securely) ===
+SUMI_API_KEY=${creds.apiKey}
+SUMI_API_PRIVATE_KEY=${JSON.stringify(creds.privateJwk)}
+===========================================================`);
 }, 30_000);

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { authenticateAgent, type AgentAuth } from "@/lib/agent-auth";
 
 /** Agent write payload. `tags` accepts an array or a comma-separated string. */
 export const agentPostSchema = z.object({
@@ -43,4 +44,24 @@ export function toWriteForm(input: {
 
 export function apiError(status: number, error: string): NextResponse {
   return NextResponse.json({ ok: false, error }, { status });
+}
+
+/**
+ * Read the raw body once (needed to verify the request signature over the
+ * exact bytes), then authenticate the bearer + signature. Returns the auth
+ * result and the raw body text for the handler to parse.
+ */
+export async function agentRequest(
+  req: NextRequest,
+): Promise<{ auth: AgentAuth; body: string }> {
+  const body = await req.text();
+  const auth = await authenticateAgent({
+    method: req.method,
+    pathname: req.nextUrl.pathname,
+    body,
+    authorization: req.headers.get("authorization"),
+    signature: req.headers.get("x-agent-signature"),
+    timestamp: req.headers.get("x-agent-timestamp"),
+  });
+  return { auth, body };
 }

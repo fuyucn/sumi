@@ -7,28 +7,34 @@
 // sumi_get_agent_info, sumi_search_posts.
 //
 // Config (env):
-//   SUMI_API_KEY  (required)  agent key from `pnpm db:create-agent`
-//   SUMI_BASE_URL (optional)  default http://localhost:3005
+//   SUMI_API_KEY          (required)  agent bearer key
+//   SUMI_API_PRIVATE_KEY  (required)  Ed25519 private JWK {"x":"...","d":"..."}
+//   SUMI_BASE_URL         (optional)  default http://localhost:3005
 //
 // Register in Claude Code: ~/.claude.json → mcpServers, or `claude mcp add`:
 //   node <abs-path>/mcp/index.mjs
 import { createInterface } from "node:readline";
+import { signRequest } from "./lib/sign.mjs";
 
 const BASE_URL = (process.env.SUMI_BASE_URL ?? "http://localhost:3005").replace(/\/$/, "");
 const API_KEY = process.env.SUMI_API_KEY ?? "";
+const PRIVATE_JWK = process.env.SUMI_API_PRIVATE_KEY ?? "";
 
-if (!API_KEY) {
-  process.stderr.write("[sumi-mcp] WARN: SUMI_API_KEY not set; calls will 401\n");
-}
+if (!API_KEY) process.stderr.write("[sumi-mcp] WARN: SUMI_API_KEY not set; calls will 401\n");
+if (!PRIVATE_JWK) process.stderr.write("[sumi-mcp] WARN: SUMI_API_PRIVATE_KEY not set; requests cannot be signed\n");
 
 async function callApi(path, { method = "GET", body } = {}) {
+  const bodyText = body !== undefined ? JSON.stringify(body) : "";
+  const { signature, iat } = signRequest(PRIVATE_JWK, { method, pathname: path, body: bodyText });
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: {
       Authorization: `Bearer ${API_KEY}`,
+      "X-Agent-Signature": signature,
+      "X-Agent-Timestamp": String(iat),
       ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
     },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    ...(body !== undefined ? { body: bodyText } : {}),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);

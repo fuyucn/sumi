@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateAgent } from "@/lib/agent-auth";
 import { getAgentContentStore } from "@/content";
 import { buildNewPost } from "@/content/post-input";
-import { agentPostUpdateSchema, tagsToCommaString, apiError } from "../../shared";
+import { agentPostUpdateSchema, tagsToCommaString, agentRequest, apiError } from "../../shared";
 
 type RouteContext = { params: Promise<{ slug: string }> };
 
 export async function PUT(req: NextRequest, { params }: RouteContext): Promise<NextResponse> {
-  const auth = await authenticateAgent(req.headers.get("authorization"));
+  const { auth, body } = await agentRequest(req);
   if (!auth.ok) return apiError(401, auth.error);
 
   const { slug } = await params;
-  const parsed = agentPostUpdateSchema.safeParse(await req.json().catch(() => null));
+  const parsed = agentPostUpdateSchema.safeParse(JSON.parse(body || "{}") as unknown);
   if (!parsed.success) return apiError(400, parsed.error.issues[0]?.message ?? "Invalid body");
 
   const store = await getAgentContentStore();
@@ -33,7 +32,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext): Promise<N
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteContext): Promise<NextResponse> {
-  const auth = await authenticateAgent(req.headers.get("authorization"));
+  const { auth } = await agentRequest(req);
   if (!auth.ok) return apiError(401, auth.error);
 
   const { slug } = await params;

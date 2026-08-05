@@ -5,11 +5,12 @@
 // → POST to the sumi agent API as a DRAFT (unless --publish).
 //
 // Config (env):
-//   SUMI_API_KEY       (required) agent key
-//   SUMI_BASE_URL      (optional) default http://localhost:3005
-//   SUMI_LLM_BASE_URL  (optional) default https://api.openai.com/v1
-//   SUMI_LLM_MODEL     (optional) default gpt-4o-mini
-//   SUMI_LLM_API_KEY   (required) LLM provider key
+//   SUMI_API_KEY          (required) agent bearer key
+//   SUMI_API_PRIVATE_KEY  (required) Ed25519 private JWK {"x":"...","d":"..."}
+//   SUMI_BASE_URL         (optional) default http://localhost:3005
+//   SUMI_LLM_BASE_URL     (optional) default https://api.openai.com/v1
+//   SUMI_LLM_MODEL        (optional) default gpt-4o-mini
+//   SUMI_LLM_API_KEY      (required) LLM provider key
 //
 // Usage:
 //   node scripts/agent-publish.mjs "完成 Docker 部署后总结一下踩的坑"
@@ -19,8 +20,10 @@
 // Works with any OpenAI-compatible endpoint (OpenAI, Groq, Ollama, local mock…).
 
 import { readFileSync } from "node:fs";
+import { signRequest } from "../mcp/lib/sign.mjs";
 const BASE_URL = (process.env.SUMI_BASE_URL ?? "http://localhost:3005").replace(/\/$/, "");
 const API_KEY = process.env.SUMI_API_KEY ?? "";
+const PRIVATE_JWK = process.env.SUMI_API_PRIVATE_KEY ?? "";
 const LLM_BASE_URL = (process.env.SUMI_LLM_BASE_URL ?? "https://api.openai.com/v1").replace(/\/$/, "");
 const LLM_MODEL = process.env.SUMI_LLM_MODEL ?? "gpt-4o-mini";
 const LLM_API_KEY = process.env.SUMI_LLM_API_KEY ?? "";
@@ -33,7 +36,8 @@ const publish = flags.has("--publish");
 const model = flagValue(args, "--model=") ?? LLM_MODEL;
 const prompt = positional || readPromptFromFile(args) || process.env.SUMI_PROMPT || (await readStdinIfPiped());
 
-if (!API_KEY) die("SUMI_API_KEY is required (agent key from scripts/create-agent.ts)");
+if (!API_KEY) die("SUMI_API_KEY is required (agent bearer key from scripts/create-agent.ts)");
+if (!PRIVATE_JWK) die("SUMI_API_PRIVATE_KEY is required (Ed25519 private JWK)");
 if (!LLM_API_KEY) die("SUMI_LLM_API_KEY is required (LLM provider key)");
 if (!prompt) die("No prompt given. Pass it as an argument, --file=path.md, SUMI_PROMPT, or stdin.");
 
@@ -103,10 +107,17 @@ function parseJson(text) {
 }
 
 async function callApi(path, { method, body }) {
+  const bodyText = body !== undefined ? JSON.stringify(body) : "";
+  const { signature, iat } = signRequest(PRIVATE_JWK, { method, pathname: path, body: bodyText });
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
-    headers: { Authorization: `Bearer ${API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      "X-Agent-Signature": signature,
+      "X-Agent-Timestamp": String(iat),
+      "Content-Type": "application/json",
+    },
+    body: bodyText,
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) die(`API error ${res.status}: ${data?.error ?? "unknown"}`);
