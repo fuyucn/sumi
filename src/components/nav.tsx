@@ -84,20 +84,6 @@ export function Nav() {
           {handle ? (
             <>
               <Link
-                href="/notifications"
-                className={`${linkClass(isActive("/notifications"))} relative`}
-                aria-current={isActive("/notifications") ? "page" : undefined}
-                aria-label="Notifications"
-              >
-                <Bell size={15} weight="duotone" aria-hidden />
-                <span className="hidden sm:inline">Inbox</span>
-                {unread > 0 ? (
-                  <span className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
-                    {unread > 9 ? "9+" : unread}
-                  </span>
-                ) : null}
-              </Link>
-              <Link
                 href={`/@${handle}`}
                 className={linkClass(isActive(`/@${handle}`, true))}
                 aria-current={isActive(`/@${handle}`, true) ? "page" : undefined}
@@ -144,6 +130,22 @@ export function Nav() {
             <MagnifyingGlass size={15} weight="duotone" aria-hidden />
             <span className="hidden sm:inline">Index</span>
           </Link>
+          {handle ? (
+            <Link
+              href="/notifications"
+              className={`${linkClass(isActive("/notifications"))} relative`}
+              aria-current={isActive("/notifications") ? "page" : undefined}
+              aria-label="Inbox"
+              title="Inbox"
+            >
+              <Bell size={15} weight="duotone" aria-hidden />
+              {unread > 0 ? (
+                <span className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           {handle ? (
             <Link
               href="/settings"
