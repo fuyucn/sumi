@@ -84,7 +84,7 @@ flowchart TB
 ## 4. 分层与模块
 
 ### 4.1 表现层（页面与组件）
-- `src/app/*` — App Router 页面:**门户首页**（身份区 + 最新文章 + 标签云）、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、标签库 `/tags` 与标签页 `/tag/[slug]`、搜索 `/search`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
+- `src/app/*` — App Router 页面:**门户首页**（身份区 + 最新文章 + 标签云）、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、手记时间线 `/[handle]/notes`、友链页 `/friends`、标签库 `/tags` 与标签页 `/tag/[slug]`、搜索 `/search`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
 - `src/components/*` — 客户端组件:TipTap 编辑器、评论表单、杂志表单、资料表单、导航栏等。
 - 公共读页面一律通过 `getReadContentStore()`（匿名 Octokit）读公开仓库，无需登录即可浏览。
 
@@ -97,7 +97,7 @@ flowchart TB
 
 ### 4.2 应用层（Server Actions 与 API）
 - `src/app/write/actions.ts` + `actions-core.ts` — 保存/删除文章、图片上传（`"use server"`）。
-- `src/app/community/actions.ts` + `actions-core.ts` — 评论、资料、杂志的增删改。
+- `src/app/community/actions.ts` + `actions-core.ts` — 评论、资料、杂志、手记、友链的增删改。
 - `src/app/api/auth/[...all]/route.ts` — 将 Better Auth 挂到 Next 的 catch-all 路由（GET/POST）。
 - 每个 action 都先经过 `resolveDeps()`（`src/lib/session.ts`）解析「当前用户 id / handle / content store」，再由 `guard()` 校验登录态与配置。
 
@@ -109,10 +109,11 @@ flowchart TB
 - `src/lib/current-user.ts` / `session.ts` / `user.ts` — 会话与 handle 解析。
 
 ### 4.4 内容层（ContentStore 抽象）
-- `src/content/store.ts` — `ContentStore` 接口（文章/评论/杂志/资料/图片的统一读写，是未来迁移到 `DbContentStore` 的接缝）。
-- `src/content/github-content-store.ts` — GitHub API 实现。
-- `src/content/frontmatter.ts` — Markdown ↔ frontmatter 序列化/解析。
+- `src/content/store.ts` — `ContentStore` 接口（文章/评论/杂志/资料/图片/手记/友链的统一读写，是 GitHub / Postgres / Cloudflare 三后端共用的接缝）。
+- `src/content/github-content-store.ts` / `db-content-store.ts` / `cloudflare-content-store.ts` — 同一接口的三个实现（Git 文件 / Postgres 镜像 / D1+R2），手记与友链在三个后端行为一致。
+- `src/content/frontmatter.ts` — Markdown ↔ frontmatter 序列化/解析（含手记）。
 - `src/content/paths.ts` — 仓库目录约定与 slug 规则。
+- `src/content/types.ts` — 领域类型（`Post / Comment / Magazine / Profile`，以及手记 `Note`、友链 `Friend`）。
 - `src/content/feed.ts` — 聚合各创作者的已发布文章，按 `publishedAt` 倒序。
 - `src/content/index.ts` — 工厂函数：`getReadContentStore()`（匿名读）与 `getContentStoreForUser()`（用 OAuth token 写）。
 
@@ -176,6 +177,10 @@ graph TD
     MAG --> M2["essays.md"]
 
     H --> PROF["profile.md"]
+    H --> NOTES["notes/"]
+    NOTES --> N1["2026-08-07...-handle.md"]
+
+    Root --> F["friends.json<br/>(站点级)"]
 ```
 
 - 每篇文章一个目录：`content/@<handle>/<slug>/index.md`，frontmatter 含 `title / tags / status / publishedAt / excerpt / coverImage`，正文为 Markdown。
@@ -183,7 +188,11 @@ graph TD
 - 评论是扁平文件：`comments/<ISO时间戳>-<作者handle>.md`，按 `date` 升序列出。
 - 杂志（合集）：`magazines/<mag>.md`，frontmatter 含 `title / description / items[]`。
 - 资料：`profile.md`，frontmatter 含 `displayName / bio`。
+- 手记（时间线）：`notes/<ISO时间戳>-<handle>.md`，frontmatter 含 `author / date`，按 `date` 降序列出。
+- 友链：站点级单文件 `content/friends.json`，数组 `{ friends: [{ id, name, url, avatar?, bio?, createdAt }] }`，按 `createdAt` 升序展示。
 - `paths.ts` 集中定义这些约定，`slugify()` 负责标题转 slug。
+
+> Postgres 镜像（`DbContentStore`）用 `sumi_notes` / `sumi_friends` 表承载同样的数据；Cloudflare D1 用 `notes` / `friends` 表，建表 SQL 见 `drizzle/d1-schema.sql`（`drizzle/*.sql` 迁移为 Postgres 方言，不适用于 D1）。
 
 ---
 
@@ -418,11 +427,13 @@ Sumi 的单一代码库可部署到三种目标，它们共享同一套 `next.co
 ```text
 env.CF_ENABLED 是否为真？
 ├─ 是 → 构造 Cloudflare 后端（D1 绑定 `DB` + R2 绑定 `IMAGES` 传入 Binding 层）
-└─ 否 → 构造 GitHub 后端（GitHubContentStore，走 Octokit 读写内容仓库）
+└─ 否 → DB_MIRROR=1 且 DATABASE_URL 可用？
+         ├─ 是 → 构造 Postgres 镜像后端（DbContentStore）
+         └─ 否 → 构造 GitHub 后端（GitHubContentStore，走 Octokit 读写内容仓库）
 ```
 
 要点：
-- `ContentStore` 接口（`src/content/store.ts`）保持不变；GitHub 实现（`src/content/github-content-store.ts`）与未来 CF 实现都实现同一接口，保证 Server Actions / 页面只依赖抽象。
+- `ContentStore` 接口（`src/content/store.ts`）保持不变；GitHub / Postgres 镜像 / Cloudflare D1+R2 三个实现都实现同一接口，保证 Server Actions / 页面只依赖抽象（工厂见 `src/content/index.ts`）。
 - `env.CF_ENABLED` 是唯一提示键（见 §10）。CF 绑定（D1/R2）由 `wrangler.jsonc` 声明并在 Worker 运行时注入，**不会**以 `process.env` 形式出现。
 - 三种目标共用同一套 GitHub OAuth 认证与会话表（Postgres 或 D1 建模由各后端负责）。
 
@@ -434,6 +445,12 @@ env.CF_ENABLED 是否为真？
 pnpm dlx wrangler d1 create sumi-db                 # → 回填 database_id 到 wrangler.jsonc
 pnpm dlx wrangler r2 bucket create sumi-opennext-cache
 pnpm dlx wrangler r2 bucket create sumi-images
+```
+
+D1 内容表建表（Postgres 方言的 `drizzle/*.sql` 不适用于 D1，请用专用 D1 DDL）：
+
+```bash
+pnpm dlx wrangler d1 execute sumi-db --remote --file=drizzle/d1-schema.sql
 ```
 
 D1/R2 的运行时访问由 Worker 绑定（`DB` / `IMAGES`）提供，不经过 `src/lib/db.ts` 的 Postgres 驱动。

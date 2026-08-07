@@ -130,12 +130,14 @@ notifications, native mobile app.
 - [x] `DB_MIRROR=1` serves reads/search from the Postgres mirror.
 - [x] Likes and follows work on GitHub + mirror backends.
 - [x] Portal home, tag cloud, and ink-on-paper design system ship in the UI.
+- [x] Handnotes (手记) timeline at `/[handle]/notes` with an inline composer for the owner; newest first.
+- [x] Friends (友链) page at `/friends` with add/remove for signed-in creators; works on all three backends.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Notifications; handnotes (手记) timeline; friends/links (友链) page; projects showcase.
+- Notifications; projects showcase.
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced

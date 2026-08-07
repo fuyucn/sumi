@@ -1,13 +1,15 @@
 import type { GitHubClient } from "@/lib/github";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, Profile } from "./types";
 import {
   parseComment,
   parseMagazine,
+  parseNote,
   parsePost,
   parseProfile,
   serializeComment,
   serializeMagazine,
+  serializeNote,
   serializePost,
   serializeProfile,
 } from "./frontmatter";
@@ -16,14 +18,18 @@ import {
   commentDir,
   commentFile,
   followingFile,
+  friendsFile,
   imagePath,
   likesFile,
   magazineFile,
   magazinesDir,
+  noteFile,
+  notesDir,
   postDir,
   postFile,
   profileFile,
   safeCommentName,
+  safeNoteName,
   slugify,
   userDir,
 } from "./paths";
@@ -256,6 +262,99 @@ export class GitHubContentStore implements ContentStore {
     const path = profileFile(handle);
     const existing = await this.client.getFile(path);
     await this.client.putTextFile(path, serializeProfile(profile), `Save profile: @${handle}`, existing?.sha);
+  }
+
+  // ---- Notes (手记) ----
+
+  async listNotes(handle: string): Promise<Note[]> {
+    let entries;
+    try {
+      entries = await this.client.listDir(notesDir(handle));
+    } catch {
+      return [];
+    }
+    const out: Note[] = [];
+    for (const entry of entries) {
+      if (entry.type !== "file" || !entry.name.endsWith(".md")) continue;
+      const file = await this.client.getFile(entry.path);
+      if (!file) continue;
+      const id = entry.name.slice(0, -3);
+      out.push(parseNote(file.content, id, ""));
+    }
+    out.sort((a, b) => b.date.localeCompare(a.date));
+    return out;
+  }
+
+  async addNote(handle: string, note: NewNote, now: Date): Promise<Note> {
+    const id = safeNoteName(now, handle);
+    const full: Note = { id, handle, date: now.toISOString(), body: note.body };
+    await this.client.putTextFile(
+      noteFile(handle, id),
+      serializeNote(full),
+      `Note on @${handle} by @${handle}`,
+    );
+    return full;
+  }
+
+  async deleteNote(handle: string, id: string): Promise<void> {
+    const path = noteFile(handle, id);
+    const file = await this.client.getFile(path);
+    if (!file) return;
+    await this.client.deleteFile(path, `Delete note @${handle}/${id}`, file.sha);
+  }
+
+  // ---- Friends (友链) ----
+
+  async listFriends(): Promise<Friend[]> {
+    const file = await this.client.getFile(friendsFile());
+    if (!file) return [];
+    try {
+      const parsed: { friends?: unknown } = JSON.parse(file.content);
+      const arr = Array.isArray(parsed.friends) ? parsed.friends : null;
+      if (!arr) return [];
+      return arr
+        .filter((x): x is Record<string, unknown> => typeof x === "object" && x !== null)
+        .map((x) => ({
+          id: typeof x.id === "string" ? x.id : "",
+          name: typeof x.name === "string" ? x.name : "",
+          url: typeof x.url === "string" ? x.url : "",
+          ...(typeof x.avatar === "string" && x.avatar ? { avatar: x.avatar } : {}),
+          ...(typeof x.bio === "string" && x.bio ? { bio: x.bio } : {}),
+          createdAt: typeof x.createdAt === "string" ? x.createdAt : "",
+        }))
+        .filter((f) => f.id && f.name && f.url);
+    } catch {
+      return [];
+    }
+  }
+
+  async addFriend(friend: NewFriend, now: Date): Promise<Friend> {
+    const full: Friend = {
+      id: `${now.toISOString().replace(/[:.]/g, "-")}-${slugify(friend.name) || "friend"}`,
+      name: friend.name,
+      url: friend.url,
+      ...(friend.avatar !== undefined ? { avatar: friend.avatar } : {}),
+      ...(friend.bio !== undefined ? { bio: friend.bio } : {}),
+      createdAt: now.toISOString(),
+    };
+    await this.writeFriends((friends) => [...friends, full]);
+    return full;
+  }
+
+  async deleteFriend(id: string): Promise<void> {
+    await this.writeFriends((friends) => friends.filter((f) => f.id !== id));
+  }
+
+  private async writeFriends(update: (current: Friend[]) => Friend[]): Promise<void> {
+    const path = friendsFile();
+    const existing = await this.client.getFile(path);
+    const current = existing ? await this.listFriends() : [];
+    await this.client.putTextFile(
+      path,
+      JSON.stringify({ friends: update(current) }, null, 2),
+      `Update friend links`,
+      existing?.sha,
+    );
   }
 
   // ---- Magazines ----

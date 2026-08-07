@@ -1,4 +1,4 @@
-import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, PostStatus, Profile } from "./types";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
@@ -61,6 +61,22 @@ interface ProfileRow {
   updated_at: string;
 }
 
+interface NoteRow {
+  id: string;
+  handle: string;
+  body: string;
+  date: string;
+}
+
+interface FriendRow {
+  id: string;
+  name: string;
+  url: string;
+  avatar: string | null;
+  bio: string | null;
+  created_at: string;
+}
+
 function parseTags(raw: string | null): string[] {
   if (!raw) return [];
   try {
@@ -103,6 +119,7 @@ export class CloudflareContentStore implements ContentStore {
       `SELECT handle FROM posts
        UNION SELECT handle FROM magazines
        UNION SELECT handle FROM profiles
+       UNION SELECT handle FROM notes
        ORDER BY handle`,
     );
     return rows.map((r) => r.handle);
@@ -311,6 +328,67 @@ export class CloudflareContentStore implements ContentStore {
          updated_at = excluded.updated_at`,
       handle, profile.displayName ?? null, profile.bio ?? null, now,
     );
+  }
+
+  // ---- Notes (手记) ----
+
+  async listNotes(handle: string): Promise<Note[]> {
+    const rows = await this.rows<NoteRow>(
+      `SELECT * FROM notes WHERE handle = ? ORDER BY date DESC`,
+      handle,
+    );
+    return rows.map((r) => ({ id: r.id, handle: r.handle, body: r.body, date: r.date }));
+  }
+
+  async addNote(handle: string, note: NewNote, now: Date): Promise<Note> {
+    const date = now.toISOString();
+    const id = date.replace(/[:.]/g, "-") + "-" + (slugify(handle) || "user");
+    await this.run(
+      `INSERT OR IGNORE INTO notes (id, handle, body, date, created_at) VALUES (?, ?, ?, ?, ?)`,
+      id, handle, note.body, date, date,
+    );
+    return { id, handle, body: note.body, date };
+  }
+
+  async deleteNote(handle: string, id: string): Promise<void> {
+    await this.run(`DELETE FROM notes WHERE handle = ? AND id = ?`, handle, id);
+  }
+
+  // ---- Friends (友链) ----
+
+  async listFriends(): Promise<Friend[]> {
+    const rows = await this.rows<FriendRow>(
+      `SELECT * FROM friends ORDER BY created_at ASC`,
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      url: r.url,
+      createdAt: r.created_at,
+      ...(r.avatar !== null ? { avatar: r.avatar } : {}),
+      ...(r.bio !== null ? { bio: r.bio } : {}),
+    }));
+  }
+
+  async addFriend(friend: NewFriend, now: Date): Promise<Friend> {
+    const createdAt = now.toISOString();
+    const id = createdAt.replace(/[:.]/g, "-") + "-" + (slugify(friend.name) || "friend");
+    await this.run(
+      `INSERT OR IGNORE INTO friends (id, name, url, avatar, bio, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+      id, friend.name, friend.url, friend.avatar ?? null, friend.bio ?? null, createdAt,
+    );
+    return {
+      id,
+      name: friend.name,
+      url: friend.url,
+      createdAt,
+      ...(friend.avatar !== undefined ? { avatar: friend.avatar } : {}),
+      ...(friend.bio !== undefined ? { bio: friend.bio } : {}),
+    };
+  }
+
+  async deleteFriend(id: string): Promise<void> {
+    await this.run(`DELETE FROM friends WHERE id = ?`, id);
   }
 
   // ---- Magazines ----

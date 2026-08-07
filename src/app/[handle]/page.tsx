@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import { PostCard } from "@/components/post-card";
 import { CreatorProfile } from "@/components/creator-profile";
@@ -18,6 +19,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const store = await getReadContentStore();
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
+  const notes = await store.listNotes(handle);
   const profile = await store.getProfile(handle);
   const hasProfile = !!(profile && (profile.displayName || profile.bio));
   const user = await getCurrentUser();
@@ -42,6 +44,12 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
             {posts.length} {posts.length === 1 ? "post" : "posts"} · {followers.length}{" "}
             {followers.length === 1 ? "follower" : "followers"}
           </p>
+          <Link
+            href={`/@${handle}/notes`}
+            className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {notes.length} {notes.length === 1 ? "note" : "notes"} →
+          </Link>
           {signedInHandle !== null && signedInHandle !== handle ? (
             <FollowButton
               handle={handle}

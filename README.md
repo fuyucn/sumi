@@ -10,6 +10,8 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 - **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (committed to the content repo).
 - **Reading** — search-free discovery: newest-first home feed, full-text search (`/search`), per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
 - **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article in the content repo.
+- **Notes (手记)** — a short-form timeline per creator at `/@handle/notes`; the owner pins a thought inline, rendered newest-first.
+- **Friends (友链)** — a site-wide friends/links page at `/friends`; signed-in creators can add name/URL/avatar/bio and remove links.
 - **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.

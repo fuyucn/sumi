@@ -1,4 +1,4 @@
-import type { Comment, Magazine, NewComment, NewMagazine, Post, PostMeta, NewPost, PostStatus, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, PostStatus, Profile } from "./types";
 
 export interface ListPostsOptions {
   handle?: string;
@@ -40,6 +40,14 @@ export interface ContentStore {
   removeFollow(followerHandle: string, followeeHandle: string): Promise<void>;
   getProfile(handle: string): Promise<Profile | null>;
   saveProfile(handle: string, profile: Profile): Promise<void>;
+  /** Notes (手记) for a creator, newest first. */
+  listNotes(handle: string): Promise<Note[]>;
+  addNote(handle: string, note: NewNote, now: Date): Promise<Note>;
+  deleteNote(handle: string, id: string): Promise<void>;
+  /** Site-wide friend links (友链), in creation order. */
+  listFriends(): Promise<Friend[]>;
+  addFriend(friend: NewFriend, now: Date): Promise<Friend>;
+  deleteFriend(id: string): Promise<void>;
   listMagazines(handle: string): Promise<Magazine[]>;
   getMagazine(handle: string, slug: string): Promise<Magazine | null>;
   saveMagazine(handle: string, magazine: NewMagazine): Promise<string>;

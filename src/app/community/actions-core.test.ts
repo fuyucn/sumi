@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment } from "@/content/types";
-import { runAddComment, runDeleteComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
+import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -23,6 +23,12 @@ function fakeStore(): ContentStore {
     async removeFollow() {},
     async getProfile() { return null; },
     async saveProfile() {},
+    async listNotes() { return []; },
+    async addNote(_h, n, now) { return { id: "n1", handle: "alice", body: n.body, date: now.toISOString() }; },
+    async deleteNote() {},
+    async listFriends() { return []; },
+    async addFriend(f, now) { return { id: "f1", ...f, createdAt: now.toISOString() }; },
+    async deleteFriend() {},
     async listMagazines() { return []; },
     async getMagazine() { return null; },
     async saveMagazine(handle, m) { return m.title.toLowerCase().replace(/\s+/g, "-"); },
@@ -198,6 +204,48 @@ test("addComment rejects a reply that would exceed the max depth", async () => {
   );
   expect(res.ok).toBe(false);
   if (!res.ok) expect(res.error).toContain("maximum depth");
+});
+
+test("note add guards, trims, and deletes", async () => {
+  const ok = await runAddNote(deps, { body: "  a fleeting thought " }, new Date("2026-01-01T00:00:00.000Z"));
+  expect(ok.ok).toBe(true);
+  if (ok.ok) {
+    expect(ok.data.body).toBe("a fleeting thought");
+    expect(ok.data.handle).toBe("alice");
+    expect(ok.data.date).toBe("2026-01-01T00:00:00.000Z");
+  }
+  const empty = await runAddNote(deps, { body: "   " }, new Date());
+  expect(empty.ok).toBe(false);
+  const guarded = await runAddNote({ userId: null, handle: null, store: null }, { body: "x" }, new Date());
+  expect(guarded.ok).toBe(false);
+  const del = await runDeleteNote(deps, { id: "n1" });
+  expect(del.ok).toBe(true);
+  const guardedDel = await runDeleteNote({ userId: null, handle: null, store: null }, { id: "n1" });
+  expect(guardedDel.ok).toBe(false);
+});
+
+test("friend add validates URL and deletes", async () => {
+  const ok = await runAddFriend(
+    deps,
+    { name: " Moe ", url: "https://moeblog.example", bio: "a friend" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(ok.ok).toBe(true);
+  if (ok.ok) {
+    expect(ok.data.name).toBe("Moe");
+    expect(ok.data.url).toBe("https://moeblog.example");
+    expect(ok.data.bio).toBe("a friend");
+  }
+  const badScheme = await runAddFriend(deps, { name: "X", url: "ftp://x.example" }, new Date());
+  expect(badScheme.ok).toBe(false);
+  const missingUrl = await runAddFriend(deps, { name: "X", url: "" }, new Date());
+  expect(missingUrl.ok).toBe(false);
+  const guarded = await runAddFriend({ userId: null, handle: null, store: null }, { name: "X", url: "https://x.example" }, new Date());
+  expect(guarded.ok).toBe(false);
+  const del = await runDeleteFriend(deps, { id: "f1" });
+  expect(del.ok).toBe(true);
+  const guardedDel = await runDeleteFriend({ userId: null, handle: null, store: null }, { id: "f1" });
+  expect(guardedDel.ok).toBe(false);
 });
 
 test("addComment rejects a reply to a missing parent", async () => {

@@ -58,4 +58,21 @@ export const profiles = sqliteTable("profiles", {
   updatedAt: text("updated_at").notNull(),
 });
 
-export const schema = { posts, comments, magazines, profiles };
+export const notes = sqliteTable("notes", {
+  id: text("id").primaryKey(),
+  handle: text("handle").notNull(),
+  body: text("body").notNull(),
+  date: text("date").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const friends = sqliteTable("friends", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  avatar: text("avatar"),
+  bio: text("bio"),
+  createdAt: text("created_at").notNull(),
+});
+
+export const schema = { posts, comments, magazines, profiles, notes, friends };

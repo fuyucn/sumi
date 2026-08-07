@@ -93,3 +93,23 @@ export function parseProfile(md: string): { displayName?: string; bio?: string }
   if (typeof data.bio === "string" && data.bio) out.bio = data.bio;
   return out;
 }
+
+// ---- Notes (手记) ----
+
+export function serializeNote(note: { handle: string; date: string; body: string }): string {
+  return matter.stringify(note.body, { author: note.handle, date: note.date });
+}
+
+export function parseNote(
+  md: string,
+  id: string,
+  fallbackDate: string,
+): { id: string; handle: string; date: string; body: string } {
+  const { data, content } = matter(md);
+  return {
+    id,
+    handle: typeof data.author === "string" && data.author ? data.author : id,
+    date: typeof data.date === "string" ? data.date : fallbackDate,
+    body: content.trim(),
+  };
+}

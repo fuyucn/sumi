@@ -71,6 +71,21 @@ CREATE TABLE "sumi_follows" (
   "created_at" text NOT NULL,
   CONSTRAINT "sumi_follows_follower_handle_followee_handle_pk" PRIMARY KEY("follower_handle","followee_handle")
 );
+CREATE TABLE "sumi_notes" (
+  "id" text PRIMARY KEY NOT NULL,
+  "handle" text NOT NULL,
+  "body" text NOT NULL,
+  "date" text NOT NULL,
+  "created_at" text NOT NULL
+);
+CREATE TABLE "sumi_friends" (
+  "id" text PRIMARY KEY NOT NULL,
+  "name" text NOT NULL,
+  "url" text NOT NULL,
+  "avatar" text,
+  "bio" text,
+  "created_at" text NOT NULL
+);
 `;
 
 async function makeStore() {
@@ -220,4 +235,37 @@ test("follows toggle, dedupe, and directional follower/following lists", async (
   await store.removeFollow("bob", "alice");
   expect(await store.listFollowers("alice")).toEqual(["carol"]);
   expect(await store.listFollowing("bob")).toEqual([]);
+});
+
+test("notes round-trip newest-first and delete", async () => {
+  const { store } = await makeStore();
+  const n1 = await store.addNote("alice", { body: "first thought" }, new Date("2026-01-01T00:00:00Z"));
+  const n2 = await store.addNote("alice", { body: "second thought" }, new Date("2026-01-02T00:00:00Z"));
+  expect(await store.listNotes("alice")).toEqual([
+    { id: n2.id, handle: "alice", body: "second thought", date: "2026-01-02T00:00:00.000Z" },
+    { id: n1.id, handle: "alice", body: "first thought", date: "2026-01-01T00:00:00.000Z" },
+  ]);
+  await store.deleteNote("alice", n1.id);
+  expect((await store.listNotes("alice")).map((n) => n.id)).toEqual([n2.id]);
+});
+
+test("friends round-trip and delete", async () => {
+  const { store } = await makeStore();
+  const f = await store.addFriend(
+    { name: "Moe", url: "https://moeblog.example", avatar: "https://x.example/a.png", bio: "a friend" },
+    new Date("2026-01-01T00:00:00Z"),
+  );
+  const friends = await store.listFriends();
+  expect(friends).toEqual([
+    {
+      id: f.id,
+      name: "Moe",
+      url: "https://moeblog.example",
+      avatar: "https://x.example/a.png",
+      bio: "a friend",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+  ]);
+  await store.deleteFriend(f.id);
+  expect(await store.listFriends()).toEqual([]);
 });

@@ -133,6 +133,23 @@ export const sumiProfiles = pgTable("sumi_profiles", {
   updatedAt: text("updated_at").notNull(),
 });
 
+export const sumiNotes = pgTable("sumi_notes", {
+  id: text("id").primaryKey(),
+  handle: text("handle").notNull(),
+  body: text("body").notNull(),
+  date: text("date").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+export const sumiFriends = pgTable("sumi_friends", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  avatar: text("avatar"),
+  bio: text("bio"),
+  createdAt: text("created_at").notNull(),
+});
+
 // Images stored by the Postgres mirror backend (DbContentStore). The GitHub /
 // Cloudflare backends own their own object stores; the DB mirror needs a home
 // for agent/user-uploaded images so the whole publishing flow works on
@@ -173,6 +190,8 @@ export const schema = {
   sumiFollows,
   sumiMagazines,
   sumiProfiles,
+  sumiNotes,
+  sumiFriends,
   sumiImages,
   agentKeys,
 };

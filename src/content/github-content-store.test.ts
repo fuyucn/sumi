@@ -81,6 +81,50 @@ test("listHandles returns all creator handles with content", async () => {
   expect(handles.sort()).toEqual(["alice", "bob"]);
 });
 
+// ---- Notes (手记) ----
+test("notes round-trip newest-first and delete", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const n1 = await store.addNote("alice", { body: "first thought" }, new Date("2026-01-01T00:00:00.000Z"));
+  const n2 = await store.addNote("alice", { body: "second thought" }, new Date("2026-01-02T00:00:00.000Z"));
+  const notes = await store.listNotes("alice");
+  expect(notes.map((n) => n.body)).toEqual(["second thought", "first thought"]);
+  expect(notes[0].handle).toBe("alice");
+  expect(notes[0].date).toBe("2026-01-02T00:00:00.000Z");
+
+  await store.deleteNote("alice", n1.id);
+  expect((await store.listNotes("alice")).map((n) => n.id)).toEqual([n2.id]);
+});
+
+test("listNotes returns [] when a creator has no notes directory", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  expect(await store.listNotes("ghost")).toEqual([]);
+});
+
+// ---- Friends (友链) ----
+test("friends round-trip and delete", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const f = await store.addFriend(
+    { name: "Moe", url: "https://moeblog.example", bio: "a friend" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(f.id).toBeTruthy();
+  expect(f.createdAt).toBe("2026-01-01T00:00:00.000Z");
+
+  const friends = await store.listFriends();
+  expect(friends).toHaveLength(1);
+  expect(friends[0].name).toBe("Moe");
+  expect(friends[0].url).toBe("https://moeblog.example");
+  expect(friends[0].bio).toBe("a friend");
+
+  await store.deleteFriend(f.id);
+  expect(await store.listFriends()).toEqual([]);
+});
+
+test("listFriends returns [] when no friends file exists", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  expect(await store.listFriends()).toEqual([]);
+});
+
 test("deletePost recurses into the images/ subdir and removes everything", async () => {
   const client = fakeClient();
   const store = new GitHubContentStore(client);

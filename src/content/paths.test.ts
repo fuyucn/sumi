@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { slugify, postDir, postFile, imagePath, userDir, CONTENT_DIR, safeImageName } from "./paths";
+import { slugify, postDir, postFile, imagePath, userDir, CONTENT_DIR, safeImageName, notesDir, noteFile, friendsFile, safeNoteName } from "./paths";
 
 test("slugify lowercases, trims, replaces spaces and strips punctuation", () => {
   expect(slugify("Hello World!")).toBe("hello-world");
@@ -37,4 +37,8 @@ test("path builders compose the content layout", () => {
   expect(postDir("alice", "hello")).toBe("content/@alice/hello");
   expect(postFile("alice", "hello")).toBe("content/@alice/hello/index.md");
   expect(imagePath("alice", "hello", "cover.png")).toBe("content/@alice/hello/images/cover.png");
+  expect(notesDir("alice")).toBe("content/@alice/notes");
+  expect(noteFile("alice", "2026-01-01T00-00-00-000Z-alice")).toBe("content/@alice/notes/2026-01-01T00-00-00-000Z-alice.md");
+  expect(friendsFile()).toBe("content/friends.json");
+  expect(safeNoteName(new Date("2026-01-01T00:00:00.000Z"), "alice")).toBe("2026-01-01T00-00-00-000Z-alice");
 });

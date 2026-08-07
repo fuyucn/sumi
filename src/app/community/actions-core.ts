@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Comment, Profile } from "@/content/types";
+import type { Comment, Friend, Note, Profile } from "@/content/types";
 import { guard, type SessionDeps } from "@/lib/session";
 import { commentDepth, MAX_COMMENT_DEPTH } from "@/lib/comment-depth";
 
@@ -38,6 +38,28 @@ export const deleteCommentFormSchema = z.object({
   commentId: z.string().trim().min(1),
 });
 
+export const noteFormSchema = z.object({
+  body: z.string().trim().min(1, "Note is required").max(2000),
+});
+
+export const deleteNoteFormSchema = z.object({
+  id: z.string().trim().min(1),
+});
+
+export const friendFormSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(80),
+  url: z.string().trim().min(1, "URL is required").max(500).refine(
+    (u) => /^https?:\/\//i.test(u),
+    "URL must start with http:// or https://",
+  ),
+  avatar: z.string().trim().max(500).default(""),
+  bio: z.string().trim().max(300).default(""),
+});
+
+export const deleteFriendFormSchema = z.object({
+  id: z.string().trim().min(1),
+});
+
 /** Delete a comment. Allowed for the comment's own author or the post's author. */
 export async function runDeleteComment(
   deps: SessionDeps,
@@ -60,6 +82,84 @@ export async function runDeleteComment(
   }
   await deps.store!.deleteComment(f.postHandle, f.slug, f.commentId);
   return { ok: true, data: { deleted: f.commentId } };
+}
+
+/** Publish a short note (手记) to the signed-in creator's timeline. */
+export async function runAddNote(
+  deps: SessionDeps,
+  form: unknown,
+  now: Date,
+): Promise<ActionResult<Note>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = noteFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const note = await deps.store!.addNote(deps.handle!, { body: f.body }, now);
+  return { ok: true, data: note };
+}
+
+/** Delete one of the signed-in creator's notes. */
+export async function runDeleteNote(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ deleted: string }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = deleteNoteFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  await deps.store!.deleteNote(deps.handle!, f.id);
+  return { ok: true, data: { deleted: f.id } };
+}
+
+/** Add a friend link (友链) to the site-wide friends page. */
+export async function runAddFriend(
+  deps: SessionDeps,
+  form: unknown,
+  now: Date,
+): Promise<ActionResult<Friend>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = friendFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const friend = await deps.store!.addFriend(
+    {
+      name: f.name,
+      url: f.url,
+      ...(f.avatar ? { avatar: f.avatar } : {}),
+      ...(f.bio ? { bio: f.bio } : {}),
+    },
+    now,
+  );
+  return { ok: true, data: friend };
+}
+
+/** Remove a friend link. */
+export async function runDeleteFriend(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ deleted: string }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = deleteFriendFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  await deps.store!.deleteFriend(f.id);
+  return { ok: true, data: { deleted: f.id } };
 }
 
 export async function runAddComment(

@@ -59,3 +59,29 @@ export interface Profile {
   displayName?: string;
   bio?: string;
 }
+
+// ---- Notes (手记 timeline) ----
+
+export interface NewNote {
+  body: string;
+}
+
+export interface Note extends NewNote {
+  id: string; // stable note id
+  handle: string; // author handle
+  date: string; // ISO 8601
+}
+
+// ---- Friends (友链) ----
+
+export interface NewFriend {
+  name: string;
+  url: string;
+  avatar?: string;
+  bio?: string;
+}
+
+export interface Friend extends NewFriend {
+  id: string;
+  createdAt: string; // ISO 8601
+}

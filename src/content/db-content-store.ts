@@ -5,14 +5,16 @@ import { schema as dbSchema } from "@/db/schema";
 import {
   sumiComments,
   sumiFollows,
+  sumiFriends,
   sumiImages,
   sumiLikes,
   sumiMagazines,
+  sumiNotes,
   sumiPosts,
   sumiProfiles,
 } from "@/db/schema";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Magazine, NewComment, NewMagazine, NewPost, Post, PostMeta, PostStatus, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, PostStatus, Profile } from "./types";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
 
@@ -80,7 +82,8 @@ export class DbContentStore implements ContentStore {
       .selectDistinct({ handle: sumiPosts.handle })
       .from(sumiPosts)
       .unionAll(this.db.selectDistinct({ handle: sumiMagazines.handle }).from(sumiMagazines))
-      .unionAll(this.db.selectDistinct({ handle: sumiProfiles.handle }).from(sumiProfiles));
+      .unionAll(this.db.selectDistinct({ handle: sumiProfiles.handle }).from(sumiProfiles))
+      .unionAll(this.db.selectDistinct({ handle: sumiNotes.handle }).from(sumiNotes));
     const handles = new Set(rows.map((r) => r.handle));
     return [...handles].sort();
   }
@@ -325,6 +328,83 @@ export class DbContentStore implements ContentStore {
           updatedAt: new Date().toISOString(),
         },
       });
+  }
+
+  // ---- Notes (手记) ----
+
+  async listNotes(handle: string): Promise<Note[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiNotes)
+      .where(sql`${sumiNotes.handle} = ${handle}`)
+      .orderBy(sql`${sumiNotes.date} DESC`);
+    return rows.map((r) => ({ id: r.id, handle: r.handle, body: r.body, date: r.date }));
+  }
+
+  async addNote(handle: string, note: NewNote, now: Date): Promise<Note> {
+    const date = now.toISOString();
+    const full: Note = {
+      id: date.replace(/[:.]/g, "-") + "-" + (slugify(handle) || "user"),
+      handle,
+      body: note.body,
+      date,
+    };
+    await this.db.insert(sumiNotes).values({
+      id: full.id,
+      handle,
+      body: note.body,
+      date,
+      createdAt: date,
+    });
+    return full;
+  }
+
+  async deleteNote(handle: string, id: string): Promise<void> {
+    await this.db
+      .delete(sumiNotes)
+      .where(sql`${sumiNotes.handle} = ${handle} AND ${sumiNotes.id} = ${id}`);
+  }
+
+  // ---- Friends (友链) ----
+
+  async listFriends(): Promise<Friend[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiFriends)
+      .orderBy(sql`${sumiFriends.createdAt} ASC`);
+    return rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      url: r.url,
+      createdAt: r.createdAt,
+      ...(r.avatar ? { avatar: r.avatar } : {}),
+      ...(r.bio ? { bio: r.bio } : {}),
+    }));
+  }
+
+  async addFriend(friend: NewFriend, now: Date): Promise<Friend> {
+    const createdAt = now.toISOString();
+    const full: Friend = {
+      id: createdAt.replace(/[:.]/g, "-") + "-" + (slugify(friend.name) || "friend"),
+      name: friend.name,
+      url: friend.url,
+      createdAt,
+      ...(friend.avatar !== undefined ? { avatar: friend.avatar } : {}),
+      ...(friend.bio !== undefined ? { bio: friend.bio } : {}),
+    };
+    await this.db.insert(sumiFriends).values({
+      id: full.id,
+      name: friend.name,
+      url: friend.url,
+      avatar: friend.avatar ?? null,
+      bio: friend.bio ?? null,
+      createdAt,
+    });
+    return full;
+  }
+
+  async deleteFriend(id: string): Promise<void> {
+    await this.db.delete(sumiFriends).where(sql`${sumiFriends.id} = ${id}`);
   }
 
   // ---- Magazines ----

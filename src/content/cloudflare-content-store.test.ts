@@ -94,6 +94,21 @@ CREATE TABLE IF NOT EXISTS profiles (
   bio TEXT,
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS notes (
+  id TEXT PRIMARY KEY,
+  handle TEXT NOT NULL,
+  body TEXT NOT NULL,
+  date TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS friends (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  url TEXT NOT NULL,
+  avatar TEXT,
+  bio TEXT,
+  created_at TEXT NOT NULL
+);
 `;
 
 function fakeBucket(): R2BucketLike & { map: Map<string, Uint8Array> } {
@@ -306,4 +321,35 @@ test("uploadImage stores bytes in the R2 stub and returns a URL", async () => {
 test("uploadImage throws when no R2 bucket is configured", async () => {
   const { store } = inMemoryStore();
   await expect(store.uploadImage("alice", "p", "cover.png", new Uint8Array([1]))).rejects.toThrow(/R2 bucket/);
+});
+
+test("notes round-trip newest-first and delete", async () => {
+  const { store } = inMemoryStore();
+  const n1 = await store.addNote("alice", { body: "first thought" }, new Date("2026-01-01T00:00:00Z"));
+  const n2 = await store.addNote("alice", { body: "second thought" }, new Date("2026-01-02T00:00:00Z"));
+  expect(await store.listNotes("alice")).toEqual([
+    { id: n2.id, handle: "alice", body: "second thought", date: "2026-01-02T00:00:00.000Z" },
+    { id: n1.id, handle: "alice", body: "first thought", date: "2026-01-01T00:00:00.000Z" },
+  ]);
+  await store.deleteNote("alice", n1.id);
+  expect((await store.listNotes("alice")).map((n) => n.id)).toEqual([n2.id]);
+});
+
+test("friends round-trip and delete", async () => {
+  const { store } = inMemoryStore();
+  const f = await store.addFriend(
+    { name: "Moe", url: "https://moeblog.example", bio: "a friend" },
+    new Date("2026-01-01T00:00:00Z"),
+  );
+  expect(await store.listFriends()).toEqual([
+    {
+      id: f.id,
+      name: "Moe",
+      url: "https://moeblog.example",
+      bio: "a friend",
+      createdAt: "2026-01-01T00:00:00.000Z",
+    },
+  ]);
+  await store.deleteFriend(f.id);
+  expect(await store.listFriends()).toEqual([]);
 });

@@ -32,7 +32,7 @@ test("parse fills defaults for missing optional frontmatter", () => {
 });
 
 // ---- Comments ----
-import { parseComment, serializeComment, parseMagazine, serializeMagazine, parseProfile, serializeProfile } from "./frontmatter";
+import { parseComment, serializeComment, parseMagazine, serializeMagazine, parseProfile, serializeProfile, parseNote, serializeNote } from "./frontmatter";
 
 test("comment round-trips", () => {
   const md = serializeComment({ handle: "bob", date: "2026-06-13T01:02:03.000Z", body: "nice one!" });
@@ -58,6 +58,20 @@ test("comment parse falls back on missing frontmatter", () => {
   expect(parsed.handle).toBe("alice");
   expect(parsed.date).toBe("2026-01-01T00:00:00.000Z");
   expect(parsed.parentId).toBeUndefined();
+});
+
+// ---- Notes ----
+test("note serialize then parse round-trips", () => {
+  const md = serializeNote({ handle: "alice", date: "2026-01-01T00:00:00.000Z", body: "a thought" });
+  const parsed = parseNote(md, "n1", "fallback");
+  expect(parsed).toEqual({ id: "n1", handle: "alice", date: "2026-01-01T00:00:00.000Z", body: "a thought" });
+});
+
+test("note parse falls back on missing frontmatter", () => {
+  const parsed = parseNote("plain body", "n1", "2026-01-01T00:00:00.000Z");
+  expect(parsed.handle).toBe("n1");
+  expect(parsed.date).toBe("2026-01-01T00:00:00.000Z");
+  expect(parsed.body).toBe("plain body");
 });
 
 // ---- Magazines ----

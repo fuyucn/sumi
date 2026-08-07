@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
 import "./globals.css";
@@ -31,8 +32,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${newsreader.variable}`}>
       <body className="paper-grain font-sans bg-paper text-ink min-h-[100dvh] flex flex-col antialiased">
+        <a
+          href="#main"
+          className="skip-link"
+        >
+          Skip to content
+        </a>
         <Nav />
-        <div className="flex-1">{children}</div>
+        <div id="main" tabIndex={-1} className="flex-1 outline-none">
+          {children}
+        </div>
         <footer className="mt-24 border-t border-line">
           <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between text-xs text-ink-faint">
             <div className="flex items-baseline gap-3">
@@ -45,13 +54,19 @@ export default function RootLayout({
               <span>Ink on paper, kept in Git.</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <a href="/tags" className="link-underline transition-colors hover:text-ink-muted">
+              <Link href="/tags" className="link-underline transition-colors hover:text-ink-muted">
                 Tags
-              </a>
-              <a href="/search" className="link-underline transition-colors hover:text-ink-muted">
+              </Link>
+              <Link href="/friends" className="link-underline transition-colors hover:text-ink-muted">
+                Friends
+              </Link>
+              <Link href="/search" className="link-underline transition-colors hover:text-ink-muted">
                 Search
-              </a>
-              <a href="/feed.xml" className="link-underline transition-colors hover:text-ink-muted">
+              </Link>
+              <a
+                href="/feed.xml"
+                className="link-underline transition-colors hover:text-ink-muted"
+              >
                 RSS
               </a>
               <span aria-hidden className="text-line-strong">·</span>

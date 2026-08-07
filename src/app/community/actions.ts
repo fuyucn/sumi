@@ -2,8 +2,12 @@
 import { resolveDeps } from "@/lib/session";
 import {
   runAddComment,
+  runAddFriend,
+  runAddNote,
   runDeleteComment,
+  runDeleteFriend,
   runDeleteMagazine,
+  runDeleteNote,
   runSaveMagazine,
   runSaveProfile,
   runToggleFollow,
@@ -16,6 +20,22 @@ export async function addCommentAction(form: unknown) {
 
 export async function deleteCommentAction(form: unknown) {
   return runDeleteComment(await resolveDeps(), form);
+}
+
+export async function addNoteAction(form: unknown) {
+  return runAddNote(await resolveDeps(), form, new Date());
+}
+
+export async function deleteNoteAction(form: unknown) {
+  return runDeleteNote(await resolveDeps(), form);
+}
+
+export async function addFriendAction(form: unknown) {
+  return runAddFriend(await resolveDeps(), form, new Date());
+}
+
+export async function deleteFriendAction(form: unknown) {
+  return runDeleteFriend(await resolveDeps(), form);
 }
 
 export async function saveProfileAction(form: unknown) {

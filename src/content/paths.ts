@@ -64,8 +64,23 @@ export function magazineFile(handle: string, slug: string): string {
 export function profileFile(handle: string): string {
   return `${userDir(handle)}/profile.md`;
 }
+export function notesDir(handle: string): string {
+  return `${userDir(handle)}/notes`;
+}
+export function noteFile(handle: string, id: string): string {
+  return `${notesDir(handle)}/${id}.md`;
+}
+/** Site-wide friend links live in a single JSON file at the content root. */
+export function friendsFile(): string {
+  return `${CONTENT_DIR}/friends.json`;
+}
 export function safeCommentName(date: Date, author: string): string {
   const ts = date.toISOString().replace(/[:.]/g, "-");
   const safeAuthor = slugify(author) || "user";
   return `${ts}-${safeAuthor}.md`;
+}
+export function safeNoteName(date: Date, author: string): string {
+  const ts = date.toISOString().replace(/[:.]/g, "-");
+  const safeAuthor = slugify(author) || "user";
+  return `${ts}-${safeAuthor}`;
 }
