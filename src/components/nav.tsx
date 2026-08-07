@@ -17,6 +17,41 @@ import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthorName } from "@/components/author-name";
 
+const linkClass = (active: boolean) =>
+  [
+    "press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+    active ? "bg-seal-wash text-seal" : "text-ink-faint hover:text-ink",
+  ].join(" ");
+
+function IconLink({
+  href,
+  label,
+  active,
+  children,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`${linkClass(active)} group relative`}
+      aria-current={active ? "page" : undefined}
+      aria-label={label}
+    >
+      {children}
+      <span
+        role="tooltip"
+        className="nav-tooltip pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs font-medium text-paper shadow-pop"
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
 export function Nav() {
   const { data } = useSession();
   const user = data?.user as { username?: string; name?: string } | undefined;
@@ -40,14 +75,6 @@ export function Nav() {
 
   const isActive = (href: string, prefix = false) =>
     prefix ? pathname.startsWith(href) : pathname === href;
-
-  const linkClass = (active: boolean) =>
-    [
-      "press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-      active
-        ? "bg-seal-wash text-seal"
-        : "text-ink-faint hover:text-ink",
-    ].join(" ");
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/80 backdrop-blur-md">
@@ -121,22 +148,18 @@ export function Nav() {
           </Link>
         </nav>
         <div className="flex shrink-0 items-center gap-1">
-          <Link
+          <IconLink
             href="/search"
-            className={linkClass(isActive("/search"))}
-            aria-current={isActive("/search") ? "page" : undefined}
-            aria-label="Search"
+            label="Index"
+            active={isActive("/search")}
           >
             <MagnifyingGlass size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Index</span>
-          </Link>
+          </IconLink>
           {handle ? (
-            <Link
+            <IconLink
               href="/notifications"
-              className={`${linkClass(isActive("/notifications"))} relative`}
-              aria-current={isActive("/notifications") ? "page" : undefined}
-              aria-label="Inbox"
-              title="Inbox"
+              label="Inbox"
+              active={isActive("/notifications")}
             >
               <Bell size={15} weight="duotone" aria-hidden />
               {unread > 0 ? (
@@ -144,18 +167,16 @@ export function Nav() {
                   {unread > 9 ? "9+" : unread}
                 </span>
               ) : null}
-            </Link>
+            </IconLink>
           ) : null}
           {handle ? (
-            <Link
+            <IconLink
               href="/settings"
-              className={linkClass(isActive("/settings"))}
-              aria-current={isActive("/settings") ? "page" : undefined}
-              aria-label="Settings"
-              title="Settings"
+              label="Settings"
+              active={isActive("/settings")}
             >
               <GearSix size={15} weight="duotone" aria-hidden />
-            </Link>
+            </IconLink>
           ) : null}
           <ThemeToggle />
         </div>

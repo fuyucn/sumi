@@ -164,6 +164,26 @@ body {
   display: none;
 }
 
+/* Icon-only nav tooltips: only on true hover-capable pointers. */
+.nav-tooltip {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+}
+@media (hover: hover) {
+  .group:hover .nav-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+@media (hover: none) {
+  .nav-tooltip {
+    display: none;
+  }
+}
+
 /* Accessibility: hidden until focused, then drops into view at the top. */
 .skip-link {
   position: fixed;
