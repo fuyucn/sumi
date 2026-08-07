@@ -13,7 +13,7 @@ export type DeleteResult = { ok: true } | { ok: false; error: string };
 function guard(deps: WriteDeps): string | null {
   if (!deps.userId) return "You must be signed in.";
   if (!deps.handle) return "Your account has no handle.";
-  if (!deps.store) return "Content repository is not configured.";
+  if (!deps.store) return "No content backend is configured.";
   return null;
 }
 

@@ -1,15 +1,20 @@
 # Sumi 墨
 
-Sumi is an open-source, Vercel-deployable, multi-creator publishing platform inspired by note.com. Creators sign in with GitHub (only explicitly allowed accounts may access), write articles in a clean editor, and every piece of content is committed directly to a GitHub repository you own — giving you a portable, version-controlled archive of everything published.
+Sumi is an open-source, multi-creator publishing platform inspired by note.com
+and mx-space. Creators sign in with GitHub (only explicitly allowed accounts
+may access), write articles in a clean editor, and every piece of content is
+stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D1
++ R2 — as a portable, version-controlled archive of everything published. A
+GitHub content repository remains an optional legacy backend.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/OWNER/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS,GITHUB_CONTENT_REPO)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/OWNER/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS)
 
 
 ## Features
 
-- **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (committed to the content repo).
+- **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (stored with the post).
 - **Reading** — search-free discovery: newest-first home feed, full-text search (`/search`), per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
-- **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article in the content repo.
+- **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article.
 - **Notes (手记)** — a short-form timeline per creator at `/@handle/notes`; the owner pins a thought inline, rendered newest-first.
 - **Friends (友链)** — a site-wide friends/links page at `/friends`; signed-in creators can add name/URL/avatar/bio and remove links.
 - **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
@@ -19,8 +24,8 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 - **Notifications** — comments, replies, likes, and new followers land in `/notifications` with an unread badge and "mark all read", on every backend.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
-- **Own your content** — every article, image, comment, and magazine is committed to a GitHub repo you control (portable, version-controlled).
-- **Optional Postgres mirror** — set `DB_MIRROR=1` to serve reads/search from Postgres (`DbContentStore`) instead of GitHub.
+- **Own your content** — every article, image, comment, and magazine is stored in your own Postgres (or Cloudflare D1) database, portable and version-controlled; no GitHub repo required.
+- **Postgres-first storage** — content lives in the `sumi_*` Postgres tables via `DbContentStore`; the GitHub content repo (`GITHUB_CONTENT_REPO`) is an optional legacy backend.
 - **SEO / discovery** — `/robots.txt`, `/sitemap.xml`, and an RSS feed at `/feed.xml` are generated from published posts (absolute URLs from `BETTER_AUTH_URL`).
 
 ## Tech stack
@@ -58,9 +63,10 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
 
 
 6. Set `ALLOWED_GITHUB_USERS` to your GitHub username (comma-separated for multiple users).
-7. Point at the content repository: set `GITHUB_CONTENT_REPO` to `owner/repo`. For
-   public read access, optionally set `GITHUB_CONTENT_TOKEN` (a fine-grained PAT with
-   contents:read); for writing your own posts it uses your GitHub OAuth token.
+7. Storage: content is stored in Postgres by default (set `DB_MIRROR=1` to serve
+   reads/writes/search from the `sumi_*` tables). The GitHub content repo is an
+   **optional legacy backend** — only set `GITHUB_CONTENT_REPO` (to `owner/repo`,
+   plus `GITHUB_CONTENT_TOKEN` for private repos) if you still want it.
 8. Run migrations to create tables:
    ```bash
    pnpm db:migrate
@@ -80,7 +86,8 @@ Sumi is an open-source, Vercel-deployable, multi-creator publishing platform ins
    - `BETTER_AUTH_URL` — your production domain, e.g. `https://sumi.example.com`
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — create a separate **production** GitHub OAuth app whose callback URL is `https://YOUR_DOMAIN/api/auth/callback/github`
    - `ALLOWED_GITHUB_USERS` — comma-separated GitHub usernames
-   - `GITHUB_CONTENT_REPO` — `owner/repo` for the content repository
+   - `DB_MIRROR=1` — store content in Postgres (default recommendation; omit to use the optional legacy GitHub backend)
+   - `GITHUB_CONTENT_REPO` — optional legacy backend: `owner/repo` of a GitHub content repository
    - `GITHUB_CONTENT_TOKEN` — optional GitHub token for public reads of the content repo (omit for public repos)
 4. After the first successful deploy, run the migration once against the production database:
    ```bash
@@ -105,7 +112,7 @@ Run the whole stack (Postgres + migrations + app) with a single `docker compose`
    - `BETTER_AUTH_SECRET` — generate with `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
    - `BETTER_AUTH_URL` — `http://localhost:3000` for local runs, your domain for production
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` + `ALLOWED_GITHUB_USERS`
-   - `GITHUB_CONTENT_REPO` (+ `GITHUB_CONTENT_TOKEN` if the content repo is private)
+   - `DB_MIRROR=1` — store content in the bundled Postgres (default); `GITHUB_CONTENT_REPO` is optional and only needed for the legacy GitHub backend
 
    The default `DATABASE_URL` (`postgresql://sumi:sumi@db:5432/sumi`) points at the bundled Postgres container, so you don't need Neon. To use a remote/Neon database instead, just override `DATABASE_URL` in `.env`.
 
@@ -146,9 +153,10 @@ Notes:
 
 ## Deploy to Cloudflare (Workers via OpenNext)
 
-Cloudflare is an **optional** third path (not a forced migration). It bundles the Next.js app into
-a Cloudflare Worker with OpenNext, using D1 (binding `DB`) and R2 (binding `IMAGES`) instead of
-Postgres + GitHub for the data backend. Config lives in `wrangler.jsonc` + `open-next.config.ts`.
+Cloudflare is a first-class path: it bundles the Next.js app into a Cloudflare
+Worker with OpenNext, using D1 (binding `DB`) and R2 (binding `IMAGES`) for the
+data backend. Content is stored in D1 (no GitHub repo needed). Config lives in
+`wrangler.jsonc` + `open-next.config.ts`.
 
 > ✅ **Compatibility**: `next` is pinned to `16.2.12`, which is within the range supported by
 > `@opennextjs/cloudflare` (`>= 16.2.11`). `pnpm cf:build` is verified working. Note the **remote
@@ -193,11 +201,11 @@ For local Cloudflare testing: `pnpm cf:dev` (builds then runs a Wrangler preview
 ## Status
 
 - **Foundation** — Next.js scaffold, GitHub OAuth via Better Auth with an allowlist gate, Drizzle + Neon, Vercel deploy config — **complete**.
-- **Content engine** — GitHub-API-backed `ContentStore` (markdown + frontmatter), per-creator content layout — **complete**.
+- **Content engine** — Postgres-first `DbContentStore` (markdown + frontmatter), per-creator content layout, optional legacy GitHub backend — **complete**.
 - **Writing & reading** — TipTap editor, drafts/publish, image upload, article/creator/tag/home pages — **complete**.
 - **Community** — nested comments, magazines/collections, and profile/settings — **complete**.
 - **Discovery** — full-text search (`/search`), tags library — **complete**.
-- **Extensibility** — optional `DbContentStore` Postgres mirror (`DB_MIRROR=1`) and the Cloudflare (D1/R2) backend, both behind the shared `ContentStore` seam — **complete**.
+- **Extensibility** — Cloudflare (D1/R2) backend plus the optional legacy GitHub backend, all behind the shared `ContentStore` seam — **complete**.
 - **Agent publishing** — local stdio MCP server (`mcp/index.mjs`), remote Streamable HTTP MCP server (`/api/mcp`, bearer auth), DPoP-style request signing, and a publishing runner — **complete**.
 - **Deployment** — Docker compose, VPS (PM2), Vercel, and Cloudflare/OpenNext (`pnpm cf:build` verified against `next@16.2.12`) — **complete**.
 

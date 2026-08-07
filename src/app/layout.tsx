@@ -21,7 +21,7 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   title: "Sumi 墨",
-  description: "A quiet place to write. Ink on paper, committed to your own GitHub.",
+  description: "A quiet place to write. Ink on paper, kept in your own space.",
 };
 
 export default function RootLayout({
@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${newsreader.variable}`}>
+    <html lang="en" className={`${geist.variable} ${newsreader.variable}`} suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -58,7 +58,7 @@ export default function RootLayout({
               <span className="hidden sm:inline" aria-hidden>
                 /
               </span>
-              <span>Ink on paper, kept in Git.</span>
+              <span>Ink on paper, kept in your space.</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <Link href="/archive" className="link-underline transition-colors hover:text-ink-muted">

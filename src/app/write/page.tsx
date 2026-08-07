@@ -120,7 +120,7 @@ export default async function WriteDashboard() {
       <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
         <h1 className="font-serif text-3xl font-semibold tracking-tight text-ink">Your posts</h1>
         <p className="mt-4 text-sm text-ink-muted">
-          Content repository is not configured for writing.
+          No content backend is configured for writing.
         </p>
         <AgentReviewSection agentDrafts={agentDrafts} />
       </main>

@@ -22,7 +22,7 @@ export default function SignInPage() {
           Continue with GitHub
         </button>
         <p className="mt-5 text-xs leading-relaxed text-ink-faint">
-          Your posts are committed to your own GitHub repository as Markdown.
+          Your posts live in your own space: versioned, portable, and yours.
         </p>
       </div>
     </main>

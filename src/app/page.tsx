@@ -42,8 +42,8 @@ export default async function Home() {
             <span className="text-seal">.</span>
           </h1>
           <p className="mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
-            Your words, inked onto warm paper and kept in your own Git
-            repository. Write, note, and share at your own pace.
+            Your words, inked onto warm paper and kept in your own quiet
+            space. Write, note, and share at your own pace.
           </p>
           <Link
             href="/write"
@@ -97,7 +97,7 @@ export default async function Home() {
                 Ink on paper
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Write in the editor, publish to your own repository, and let the
+                Write in the editor, publish to your own space, and let the
                 seal mark the words you chose to keep.
               </p>
             </div>

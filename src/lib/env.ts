@@ -12,13 +12,14 @@ const schema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1),
   // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
   ALLOWED_GITHUB_USERS: z.string().default(""),
-  // Optional until Plan 2 (content engine via GitHub API) actually uses it, so a
-  // Plan 1-only deployment doesn't fail on first request. When present it must be owner/repo.
+  // Optional legacy backend. Content is stored in Postgres (DB_MIRROR) or
+  // Cloudflare D1 by default; only set this to mirror content to a GitHub repo.
+  // When present it must be owner/repo.
   GITHUB_CONTENT_REPO: z.preprocess(
     emptyToUndefined,
     z.string().regex(/^[^/]+\/[^/]+$/, "must be owner/repo").optional(),
   ),
-  // Optional read token for server-side public reads of the content repo.
+  // Optional read token for server-side public reads of the legacy content repo.
   // If absent, reads use unauthenticated Octokit (works for public repos).
   GITHUB_CONTENT_TOKEN: z.preprocess(emptyToUndefined, z.string().optional()),
   // Optional Cloudflare runtime flag. OpenNext injects CF bindings (D1/R2) via
@@ -26,9 +27,9 @@ const schema = z.object({
   // hint for the ContentStore factory to select the Cloudflare backend over the
   // GitHub one. Empty string (common in .env files) disables it.
   CF_ENABLED: z.preprocess(emptyToUndefined, z.string().optional()),
-  // Optional Postgres content mirror flag. When set (e.g. "1"), reads/search
-  // are served from the `sumi_*` Postgres mirror tables (DbContentStore) instead
-  // of the GitHub repo. Writes via DbContentStore only affect the mirror.
+  // Postgres-first content storage flag. When set (e.g. "1"), all content
+  // reads/writes/search are served from the `sumi_*` Postgres tables
+  // (DbContentStore) instead of the legacy GitHub repo.
   DB_MIRROR: z.preprocess(emptyToUndefined, z.string().optional()),
 });
 
