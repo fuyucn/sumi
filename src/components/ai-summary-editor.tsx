@@ -9,11 +9,13 @@ interface Props {
   slug: string;
   /** Current editor body — generated from the latest content even before saving. */
   body: string;
+  /** While editing an agent post, read/generate the task under this handle. */
+  sourceHandle?: string;
   initialTask?: AiTask | null;
   headings?: HeadingInfo[];
 }
 
-export function AiSummaryEditor({ slug, body, initialTask = null, headings = [] }: Props) {
+export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, headings = [] }: Props) {
   const [task, setTask] = useState<AiTask | null>(initialTask);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function AiSummaryEditor({ slug, body, initialTask = null, headings = [] 
     if (busy) return;
     setBusy(true);
     setError(null);
-    const result = await generateSummaryAction(slug, body);
+    const result = await generateSummaryAction(slug, body, sourceHandle);
     setBusy(false);
     if (result.ok) {
       setTask(result.task);

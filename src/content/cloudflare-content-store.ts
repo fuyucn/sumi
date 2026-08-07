@@ -195,7 +195,7 @@ export class CloudflareContentStore implements ContentStore {
   }
 
   async savePost(handle: string, post: NewPost): Promise<string> {
-    const slug = slugify(post.title);
+    const slug = post.slug ?? slugify(post.title);
     const now = new Date().toISOString();
     const row: PostRow = {
       handle,
@@ -665,6 +665,7 @@ function toPostMeta(r: PostRow): PostMeta {
     slug: r.slug,
     tags: parseTags(r.tags),
     status: r.status,
+    ...(r.created_at !== null ? { createdAt: r.created_at } : {}),
     ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
     ...(r.cover_image !== null ? { coverImage: r.cover_image } : {}),
     ...(r.published_at !== null ? { publishedAt: r.published_at } : {}),

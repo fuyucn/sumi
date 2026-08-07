@@ -7,6 +7,8 @@ export interface PostMeta {
   excerpt?: string;
   coverImage?: string;
   status: PostStatus;
+  /** Creation time (ISO 8601) when the backend tracks it (Postgres/D1). */
+  createdAt?: string;
   publishedAt?: string; // ISO 8601
   /** True when the post was authored by an autonomous agent. */
   agent?: boolean;
@@ -19,6 +21,8 @@ export interface Post extends PostMeta {
 export interface NewPost {
   title: string;
   body: string;
+  /** Keep an existing slug when editing in place (agent posts). */
+  slug?: string;
   tags?: string[];
   excerpt?: string;
   coverImage?: string;

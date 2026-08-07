@@ -3,31 +3,91 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser, getReadContentStore } from "@/content";
-import { AgentDraftActions } from "@/components/agent-draft-actions";
+import { PostRowActions } from "@/components/post-row-actions";
 import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
 
 export const dynamic = "force-dynamic";
 
-function PostRow({ post, handle, isDraft }: { post: PostMeta; handle: string; isDraft: boolean }) {
-  const href = `/@${handle}/${post.slug}`;
-  const editHref = `/write/${post.slug}`;
+type Scope = "all" | "mine" | "agent";
+
+interface ListingPost extends PostMeta {
+  handle: string;
+  isAgent: boolean;
+  displayName?: string;
+}
+
+function sortTime(p: ListingPost): string {
+  return p.createdAt ?? p.publishedAt ?? "";
+}
+
+function formatDate(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+
+async function loadAgentPosts(): Promise<ListingPost[]> {
+  const readStore = await getReadContentStore();
+  if (!readStore) return [];
+  const agents = await db
+    .select({ handle: agentKeys.agentHandle, displayName: agentKeys.displayName })
+    .from(agentKeys);
+  const out: ListingPost[] = [];
+  for (const agent of agents) {
+    const posts = await readStore.listPosts({ handle: agent.handle });
+    for (const p of posts) {
+      out.push({ ...p, handle: agent.handle, displayName: agent.displayName, isAgent: true });
+    }
+  }
+  return out;
+}
+
+function ScopeTab({
+  href,
+  active,
+  label,
+}: {
+  href: string;
+  active: boolean;
+  label: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`border-b-2 px-3 pb-2.5 text-sm transition-colors ${
+        active
+          ? "border-seal font-medium text-ink"
+          : "border-transparent text-ink-faint hover:text-ink-muted"
+      }`}
+    >
+      {label}
+    </Link>
+  );
+}
+
+function PostRow({ post }: { post: ListingPost }) {
+  const isDraft = post.status === "draft";
+  const date = formatDate(isDraft ? post.createdAt : post.publishedAt);
   return (
     <li className="group border-t border-line first:border-t-0">
       <div className="flex items-center justify-between gap-4 py-4">
         <Link
-          href={editHref}
+          href={`/write/${post.slug}${post.isAgent ? `?agent=${encodeURIComponent(post.handle)}` : ""}`}
           className="min-w-0 flex-1 font-serif text-lg leading-snug text-ink transition-colors group-hover:text-seal"
         >
           {post.title || "Untitled"}
-          {post.agent ? (
+          {post.isAgent ? (
             <span className="ml-2 inline-block rounded-full border border-seal/40 px-2 py-0.5 align-middle text-xs font-medium tracking-wide text-seal">
               Agent
             </span>
           ) : null}
           <span className="mt-0.5 block text-sm font-sans text-ink-faint">
-            {"#" + post.tags.join("  #")}
+            {post.isAgent && post.displayName ? `${post.displayName} · @${post.handle} · ` : ""}
+            {date ? `${date} · ` : ""}
+            {post.tags.length ? "#" + post.tags.join("  #") : "Untagged"}
           </span>
         </Link>
         <div className="flex shrink-0 items-center gap-3">
@@ -38,82 +98,30 @@ function PostRow({ post, handle, isDraft }: { post: PostMeta; handle: string; is
           >
             {isDraft ? "Draft" : "Published"}
           </span>
-          <Link
-            href={editHref}
-            className="btn-ghost px-3 py-1"
-          >
-            Edit
-          </Link>
-          {!isDraft ? (
-            <Link href={href} className="text-sm text-ink-faint transition-colors hover:text-ink-muted">
-              View
-            </Link>
-          ) : null}
+          <PostRowActions
+            handle={post.handle}
+            slug={post.slug}
+            status={post.status}
+            isAgent={post.isAgent}
+          />
         </div>
       </div>
     </li>
   );
 }
 
-interface AgentDraftGroup {
-  handle: string;
-  displayName: string;
-  posts: PostMeta[];
-}
-
-async function loadAgentDrafts(): Promise<AgentDraftGroup[]> {
-  const readStore = await getReadContentStore();
-  if (!readStore) return [];
-  const agents = await db
-    .select({ handle: agentKeys.agentHandle, displayName: agentKeys.displayName })
-    .from(agentKeys);
-  const groups: AgentDraftGroup[] = [];
-  for (const agent of agents) {
-    const posts = await readStore.listPosts({ handle: agent.handle, status: "draft" });
-    if (posts.length) groups.push({ handle: agent.handle, displayName: agent.displayName, posts });
-  }
-  return groups;
-}
-
-function AgentReviewSection({ agentDrafts }: { agentDrafts: AgentDraftGroup[] }) {
-  if (agentDrafts.length === 0) return null;
-  const total = agentDrafts.reduce((n, g) => n + g.posts.length, 0);
-  return (
-    <section className="mt-12">
-      <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
-        Agent drafts for review · {total}
-      </h2>
-      <ul>
-        {agentDrafts.flatMap(({ handle, displayName, posts }) =>
-          posts.map((p) => (
-            <li key={`${handle}/${p.slug}`} className="border-t border-line py-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <p className="font-serif text-lg leading-snug text-ink">{p.title || "Untitled"}</p>
-                  <p className="mt-0.5 text-sm text-ink-faint">
-                    {displayName} · @{handle}
-                    <span className="ml-2 rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium tracking-wide text-seal">
-                      Agent
-                    </span>
-                    {p.tags.length ? <span className="ml-2">{"#" + p.tags.join("  #")}</span> : null}
-                  </p>
-                </div>
-                <AgentDraftActions handle={handle} slug={p.slug} />
-              </div>
-            </li>
-          )),
-        )}
-      </ul>
-    </section>
-  );
-}
-
-export default async function WriteDashboard() {
+export default async function WriteDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string | string[] }>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
+  const sp = await searchParams;
+  const rawScope = typeof sp.scope === "string" ? sp.scope : "all";
+  const scope: Scope = rawScope === "mine" || rawScope === "agent" ? rawScope : "all";
   const [handle, store] = await Promise.all([getUserHandle(user.id), getContentStoreForUser(user.id)]);
-
-  const agentDrafts = await loadAgentDrafts();
+  const agentPosts = await loadAgentPosts();
 
   if (!handle || !store) {
     return (
@@ -122,18 +130,24 @@ export default async function WriteDashboard() {
         <p className="mt-4 text-sm text-ink-muted">
           No content backend is configured for writing.
         </p>
-        <AgentReviewSection agentDrafts={agentDrafts} />
       </main>
     );
   }
 
-  const posts = await store.listPosts({ handle });
-  const drafts = posts.filter((p) => p.status === "draft");
-  const published = posts.filter((p) => p.status === "published");
+  const ownPosts = (await store.listPosts({ handle })).map(
+    (p): ListingPost => ({ ...p, handle, isAgent: false }),
+  );
+  const all = [...ownPosts, ...agentPosts].sort((a, b) =>
+    sortTime(b).localeCompare(sortTime(a)),
+  );
+  const mine = all.filter((p) => !p.isAgent);
+  const agent = all.filter((p) => p.isAgent);
+  const visible =
+    scope === "mine" ? mine : scope === "agent" ? agent : all;
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
-      <header className="mb-8 flex items-end justify-between gap-4">
+      <header className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-medium uppercase tracking-widest text-ink-faint">Writing</p>
           <h1 className="mt-1 font-serif text-4xl font-semibold tracking-tight text-ink">Your posts</h1>
@@ -146,39 +160,31 @@ export default async function WriteDashboard() {
         </Link>
       </header>
 
-      {posts.length === 0 ? (
+      <nav className="mb-4 flex items-end gap-1 border-b border-line">
+        <ScopeTab href="/write" active={scope === "all"} label={`All · ${all.length}`} />
+        <ScopeTab href="/write?scope=mine" active={scope === "mine"} label={`Mine · ${mine.length}`} />
+        <ScopeTab href="/write?scope=agent" active={scope === "agent"} label={`Agent · ${agent.length}`} />
+      </nav>
+
+      {visible.length === 0 ? (
         <div className="border-t border-line py-24 text-center">
           <p className="font-serif text-lg text-ink-muted">Nothing here yet.</p>
-          <p className="mt-2 text-sm text-ink-faint">Start your first post. It autosaves to your browser as you type.</p>
+          <p className="mt-2 text-sm text-ink-faint">
+            {scope === "agent"
+              ? "Agent hasn't written any posts yet."
+              : scope === "mine"
+                ? "Start your first post. It autosaves to your browser as you type."
+                : "Start your first post. It autosaves to your browser as you type."}
+          </p>
         </div>
       ) : (
-        <>
-          {drafts.length > 0 ? (
-            <section className="mb-10">
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
-                Drafts · {drafts.length}
-              </h2>
-              <ul>
-                {drafts.map((p) => (
-                  <PostRow key={p.slug} post={p} handle={handle} isDraft />
-                ))}
-              </ul>
-            </section>
-          ) : null}
-          {published.length > 0 ? (
-            <section>
-              <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
-                Published · {published.length}
-              </h2>
-              <ul>
-                {published.map((p) => (
-                  <PostRow key={p.slug} post={p} handle={handle} isDraft={false} />
-                ))}
-              </ul>
-            </section>
-          ) : null}
-        </>
+        <ul>
+          {visible.map((p) => (
+            <PostRow key={`${p.handle}/${p.slug}`} post={p} />
+          ))}
+        </ul>
       )}
+
       <section className="mt-12">
         <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
           Collections
@@ -207,7 +213,6 @@ export default async function WriteDashboard() {
           </Link>
         </div>
       </section>
-      <AgentReviewSection agentDrafts={agentDrafts} />
     </main>
   );
 }

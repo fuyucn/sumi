@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import { getCurrentUser } from "@/lib/current-user";
 import { getAgentContentStore, getReadContentStore } from "@/content";
+import { buildNewPost, type WriteForm } from "@/content/post-input";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
@@ -23,7 +24,7 @@ async function getAgentDraft(handle: string, slug: string) {
   const readStore = await getReadContentStore();
   if (!readStore) return null;
   const post = await readStore.getPost(handle, slug);
-  if (!post || post.status !== "draft") return null;
+  if (!post) return null;
   return post;
 }
 
@@ -32,12 +33,13 @@ export async function approveAgentDraftAction(handle: string, slug: string): Pro
   if (!guard.ok) return guard;
 
   const post = await getAgentDraft(handle, slug);
-  if (!post) return { ok: false, error: "Draft not found or already published" };
+  if (!post || post.status !== "draft") return { ok: false, error: "Draft not found or already published" };
 
   const store = await getAgentContentStore();
   if (!store) return { ok: false, error: "No write backend configured" };
 
   await store.savePost(handle, {
+    slug,
     title: post.title,
     body: post.body,
     tags: post.tags,
@@ -50,12 +52,44 @@ export async function approveAgentDraftAction(handle: string, slug: string): Pro
   return { ok: true };
 }
 
-export async function deleteAgentDraftAction(handle: string, slug: string): Promise<ActionResult> {
+/**
+ * In-place save of an agent post while a signed-in reviewer edits it: the post
+ * stays under the agent handle with the original slug and `agent: true`, so
+ * the author is never overridden by the reviewer.
+ */
+export async function saveAgentPostAction(
+  handle: string,
+  slug: string,
+  form: WriteForm,
+): Promise<ActionResult & { slug?: string }> {
   const guard = await requireAgent(handle);
   if (!guard.ok) return guard;
 
   const post = await getAgentDraft(handle, slug);
-  if (!post) return { ok: false, error: "Draft not found or already published" };
+  if (!post) return { ok: false, error: "Post not found" };
+
+  const store = await getAgentContentStore();
+  if (!store) return { ok: false, error: "No write backend configured" };
+
+  try {
+    const built = buildNewPost(form, new Date());
+    const savedSlug = await store.savePost(handle, {
+      ...built,
+      slug,
+      agent: true,
+    });
+    return { ok: true, slug: savedSlug };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+}
+
+export async function deleteAgentPostAction(handle: string, slug: string): Promise<ActionResult> {
+  const guard = await requireAgent(handle);
+  if (!guard.ok) return guard;
+
+  const post = await getAgentDraft(handle, slug);
+  if (!post) return { ok: false, error: "Post not found" };
 
   const store = await getAgentContentStore();
   if (!store) return { ok: false, error: "No write backend configured" };

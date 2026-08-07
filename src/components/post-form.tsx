@@ -6,6 +6,7 @@ import { TagPicker } from "./tag-picker";
 import { AiSummaryEditor } from "./ai-summary-editor";
 import { useDraftAutosave, type DraftData } from "./use-autosave";
 import { savePostAction, uploadImageAction } from "@/app/write/actions";
+import { saveAgentPostAction } from "@/app/write/agent-actions";
 import type { AiTask } from "@/content/ai-store";
 import type { HeadingInfo } from "@/lib/heading-slug";
 
@@ -13,13 +14,19 @@ export function PostForm({
   initial,
   draftKey = "new",
   postSlug,
+  agentSource,
+  initialAgent,
   initialAiTask,
   aiHeadings,
 }: {
   initial?: { title: string; tags: string; body: string; publishedAt?: string };
+  /** Preserve the Agent-authored marker on the post across saves. */
+  initialAgent?: boolean;
   draftKey?: string;
   /** Set when editing an existing post (the AI 导读 panel needs a slug). */
   postSlug?: string;
+  /** When set, the editor opened an agent post; saving stays under the agent handle. */
+  agentSource?: string;
   initialAiTask?: AiTask | null;
   aiHeadings?: HeadingInfo[];
 }) {
@@ -79,7 +86,17 @@ export function PostForm({
   async function submit(publish: boolean) {
     setBusy(true);
     setError(null);
-    const res = await savePostAction({ title, tags: tags.join(", "), body, publish, publishedAt: initial?.publishedAt });
+    const form = {
+      title,
+      tags: tags.join(", "),
+      body,
+      publish,
+      publishedAt: initial?.publishedAt,
+      agent: agentSource ? true : initialAgent,
+    };
+    const res = agentSource && postSlug
+      ? await saveAgentPostAction(agentSource, postSlug, form)
+      : await savePostAction(form);
     setBusy(false);
     if (!res.ok) {
       setError(res.error);
@@ -87,7 +104,11 @@ export function PostForm({
     }
     clear();
     setDirty(false);
-    router.push(publish ? "/" : `/write/${res.slug}`);
+    if (agentSource) {
+      router.push(publish ? "/" : `/write/${res.slug}?agent=${encodeURIComponent(agentSource)}`);
+    } else {
+      router.push(publish ? "/" : `/write/${res.slug}`);
+    }
   }
 
   const savedTime = savedAt
@@ -96,6 +117,14 @@ export function PostForm({
 
   return (
     <div className="flex flex-col">
+      {agentSource ? (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded border border-seal/30 bg-seal/[0.06] px-4 py-2.5 text-sm text-ink">
+          <span>
+            正在编辑 agent 的文章（@{agentSource}）— 保存后仍保留在 agent 名下、
+            作者不变，AI 导读可随时生成。
+          </span>
+        </div>
+      ) : null}
       {recoveredAt ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded border border-seal/20 bg-seal/[0.06] px-4 py-2.5 text-sm text-ink">
           <span>
@@ -126,7 +155,13 @@ export function PostForm({
       <Editor key={editorKey} initialMarkdown={initialBody} onChange={handleBody} uploadImage={handleUploadImage} />
 
       {postSlug ? (
-        <AiSummaryEditor slug={postSlug} body={body} initialTask={initialAiTask} headings={aiHeadings} />
+        <AiSummaryEditor
+          slug={postSlug}
+          body={body}
+          sourceHandle={agentSource}
+          initialTask={initialAiTask}
+          headings={aiHeadings}
+        />
       ) : null}
 
       <div className="mt-2 flex items-center justify-end gap-3 border-t border-line pt-5">

@@ -50,6 +50,7 @@ interface PostRow {
   status: string;
   publishedAt: string | null;
   agent: boolean;
+  createdAt: string;
 }
 
 interface MagazineRow {
@@ -154,7 +155,7 @@ export class DbContentStore implements ContentStore {
   }
 
   async savePost(handle: string, post: NewPost): Promise<string> {
-    const slug = slugify(post.title);
+    const slug = post.slug ?? slugify(post.title);
     const now = new Date().toISOString();
     const full: PostRow = {
       handle,
@@ -167,10 +168,11 @@ export class DbContentStore implements ContentStore {
       status: post.status ?? "draft",
       publishedAt: post.publishedAt ?? null,
       agent: post.agent ?? false,
+      createdAt: now,
     };
     await this.db
       .insert(sumiPosts)
-      .values({ ...full, createdAt: now, updatedAt: now })
+      .values({ ...full, updatedAt: now })
       .onConflictDoUpdate({
         target: [sumiPosts.handle, sumiPosts.slug],
         set: {
@@ -721,6 +723,7 @@ function toPostMeta(r: PostRow): PostMeta {
     slug: r.slug,
     tags: parseJsonList(r.tags),
     status: r.status as PostStatus,
+    ...(r.createdAt !== null ? { createdAt: r.createdAt } : {}),
     ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
     ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),
     ...(r.publishedAt !== null ? { publishedAt: r.publishedAt } : {}),
