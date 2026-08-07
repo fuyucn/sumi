@@ -38,7 +38,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           </h1>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
-          <p className="text-sm text-ink-faint">
+          <p className="text-sm text-ink-faint tabular-nums">
             {posts.length} {posts.length === 1 ? "post" : "posts"} · {followers.length}{" "}
             {followers.length === 1 ? "follower" : "followers"}
           </p>

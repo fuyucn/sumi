@@ -2,21 +2,44 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-newsreader), ui-serif, Georgia, serif;
 
-  /* Ink-on-paper palette. Warm washi paper + true sumi ink, with a single
-     restrained cinnabar accent borrowed from the hanko (seal) tradition. */
-  --color-paper: #fcfbf7;
-  --color-paper-raised: #ffffff;
-  --color-ink: #1c1a17;
-  --color-ink-soft: #3a3733;
-  --color-ink-muted: #78736b;
-  --color-ink-faint: #9c968c;
-  --color-line: #e9e5dc;
-  --color-line-strong: #ddd8cc;
+  /* Sumi ink-on-paper palette: warm washi paper + true sumi ink + a single
+     cinnabar accent borrowed from the hanko (seal) tradition. */
+  --color-paper: #f7f4ec;
+  --color-paper-raised: #fffdf8;
+  --color-paper-deep: #efe9dc;
+  --color-ink: #1e1b16;
+  --color-ink-soft: #4a453d;
+  --color-ink-muted: #7d7669;
+  --color-ink-faint: #a39a8a;
+  --color-line: #e5dfd1;
+  --color-line-strong: #d8d0bf;
   --color-seal: #b3402e;
   --color-seal-soft: #c45a44;
+  --color-seal-wash: #f3e2dd;
+
+  --radius-card: 14px;
+  --radius-input: 10px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgb(30 27 22 / 0.05), 0 12px 32px -16px rgb(30 27 22 / 0.14);
+  --shadow-card-hover: 0 2px 4px rgb(30 27 22 / 0.06), 0 20px 44px -18px rgb(30 27 22 / 0.2);
+  --shadow-pop: 0 24px 60px -24px rgb(30 27 22 / 0.28);
+
+  --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 html {
@@ -30,65 +53,103 @@ html {
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
+  background-image:
+    radial-gradient(1200px 520px at 82% -8%, color-mix(in srgb, var(--color-seal) 5%, transparent), transparent 62%),
+    radial-gradient(900px 420px at -6% 24%, color-mix(in srgb, var(--color-ink) 3%, transparent), transparent 55%);
+  background-attachment: fixed;
+}
+
+/* Paper grain: a whisper of texture so flat surfaces still feel physical. */
+.paper-grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
 /* Dark mode — "ink at night": warm near-black paper, soft warm ink, a brighter
-   cinnabar so the seal still reads. Automatic via the OS preference; the
-   .dark / [data-theme="dark"] hooks allow a future manual toggle. */
+   cinnabar so the seal still reads. */
 :root {
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-theme="light"]) {
     color-scheme: dark;
-    --color-paper: #1b1816;
-    --color-paper-raised: #232019;
-    --color-ink: #ece6da;
-    --color-ink-soft: #cec7b9;
-    --color-ink-muted: #9a9286;
-    --color-ink-faint: #6e685e;
-    --color-line: #332e27;
-    --color-line-strong: #443d34;
+    --color-paper: #17140f;
+    --color-paper-raised: #201c16;
+    --color-paper-deep: #241f18;
+    --color-ink: #ece5d8;
+    --color-ink-soft: #c9c1b2;
+    --color-ink-muted: #9c9484;
+    --color-ink-faint: #6e675a;
+    --color-line: #322c24;
+    --color-line-strong: #433b30;
     --color-seal: #e06a4f;
     --color-seal-soft: #ee8a72;
+    --color-seal-wash: #3d2823;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 14px 36px -18px rgb(0 0 0 / 0.55);
+    --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.34), 0 22px 48px -20px rgb(0 0 0 / 0.62);
+    --shadow-pop: 0 28px 64px -26px rgb(0 0 0 / 0.7);
   }
 }
 :root.dark,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-paper: #1b1816;
-  --color-paper-raised: #232019;
-  --color-ink: #ece6da;
-  --color-ink-soft: #cec7b9;
-  --color-ink-muted: #9a9286;
-  --color-ink-faint: #6e685e;
-  --color-line: #332e27;
-  --color-line-strong: #443d34;
+  --color-paper: #17140f;
+  --color-paper-raised: #201c16;
+  --color-paper-deep: #241f18;
+  --color-ink: #ece5d8;
+  --color-ink-soft: #c9c1b2;
+  --color-ink-muted: #9c9484;
+  --color-ink-faint: #6e675a;
+  --color-line: #322c24;
+  --color-line-strong: #433b30;
   --color-seal: #e06a4f;
   --color-seal-soft: #ee8a72;
+  --color-seal-wash: #3d2823;
 }
 
 ::selection {
-  background-color: color-mix(in srgb, var(--color-seal) 18%, transparent);
+  background-color: color-mix(in srgb, var(--color-seal) 20%, transparent);
   color: var(--color-ink);
 }
 
-/* Focus: a soft cinnabar ring, never a harsh browser outline. */
 *:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--color-seal) 55%, transparent);
+  outline: 2px solid color-mix(in srgb, var(--color-seal) 60%, transparent);
   outline-offset: 2px;
   border-radius: 3px;
 }
 
-/* Page content drifts up softly on first paint. Restraint over motion. */
+/* Shared motion: content drifts up softly on first paint; cards lift on hover. */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+  .rise-delay-1 {
+    animation-delay: 0.08s;
+  }
+  .rise-delay-2 {
+    animation-delay: 0.16s;
+  }
+  .rise-delay-3 {
+    animation-delay: 0.24s;
+  }
+
+  .lift {
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+  .lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+  }
+
   @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(6px);
+      transform: translateY(10px);
     }
     to {
       opacity: 1;
@@ -97,7 +158,6 @@ body {
   }
 }
 
-/* An understated animated underline used for prose / inline links. */
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0 100%;
@@ -109,8 +169,15 @@ body {
   background-size: 100% 1px;
 }
 
-/* Reading + writing surfaces use the serif for a calm, book-like feel.
-   (code/pre keep the typography plugin's monospace.) */
+/* Icon buttons and ghost actions press down with a physical tick. */
+.press {
+  transition: transform 0.12s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.press:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* Reading + writing surfaces use the serif for a calm, book-like feel. */
 .prose {
   font-family: var(--font-serif);
   --tw-prose-body: var(--color-ink-soft);
@@ -139,7 +206,6 @@ body {
 .prose :is(h2, h3) {
   margin-top: 2.2em;
 }
-/* Links in reading text: ink, with a quiet underline that warms on hover. */
 .prose a {
   text-decoration: none;
   font-weight: 500;

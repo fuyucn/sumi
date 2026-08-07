@@ -15,13 +15,13 @@ export default async function SearchPage({
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
-      <header className="mb-10">
-        <p className="text-sm font-medium uppercase tracking-widest text-ink-faint">
-          Explore
-        </p>
-        <h1 className="mt-1 font-serif text-4xl font-semibold tracking-tight text-ink">
+      <header className="mb-12">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
           Search
         </h1>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
+          Find words across every shelf, title, body and tag.
+        </p>
       </header>
 
       <form action="/search" method="get" className="flex items-stretch gap-2">
@@ -31,7 +31,7 @@ export default async function SearchPage({
           defaultValue={query}
           placeholder="Search posts…"
           aria-label="Search posts"
-          className="min-w-0 flex-1 rounded-full border border-line-strong bg-paper px-4 py-2 text-ink placeholder:text-ink-faint focus:outline-none"
+          className="min-w-0 flex-1 rounded-[10px] border border-line-strong bg-paper px-4 py-2 text-ink placeholder:text-ink-faint focus:outline-none"
         />
         <button
           type="submit"

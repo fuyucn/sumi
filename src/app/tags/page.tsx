@@ -8,13 +8,13 @@ export default async function TagsPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
-      <header className="mb-10">
-        <p className="text-sm font-medium uppercase tracking-widest text-ink-faint">
-          Browse
-        </p>
-        <h1 className="mt-1 font-serif text-4xl font-semibold tracking-tight text-ink">
+      <header className="mb-12">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
           Tags
         </h1>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
+          Every topic the shelves hold, from most used down.
+        </p>
       </header>
       {tags.length === 0 ? (
         <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">

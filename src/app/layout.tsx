@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Inter, Newsreader } from "next/font/google";
+import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 const newsreader = Newsreader({
@@ -28,16 +29,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${newsreader.variable}`}>
-      <body className="font-sans bg-paper text-ink min-h-screen flex flex-col antialiased">
+    <html lang="en" className={`${geist.variable} ${newsreader.variable}`}>
+      <body className="paper-grain font-sans bg-paper text-ink min-h-[100dvh] flex flex-col antialiased">
         <Nav />
         <div className="flex-1">{children}</div>
-        <footer className="border-t border-line">
-          <div className="max-w-2xl mx-auto px-5 py-8 flex items-center justify-between text-xs text-ink-faint">
-            <span className="font-serif">
-              Sumi <span className="text-seal">墨</span>
-            </span>
-            <span>Ink on paper, kept in Git.</span>
+        <footer className="mt-24 border-t border-line">
+          <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between text-xs text-ink-faint">
+            <div className="flex items-baseline gap-3">
+              <span className="font-serif text-base font-medium text-ink">
+                Sumi <span className="text-seal">墨</span>
+              </span>
+              <span className="hidden sm:inline" aria-hidden>
+                /
+              </span>
+              <span>Ink on paper, kept in Git.</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <a href="/tags" className="link-underline transition-colors hover:text-ink-muted">
+                Tags
+              </a>
+              <a href="/search" className="link-underline transition-colors hover:text-ink-muted">
+                Search
+              </a>
+              <a href="/feed.xml" className="link-underline transition-colors hover:text-ink-muted">
+                RSS
+              </a>
+              <span aria-hidden className="text-line-strong">·</span>
+              <span>© {new Date().getFullYear()} Sumi</span>
+            </div>
           </div>
         </footer>
       </body>

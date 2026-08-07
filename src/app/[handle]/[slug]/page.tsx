@@ -79,6 +79,21 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           ) : null}
         </div>
       </header>
+      {post.coverImage ? (
+        <img
+          src={
+            post.coverImage.startsWith("http")
+              ? post.coverImage
+              : imageBase
+                ? `${imageBase}${post.coverImage}`
+                : post.coverImage
+          }
+          alt={post.title}
+          width={1600}
+          height={900}
+          className="mt-8 w-full rounded-card border border-line object-cover shadow-card"
+        />
+      ) : null}
       <hr className="mt-8 mb-10 border-line" />
       <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
         <Markdown baseUrl={imageBase}>{post.body}</Markdown>
