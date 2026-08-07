@@ -155,6 +155,15 @@ body {
   border-radius: 3px;
 }
 
+/* Hide scrollbars for horizontally scrollable chrome (nav, tag rails). */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* Accessibility: hidden until focused, then drops into view at the top. */
 .skip-link {
   position: fixed;

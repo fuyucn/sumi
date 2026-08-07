@@ -54,7 +54,7 @@ export function Nav() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
         <Link
           href="/"
-          className="group flex items-center gap-2 font-serif text-lg font-semibold tracking-tight text-ink transition-opacity hover:opacity-90"
+          className="group flex shrink-0 items-center gap-2 font-serif text-lg font-semibold tracking-tight text-ink transition-opacity hover:opacity-90"
         >
           <span
             aria-hidden
@@ -64,7 +64,7 @@ export function Nav() {
           </span>
           Sumi
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-sm">
           <Link
             href="/"
             className={linkClass(isActive("/"))}
@@ -80,14 +80,6 @@ export function Nav() {
           >
             <Article size={15} weight="duotone" aria-hidden />
             <span className="hidden sm:inline">Posts</span>
-          </Link>
-          <Link
-            href="/search"
-            className={linkClass(isActive("/search"))}
-            aria-current={isActive("/search") ? "page" : undefined}
-          >
-            <MagnifyingGlass size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Index</span>
           </Link>
           {handle ? (
             <>
@@ -116,14 +108,6 @@ export function Nav() {
                 </span>
               </Link>
               <Link
-                href="/settings"
-                className={linkClass(isActive("/settings"))}
-                aria-current={isActive("/settings") ? "page" : undefined}
-              >
-                <GearSix size={15} weight="duotone" aria-hidden />
-                <span className="hidden sm:inline">Settings</span>
-              </Link>
-              <Link
                 href="/write"
                 className="btn-primary ml-1 px-4 py-1.5"
               >
@@ -150,7 +134,29 @@ export function Nav() {
             <span className="hidden sm:inline">Tags</span>
           </Link>
         </nav>
-        <ThemeToggle />
+        <div className="flex shrink-0 items-center gap-1">
+          <Link
+            href="/search"
+            className={linkClass(isActive("/search"))}
+            aria-current={isActive("/search") ? "page" : undefined}
+            aria-label="Search"
+          >
+            <MagnifyingGlass size={15} weight="duotone" aria-hidden />
+            <span className="hidden sm:inline">Index</span>
+          </Link>
+          {handle ? (
+            <Link
+              href="/settings"
+              className={linkClass(isActive("/settings"))}
+              aria-current={isActive("/settings") ? "page" : undefined}
+              aria-label="Settings"
+              title="Settings"
+            >
+              <GearSix size={15} weight="duotone" aria-hidden />
+            </Link>
+          ) : null}
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
