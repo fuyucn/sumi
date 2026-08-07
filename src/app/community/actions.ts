@@ -2,6 +2,7 @@
 import { resolveDeps } from "@/lib/session";
 import {
   runAddComment,
+  runDeleteComment,
   runDeleteMagazine,
   runSaveMagazine,
   runSaveProfile,
@@ -11,6 +12,10 @@ import {
 
 export async function addCommentAction(form: unknown) {
   return runAddComment(await resolveDeps(), form, new Date());
+}
+
+export async function deleteCommentAction(form: unknown) {
+  return runDeleteComment(await resolveDeps(), form);
 }
 
 export async function saveProfileAction(form: unknown) {

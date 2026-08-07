@@ -14,6 +14,7 @@ function fakeStore(): ContentStore {
     uploadImage: vi.fn().mockResolvedValue("images/x.png"),
     listComments: vi.fn().mockResolvedValue([]),
     addComment: vi.fn(),
+    deleteComment: vi.fn(),
     listLikes: vi.fn().mockResolvedValue([]),
     addLike: vi.fn(),
     removeLike: vi.fn(),

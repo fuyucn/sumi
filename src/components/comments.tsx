@@ -5,6 +5,7 @@ import { Markdown } from "@/components/markdown";
 import Link from "next/link";
 import { CommentForm } from "@/components/comment-form";
 import { ReplyComposer } from "@/components/reply-composer";
+import { DeleteCommentButton } from "@/components/delete-comment-button";
 import { replyAllowed } from "@/lib/comment-depth";
 import type { Comment } from "@/content/types";
 
@@ -55,6 +56,11 @@ function CommentNode({
         <div className="mt-2 text-sm leading-relaxed text-ink">
           <Markdown>{comment.body}</Markdown>
         </div>
+        {signedInHandle && (comment.handle === signedInHandle || postHandle === signedInHandle) ? (
+          <div className="mt-1.5">
+            <DeleteCommentButton postHandle={postHandle} slug={slug} commentId={comment.id} />
+          </div>
+        ) : null}
         {signedInHandle && replyAllowed(allComments, comment) ? (
           <ReplyComposer
             postHandle={postHandle}

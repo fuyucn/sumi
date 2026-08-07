@@ -233,6 +233,17 @@ export class GitHubContentStore implements ContentStore {
     return full;
   }
 
+  async deleteComment(postHandle: string, slug: string, commentId: string): Promise<void> {
+    const path = commentFile(postHandle, slug, `${commentId}.md`);
+    const file = await this.client.getFile(path);
+    if (!file) return;
+    await this.client.deleteFile(
+      path,
+      `Delete comment @${postHandle}/${slug}/${commentId}`,
+      file.sha,
+    );
+  }
+
   // ---- Profile ----
 
   async getProfile(handle: string): Promise<Profile | null> {

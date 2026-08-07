@@ -115,5 +115,6 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
   design no longer applies — it all lives where the content lives.
 - Notifications; full-text search index tuning / DB-backed ranking (done:
   relevance scoring + pg_trgm GIN index).
-- Moderation tooling for comment threads; comment nesting is capped at a depth of
-  4 (enforced server-side across all backends, still renders replies as threaded).
+- Moderation tooling for comment threads (done: comment authors or the post's
+  author can delete a comment via a Delete button; nesting cap of 4 is enforced
+  server-side across all backends, still renders replies as threaded).

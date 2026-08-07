@@ -26,6 +26,8 @@ export interface ContentStore {
   uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string>;
   listComments(postHandle: string, slug: string): Promise<Comment[]>;
   addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment>;
+  /** Remove a single comment (by its id) from a post. */
+  deleteComment(postHandle: string, slug: string, commentId: string): Promise<void>;
   /** Handles that liked a post (no particular order). */
   listLikes(postHandle: string, slug: string): Promise<string[]>;
   addLike(postHandle: string, slug: string, likerHandle: string, now: Date): Promise<void>;

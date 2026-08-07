@@ -206,6 +206,18 @@ export class DbContentStore implements ContentStore {
     return full;
   }
 
+  async deleteComment(postHandle: string, slug: string, commentId: string): Promise<void> {
+    await this.db
+      .delete(sumiComments)
+      .where(
+        and(
+          eq(sumiComments.postHandle, postHandle),
+          eq(sumiComments.postSlug, slug),
+          eq(sumiComments.id, commentId),
+        ),
+      );
+  }
+
   // ---- Likes ----
 
   async listLikes(postHandle: string, slug: string): Promise<string[]> {

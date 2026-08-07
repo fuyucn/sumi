@@ -185,6 +185,16 @@ test("uploadImage stores bytes in sumi_images and returns a serving path", async
   expect(Buffer.from(rows[0].bytes as Uint8Array)).toEqual(Buffer.from([1, 2, 3]));
 });
 
+test("deleteComment removes only the target comment, leaving siblings", async () => {
+  const { store } = await makeStore();
+  await store.savePost("alice", { title: "Hi", body: "x", status: "published" });
+  const c1 = await store.addComment("alice", "hi", { body: "one" }, "bob", new Date("2026-06-01T00:00:00Z"));
+  const c2 = await store.addComment("alice", "hi", { body: "two" }, "carol", new Date("2026-06-01T00:00:00Z"));
+  await store.deleteComment("alice", "hi", c1.id);
+  const left = await store.listComments("alice", "hi");
+  expect(left.map((c) => c.id)).toEqual([c2.id]);
+});
+
 test("likes toggle, dedupe, and cascade on delete", async () => {
   const { store } = await makeStore();
   await store.savePost("alice", { title: "Hi", body: "x", status: "published" });

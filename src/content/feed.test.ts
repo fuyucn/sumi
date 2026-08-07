@@ -16,6 +16,7 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async uploadImage() { return ""; },
     async listComments() { return []; },
     async addComment() { return { id: "", body: "", handle: "", date: "" }; },
+    async deleteComment() {},
     async listLikes() { return []; },
     async addLike() {},
     async removeLike() {},

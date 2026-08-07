@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment } from "@/content/types";
-import { runAddComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
+import { runAddComment, runDeleteComment, runDeleteMagazine, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -13,6 +13,7 @@ function fakeStore(): ContentStore {
     async uploadImage() { return ""; },
     async listComments() { return []; },
     async addComment(_p, _s, c, author, now) { return { id: "cid", ...c, handle: author, date: now.toISOString() }; },
+    async deleteComment() {},
     async listLikes() { return []; },
     async addLike() {},
     async removeLike() {},
@@ -104,6 +105,26 @@ test("toggleFollow follows then unfollows and reports follower count", async () 
   const off = await runToggleFollow(d, { followee: "bob" }, now);
   expect(off.ok).toBe(true);
   if (off.ok) expect(off.data).toEqual({ following: false, count: 0 });
+});
+
+test("deleteComment guards, authorizes, and removes", async () => {
+  const comments = [
+    { id: "c1", handle: "bob", date: "t", body: "hi" },
+    { id: "c2", handle: "eve", date: "t", body: "spam" },
+  ];
+  const withComments = { ...fakeStore(), async listComments() { return comments; }, async deleteComment() {} } as unknown as ContentStore;
+  const okBob = await runDeleteComment({ userId: "u1", handle: "bob", store: withComments }, { postHandle: "alice", slug: "p", commentId: "c1" });
+  expect(okBob.ok).toBe(true);
+  const asAlicePostAuthor = await runDeleteComment({ userId: "u2", handle: "alice", store: withComments }, { postHandle: "alice", slug: "p", commentId: "c2" });
+  expect(asAlicePostAuthor.ok).toBe(true);
+  const asEveAuthor = await runDeleteComment({ userId: "u3", handle: "eve", store: withComments }, { postHandle: "alice", slug: "p", commentId: "c2" });
+  expect(asEveAuthor.ok).toBe(true);
+  const asOther = await runDeleteComment({ userId: "u9", handle: "mallory", store: withComments }, { postHandle: "alice", slug: "p", commentId: "c2" });
+  expect(asOther.ok).toBe(false);
+  const unsigned = await runDeleteComment({ userId: null, handle: null, store: null }, { postHandle: "alice", slug: "p", commentId: "c1" });
+  expect(unsigned.ok).toBe(false);
+  const missing = await runDeleteComment({ userId: "u1", handle: "bob", store: withComments }, { postHandle: "alice", slug: "p", commentId: "nope" });
+  expect(missing.ok).toBe(false);
 });
 
 test("toggleFollow rejects following yourself and unsigned", async () => {

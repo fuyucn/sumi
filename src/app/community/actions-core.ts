@@ -32,6 +32,36 @@ export const followFormSchema = z.object({
   followee: z.string().trim().min(1),
 });
 
+export const deleteCommentFormSchema = z.object({
+  postHandle: z.string().trim().min(1),
+  slug: z.string().trim().min(1),
+  commentId: z.string().trim().min(1),
+});
+
+/** Delete a comment. Allowed for the comment's own author or the post's author. */
+export async function runDeleteComment(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ deleted: string }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = deleteCommentFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const comments = await deps.store!.listComments(f.postHandle, f.slug);
+  const comment = comments.find((c) => c.id === f.commentId);
+  if (!comment) return { ok: false, error: "Comment not found" };
+  const isPostAuthor = f.postHandle === deps.handle;
+  if (comment.handle !== deps.handle && !isPostAuthor) {
+    return { ok: false, error: "You can only delete your own comments or comments on your posts" };
+  }
+  await deps.store!.deleteComment(f.postHandle, f.slug, f.commentId);
+  return { ok: true, data: { deleted: f.commentId } };
+}
+
 export async function runAddComment(
   deps: SessionDeps,
   form: unknown,

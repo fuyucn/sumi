@@ -223,6 +223,13 @@ export class CloudflareContentStore implements ContentStore {
     return full;
   }
 
+  async deleteComment(postHandle: string, slug: string, commentId: string): Promise<void> {
+    await this.run(
+      `DELETE FROM comments WHERE post_handle = ? AND post_slug = ? AND id = ?`,
+      postHandle, slug, Number(commentId),
+    );
+  }
+
   // ---- Likes ----
 
   async listLikes(postHandle: string, slug: string): Promise<string[]> {
