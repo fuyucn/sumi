@@ -42,6 +42,9 @@ function fakeStore(): ContentStore {
     getPage: vi.fn().mockResolvedValue(null),
     savePage: vi.fn().mockResolvedValue("pg"),
     deletePage: vi.fn().mockResolvedValue(undefined),
+    listNotifications: vi.fn().mockResolvedValue([]),
+    addNotification: vi.fn(),
+    markNotificationsRead: vi.fn().mockResolvedValue(0),
     listTags: vi.fn().mockResolvedValue([]),
     searchPosts: vi.fn().mockResolvedValue([]),
   };

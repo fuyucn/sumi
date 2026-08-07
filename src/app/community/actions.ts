@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { resolveDeps } from "@/lib/session";
 import {
   runAddComment,
@@ -16,6 +17,7 @@ import {
   runSaveProfile,
   runToggleFollow,
   runToggleLike,
+  runMarkNotificationsRead,
 } from "./actions-core";
 
 export async function addCommentAction(form: unknown) {
@@ -76,4 +78,9 @@ export async function toggleLikeAction(form: unknown) {
 
 export async function toggleFollowAction(form: unknown) {
   return runToggleFollow(await resolveDeps(), form, new Date());
+}
+
+export async function markNotificationsReadAction() {
+  const res = await runMarkNotificationsRead(await resolveDeps());
+  if (res.ok) revalidatePath("/notifications");
 }

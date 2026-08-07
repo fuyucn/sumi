@@ -82,6 +82,10 @@ export function pagesDir(handle: string): string {
 export function pageFile(handle: string, slug: string): string {
   return `${pagesDir(handle)}/${slug}.md`;
 }
+/** Per-creator notifications live in a single JSON file. */
+export function notificationsFile(handle: string): string {
+  return `${userDir(handle)}/notifications.json`;
+}
 /** Site-wide friend links live in a single JSON file at the content root. */
 export function friendsFile(): string {
   return `${CONTENT_DIR}/friends.json`;

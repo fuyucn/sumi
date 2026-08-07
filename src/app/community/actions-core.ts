@@ -1,5 +1,6 @@
 import { z } from "zod";
-import type { Comment, Friend, Note, Profile } from "@/content/types";
+import type { ContentStore } from "@/content/store";
+import type { Comment, Friend, NewNotification, Note, Profile } from "@/content/types";
 import { guard, type SessionDeps } from "@/lib/session";
 import { commentDepth, MAX_COMMENT_DEPTH } from "@/lib/comment-depth";
 
@@ -82,6 +83,31 @@ export const friendFormSchema = z.object({
 export const deleteFriendFormSchema = z.object({
   id: z.string().trim().min(1),
 });
+
+/**
+ * Push a notification to a recipient unless an unread one from the same actor
+ * for the same target already exists today (prevents like/follow toggling spam).
+ */
+async function notifyOnce(
+  store: ContentStore,
+  recipient: string,
+  notification: NewNotification,
+  now: Date,
+): Promise<void> {
+  if (!recipient) return;
+  const today = now.toDateString();
+  const recent = await store.listNotifications(recipient);
+  const duplicate = recent.some(
+    (n) =>
+      !n.read &&
+      n.actor === notification.actor &&
+      n.type === notification.type &&
+      n.postHandle === notification.postHandle &&
+      new Date(n.date).toDateString() === today,
+  );
+  if (duplicate) return;
+  await store.addNotification(recipient, notification, now);
+}
 
 /** Delete a comment. Allowed for the comment's own author or the post's author. */
 export async function runDeleteComment(
@@ -220,6 +246,16 @@ export async function runAddComment(
     deps.handle!,
     now,
   );
+  if (f.postHandle !== deps.handle) {
+    await notifyOnce(deps.store!, f.postHandle, {
+      type: f.parentId ? "reply" : "comment",
+      actor: deps.handle!,
+      postHandle: f.postHandle,
+      postSlug: f.slug,
+      commentId: comment.id,
+      body: f.body.slice(0, 200),
+    }, now);
+  }
   return { ok: true, data: comment };
 }
 
@@ -350,6 +386,14 @@ export async function runToggleLike(
     await deps.store!.removeLike(f.postHandle, f.slug, handle);
   } else {
     await deps.store!.addLike(f.postHandle, f.slug, handle, now);
+    if (f.postHandle !== handle) {
+      await notifyOnce(deps.store!, f.postHandle, {
+        type: "like",
+        actor: handle,
+        postHandle: f.postHandle,
+        postSlug: f.slug,
+      }, now);
+    }
   }
   return { ok: true, data: { liked: !liked, count: liked ? current.length - 1 : current.length + 1 } };
 }
@@ -390,7 +434,18 @@ export async function runToggleFollow(
   const followee = f.followee;
   const following = (await deps.store!.listFollowing(me)).includes(followee);
   if (following) await deps.store!.removeFollow(me, followee);
-  else await deps.store!.addFollow(me, followee, now);
+  else {
+    await deps.store!.addFollow(me, followee, now);
+    await notifyOnce(deps.store!, followee, { type: "follow", actor: me }, now);
+  }
   const count = (await deps.store!.listFollowers(followee)).length;
   return { ok: true, data: { following: !following, count } };
+}
+
+/** Mark every notification for the signed-in user as read. Returns the number marked. */
+export async function runMarkNotificationsRead(deps: SessionDeps): Promise<ActionResult<number>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  const marked = await deps.store!.markNotificationsRead(deps.handle!);
+  return { ok: true, data: marked };
 }

@@ -135,6 +135,19 @@ CREATE TABLE IF NOT EXISTS pages (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (handle, slug)
 );
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  handle TEXT NOT NULL,
+  type TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  post_handle TEXT,
+  post_slug TEXT,
+  comment_id TEXT,
+  body TEXT,
+  date TEXT NOT NULL,
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
 `;
 
 function fakeBucket(): R2BucketLike & { map: Map<string, Uint8Array> } {
@@ -433,4 +446,43 @@ test("friends round-trip and delete", async () => {
   ]);
   await store.deleteFriend(f.id);
   expect(await store.listFriends()).toEqual([]);
+});
+
+test("notifications round-trip newest-first and mark read", async () => {
+  const { store } = inMemoryStore();
+  const t1 = new Date("2026-01-02T00:00:00.000Z");
+  const t2 = new Date("2026-01-01T00:00:00.000Z");
+  const like = await store.addNotification(
+    "alice",
+    { type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" },
+    t1,
+  );
+  const comment = await store.addNotification(
+    "alice",
+    { type: "comment", actor: "carol", postHandle: "alice", postSlug: "hello", body: "Nice post!" },
+    t2,
+  );
+  expect(like.read).toBe(false);
+  expect(comment.read).toBe(false);
+
+  const list = await store.listNotifications("alice");
+  expect(list.map((n) => n.id)).toEqual([like.id, comment.id]);
+  expect(list[0]).toMatchObject({ type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" });
+  expect(list[1]).toMatchObject({ type: "comment", actor: "carol", body: "Nice post!" });
+
+  expect(await store.markNotificationsRead("alice")).toBe(2);
+  const read = await store.listNotifications("alice");
+  expect(read.every((n) => n.read)).toBe(true);
+  expect(await store.markNotificationsRead("alice")).toBe(0);
+});
+
+test("notifications are scoped per recipient handle", async () => {
+  const { store } = inMemoryStore();
+  await store.addNotification(
+    "alice",
+    { type: "follow", actor: "bob" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(await store.listNotifications("bob")).toEqual([]);
+  expect(await store.markNotificationsRead("bob")).toBe(0);
 });

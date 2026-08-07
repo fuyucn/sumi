@@ -109,4 +109,18 @@ export const pages = sqliteTable(
   (t) => [primaryKey({ columns: [t.handle, t.slug] })],
 );
 
-export const schema = { posts, comments, magazines, profiles, notes, friends, projects, pages };
+export const notifications = sqliteTable("notifications", {
+  id: text("id").primaryKey(),
+  handle: text("handle").notNull(),
+  type: text("type").notNull(),
+  actor: text("actor").notNull(),
+  postHandle: text("post_handle"),
+  postSlug: text("post_slug"),
+  commentId: text("comment_id"),
+  body: text("body"),
+  date: text("date").notNull(),
+  read: integer("read").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+});
+
+export const schema = { posts, comments, magazines, profiles, notes, friends, projects, pages, notifications };

@@ -1,7 +1,9 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
+  Bell,
   Feather,
   GearSix,
   MagnifyingGlass,
@@ -16,6 +18,21 @@ export function Nav() {
   const user = data?.user as { username?: string; name?: string } | undefined;
   const handle = user?.username ?? user?.name;
   const pathname = usePathname();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!handle) return;
+    let cancelled = false;
+    fetch("/api/notifications/unread")
+      .then((r) => r.json())
+      .then((j) => {
+        if (!cancelled && typeof j?.unread === "number") setUnread(j.unread);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [handle, pathname]);
 
   const isActive = (href: string, prefix = false) =>
     prefix ? pathname.startsWith(href) : pathname === href;
@@ -62,6 +79,20 @@ export function Nav() {
           </Link>
           {handle ? (
             <>
+              <Link
+                href="/notifications"
+                className={`${linkClass(isActive("/notifications"))} relative`}
+                aria-current={isActive("/notifications") ? "page" : undefined}
+                aria-label="Notifications"
+              >
+                <Bell size={15} weight="duotone" aria-hidden />
+                <span className="hidden sm:inline">Inbox</span>
+                {unread > 0 ? (
+                  <span className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                ) : null}
+              </Link>
               <Link
                 href={`/@${handle}`}
                 className={linkClass(isActive(`/@${handle}`, true))}

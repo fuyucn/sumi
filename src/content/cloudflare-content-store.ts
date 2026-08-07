@@ -1,4 +1,4 @@
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewNotification, NewPage, NewPost, NewProject, Note, Notification, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
@@ -101,6 +101,20 @@ interface PageRow {
   show_in_nav: number;
   created_at: string;
   updated_at: string;
+}
+
+interface NotificationRow {
+  id: string;
+  handle: string;
+  type: string;
+  actor: string;
+  post_handle: string | null;
+  post_slug: string | null;
+  comment_id: string | null;
+  body: string | null;
+  date: string;
+  read: number;
+  created_at: string;
 }
 
 function parseTags(raw: string | null): string[] {
@@ -541,6 +555,46 @@ export class CloudflareContentStore implements ContentStore {
     await this.run(`DELETE FROM pages WHERE handle = ? AND slug = ?`, handle, slug);
   }
 
+  // ---- Notifications ----
+
+  async listNotifications(handle: string): Promise<Notification[]> {
+    const rows = await this.rows<NotificationRow>(
+      `SELECT * FROM notifications WHERE handle = ? ORDER BY date DESC LIMIT 100`,
+      handle,
+    );
+    return rows.map((r) => toNotification(r));
+  }
+
+  async addNotification(handle: string, notification: NewNotification, now: Date): Promise<Notification> {
+    const id = `ntf-${now.toISOString().replace(/[:.]/g, "-")}`;
+    const full: Notification = { id, handle, date: now.toISOString(), read: false, ...notification };
+    await this.run(
+      `INSERT INTO notifications (id, handle, type, actor, post_handle, post_slug, comment_id, body, date, read, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)`,
+      id,
+      handle,
+      full.type,
+      full.actor,
+      full.postHandle ?? null,
+      full.postSlug ?? null,
+      full.commentId ?? null,
+      full.body ?? null,
+      full.date,
+      now.toISOString(),
+    );
+    return full;
+  }
+
+  async markNotificationsRead(handle: string): Promise<number> {
+    const rows = await this.rows<{ id: string }>(
+      `SELECT id FROM notifications WHERE handle = ? AND read = 0`,
+      handle,
+    );
+    if (rows.length === 0) return 0;
+    await this.run(`UPDATE notifications SET read = 1 WHERE handle = ? AND read = 0`, handle);
+    return rows.length;
+  }
+
   // ---- Tags ----
 
   async listTags(): Promise<TagInfo[]> {
@@ -664,4 +718,31 @@ function toPageMeta(r: PageRow): PageMeta {
 
 function toPage(r: PageRow): Page {
   return { ...toPageMeta(r), handle: r.handle, body: r.body };
+}
+
+function toNotification(r: NotificationRow): Notification {
+  const type = r.type;
+  if (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow") {
+    // Defensive: DB rows with an unknown type should not crash the list page.
+    return {
+      id: r.id,
+      handle: r.handle,
+      actor: r.actor,
+      date: r.date,
+      read: r.read === 1,
+      type: "comment",
+    };
+  }
+  return {
+    id: r.id,
+    handle: r.handle,
+    type,
+    actor: r.actor,
+    date: r.date,
+    read: r.read === 1,
+    ...(r.post_handle !== null ? { postHandle: r.post_handle } : {}),
+    ...(r.post_slug !== null ? { postSlug: r.post_slug } : {}),
+    ...(r.comment_id !== null ? { commentId: r.comment_id } : {}),
+    ...(r.body !== null ? { body: r.body } : {}),
+  };
 }

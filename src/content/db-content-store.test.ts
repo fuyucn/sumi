@@ -112,6 +112,19 @@ CREATE TABLE "sumi_pages" (
   "updated_at" text NOT NULL,
   CONSTRAINT "sumi_pages_handle_slug_pk" PRIMARY KEY("handle","slug")
 );
+CREATE TABLE "sumi_notifications" (
+  "id" text PRIMARY KEY NOT NULL,
+  "handle" text NOT NULL,
+  "type" text NOT NULL,
+  "actor" text NOT NULL,
+  "post_handle" text,
+  "post_slug" text,
+  "comment_id" text,
+  "body" text,
+  "date" text NOT NULL,
+  "read" boolean DEFAULT false NOT NULL,
+  "created_at" text NOT NULL
+);
 `;
 
 async function makeStore() {
@@ -349,4 +362,43 @@ test("friends round-trip and delete", async () => {
   ]);
   await store.deleteFriend(f.id);
   expect(await store.listFriends()).toEqual([]);
+});
+
+test("notifications round-trip newest-first and mark read", async () => {
+  const { store } = await makeStore();
+  const t1 = new Date("2026-01-02T00:00:00.000Z");
+  const t2 = new Date("2026-01-01T00:00:00.000Z");
+  const like = await store.addNotification(
+    "alice",
+    { type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" },
+    t1,
+  );
+  const comment = await store.addNotification(
+    "alice",
+    { type: "comment", actor: "carol", postHandle: "alice", postSlug: "hello", body: "Nice post!" },
+    t2,
+  );
+  expect(like.read).toBe(false);
+  expect(comment.read).toBe(false);
+
+  const list = await store.listNotifications("alice");
+  expect(list.map((n) => n.id)).toEqual([like.id, comment.id]);
+  expect(list[0]).toMatchObject({ type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" });
+  expect(list[1]).toMatchObject({ type: "comment", actor: "carol", body: "Nice post!" });
+
+  expect(await store.markNotificationsRead("alice")).toBe(2);
+  const read = await store.listNotifications("alice");
+  expect(read.every((n) => n.read)).toBe(true);
+  expect(await store.markNotificationsRead("alice")).toBe(0);
+});
+
+test("notifications are scoped per recipient handle", async () => {
+  const { store } = await makeStore();
+  await store.addNotification(
+    "alice",
+    { type: "follow", actor: "bob" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(await store.listNotifications("bob")).toEqual([]);
+  expect(await store.markNotificationsRead("bob")).toBe(0);
 });

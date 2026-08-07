@@ -129,3 +129,26 @@ export interface Page extends PageMeta {
   handle: string;
   body: string;
 }
+
+// ---- Notifications ----
+
+export type NotificationType = "comment" | "reply" | "like" | "follow";
+
+export interface NewNotification {
+  type: NotificationType;
+  /** Handle of the person who triggered the event. */
+  actor: string;
+  postHandle?: string;
+  postSlug?: string;
+  commentId?: string;
+  /** Short snippet, e.g. the comment body. */
+  body?: string;
+}
+
+export interface Notification extends NewNotification {
+  id: string;
+  /** Recipient handle. */
+  handle: string;
+  date: string; // ISO 8601
+  read: boolean;
+}

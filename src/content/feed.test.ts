@@ -44,6 +44,9 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     async getPage() { return null; },
     async savePage() { return ""; },
     async deletePage() {},
+    async listNotifications() { return []; },
+    async addNotification(_h, n, now) { return { id: "ntf", handle: "alice", date: now.toISOString(), read: false, ...n }; },
+    async markNotificationsRead() { return 0; },
     async listTags() { return []; },
     async searchPosts() { return []; },
   };

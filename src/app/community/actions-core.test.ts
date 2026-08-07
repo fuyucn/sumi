@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
-import type { Comment } from "@/content/types";
-import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runDeletePage, runDeleteProject, runGetLikeState, runSaveMagazine, runSavePage, runSaveProfile, runSaveProject, runToggleFollow, runToggleLike } from "./actions-core";
+import type { Comment, NewNotification, Notification } from "@/content/types";
+import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runDeletePage, runDeleteProject, runGetLikeState, runMarkNotificationsRead, runSaveMagazine, runSavePage, runSaveProfile, runSaveProject, runToggleFollow, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -41,6 +41,9 @@ function fakeStore(): ContentStore {
     async getPage() { return null; },
     async savePage() { return "pg"; },
     async deletePage() {},
+    async listNotifications() { return []; },
+    async addNotification(_h, n, now) { return { id: "ntf1", handle: "alice", date: now.toISOString(), read: false, ...n }; },
+    async markNotificationsRead() { return 0; },
     async listTags() { return []; },
     async searchPosts() { return []; },
   };
@@ -304,4 +307,130 @@ test("addComment rejects a reply to a missing parent", async () => {
     new Date(),
   );
   expect(res.ok).toBe(false);
+});
+
+function notifyingStore() {
+  const notifications: Notification[] = [];
+  const likes: string[] = [];
+  const follows: string[] = [];
+  const store: ContentStore = {
+    ...fakeStore(),
+    async listLikes() { return [...likes]; },
+    async addLike(_h, _s, handle) { likes.push(handle); },
+    async removeLike(_h, _s, handle) { likes.splice(likes.indexOf(handle), 1); },
+    async listFollowing() { return [...follows]; },
+    async listFollowers() { return [...follows]; },
+    async addFollow(_f, e) { follows.push(e); },
+    async removeFollow(_f, e) { follows.splice(follows.indexOf(e), 1); },
+    async listNotifications(handle) { return notifications.filter((n) => n.handle === handle); },
+    async addNotification(handle, n: NewNotification, now) {
+      const full: Notification = { id: `ntf-${notifications.length + 1}`, handle, date: now.toISOString(), read: false, ...n };
+      notifications.push(full);
+      return full;
+    },
+    async markNotificationsRead(handle) {
+      let marked = 0;
+      for (const n of notifications) {
+        if (n.handle === handle && !n.read) {
+          n.read = true;
+          marked += 1;
+        }
+      }
+      return marked;
+    },
+  };
+  return { store, notifications };
+}
+
+test("commenting on someone else's post notifies the post author", async () => {
+  const { store, notifications } = notifyingStore();
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store },
+    { postHandle: "bob", slug: "hello", body: "Nice one" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(res.ok).toBe(true);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({
+    handle: "bob",
+    type: "comment",
+    actor: "alice",
+    postHandle: "bob",
+    postSlug: "hello",
+    commentId: "cid",
+    body: "Nice one",
+  });
+});
+
+test("commenting on your own post does not notify yourself", async () => {
+  const { store, notifications } = notifyingStore();
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store },
+    { postHandle: "alice", slug: "hello", body: "hi" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(res.ok).toBe(true);
+  expect(notifications).toHaveLength(0);
+});
+
+test("replying notifies the post author with the reply type", async () => {
+  const { store, notifications } = notifyingStore();
+  const withChain = { ...store, async listComments() { return chain; } } as ContentStore;
+  const res = await runAddComment(
+    { userId: "u1", handle: "alice", store: withChain },
+    { postHandle: "bob", slug: "hello", body: "In reply", parentId: "r1" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  expect(res.ok).toBe(true);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({
+    handle: "bob",
+    type: "reply",
+    actor: "alice",
+    commentId: "cid",
+  });
+});
+
+test("liking notifies the post author and dedupes a same-day repeat", async () => {
+  const { store, notifications } = notifyingStore();
+  const d = { userId: "u1", handle: "alice", store };
+  const now = new Date("2026-01-01T00:00:00.000Z");
+  expect((await runToggleLike(d, { postHandle: "bob", slug: "hello" }, now)).ok).toBe(true);
+  expect((await runToggleLike(d, { postHandle: "bob", slug: "hello" }, now)).ok).toBe(true);
+  expect((await runToggleLike(d, { postHandle: "bob", slug: "hello" }, now)).ok).toBe(true);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({
+    handle: "bob",
+    type: "like",
+    actor: "alice",
+    postHandle: "bob",
+    postSlug: "hello",
+  });
+});
+
+test("following notifies the followee, self-follow stays rejected", async () => {
+  const { store, notifications } = notifyingStore();
+  const now = new Date("2026-01-01T00:00:00.000Z");
+  const res = await runToggleFollow({ userId: "u1", handle: "bob", store }, { followee: "alice" }, now);
+  expect(res.ok).toBe(true);
+  expect(notifications).toHaveLength(1);
+  expect(notifications[0]).toMatchObject({ handle: "alice", type: "follow", actor: "bob" });
+  const self = await runToggleFollow({ userId: "u1", handle: "alice", store }, { followee: "alice" }, now);
+  expect(self.ok).toBe(false);
+  expect(notifications).toHaveLength(1);
+});
+
+test("markNotificationsRead guards and marks unread as read", async () => {
+  const { store, notifications } = notifyingStore();
+  await runToggleFollow(
+    { userId: "u1", handle: "bob", store },
+    { followee: "alice" },
+    new Date("2026-01-01T00:00:00.000Z"),
+  );
+  const res = await runMarkNotificationsRead({ userId: "u1", handle: "alice", store });
+  expect(res.ok).toBe(true);
+  if (res.ok) expect(res.data).toBe(1);
+  expect(notifications.every((n) => n.read)).toBe(true);
+  const guarded = await runMarkNotificationsRead({ userId: null, handle: null, store: null });
+  expect(guarded.ok).toBe(false);
 });

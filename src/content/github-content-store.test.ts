@@ -338,3 +338,39 @@ test("listTags returns empty when there are no published posts", async () => {
   await store.savePost("alice", { title: "Only Draft", body: "d", tags: ["js"], status: "draft" });
   expect(await store.listTags()).toEqual([]);
 });
+
+// ---- Notifications ----
+test("notifications round-trip newest-first and mark read", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  const t1 = new Date("2026-01-02T00:00:00.000Z");
+  const t2 = new Date("2026-01-01T00:00:00.000Z");
+  const like = await store.addNotification(
+    "alice",
+    { type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" },
+    t1,
+  );
+  const comment = await store.addNotification(
+    "alice",
+    { type: "comment", actor: "carol", postHandle: "alice", postSlug: "hello", body: "Nice post!" },
+    t2,
+  );
+  expect(like.read).toBe(false);
+  expect(comment.read).toBe(false);
+
+  const list = await store.listNotifications("alice");
+  expect(list.map((n) => n.id)).toEqual([like.id, comment.id]);
+  expect(list[0]).toMatchObject({ type: "like", actor: "bob", postHandle: "alice", postSlug: "hello" });
+  expect(list[1]).toMatchObject({ type: "comment", actor: "carol", body: "Nice post!" });
+
+  expect(await store.markNotificationsRead("alice")).toBe(2);
+  const read = await store.listNotifications("alice");
+  expect(read.every((n) => n.read)).toBe(true);
+  expect(await store.markNotificationsRead("alice")).toBe(0);
+});
+
+test("listNotifications returns [] when no notifications file exists", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  expect(await store.listNotifications("alice")).toEqual([]);
+  expect(await store.markNotificationsRead("alice")).toBe(0);
+});

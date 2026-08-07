@@ -112,3 +112,17 @@ CREATE TABLE IF NOT EXISTS pages (
   updated_at TEXT NOT NULL,
   PRIMARY KEY (handle, slug)
 );
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  handle TEXT NOT NULL,
+  type TEXT NOT NULL,
+  actor TEXT NOT NULL,
+  post_handle TEXT,
+  post_slug TEXT,
+  comment_id TEXT,
+  body TEXT,
+  date TEXT NOT NULL,
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);

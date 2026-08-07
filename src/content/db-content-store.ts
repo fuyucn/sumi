@@ -10,13 +10,14 @@ import {
   sumiLikes,
   sumiMagazines,
   sumiNotes,
+  sumiNotifications,
   sumiPages,
   sumiPosts,
   sumiProfiles,
   sumiProjects,
 } from "@/db/schema";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewNotification, NewPage, NewPost, NewProject, Note, Notification, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
 
@@ -83,6 +84,20 @@ interface PageRow {
   showInNav: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+interface NotificationRow {
+  id: string;
+  handle: string;
+  type: string;
+  actor: string;
+  postHandle: string | null;
+  postSlug: string | null;
+  commentId: string | null;
+  body: string | null;
+  date: string;
+  read: boolean;
+  createdAt: string;
 }
 
 function parseJsonList(raw: string | null): string[] {
@@ -603,6 +618,46 @@ export class DbContentStore implements ContentStore {
       .where(sql`${sumiPages.handle} = ${handle} AND ${sumiPages.slug} = ${slug}`);
   }
 
+  // ---- Notifications ----
+
+  async listNotifications(handle: string): Promise<Notification[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiNotifications)
+      .where(sql`${sumiNotifications.handle} = ${handle}`)
+      .orderBy(sql`${sumiNotifications.date} DESC`)
+      .limit(100);
+    return rows.map((r) => toNotification(r));
+  }
+
+  async addNotification(handle: string, notification: NewNotification, now: Date): Promise<Notification> {
+    const id = `ntf-${now.toISOString().replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}`;
+    const full: Notification = { id, handle, date: now.toISOString(), read: false, ...notification };
+    await this.db.insert(sumiNotifications).values({
+      id,
+      handle,
+      type: full.type,
+      actor: full.actor,
+      postHandle: full.postHandle ?? null,
+      postSlug: full.postSlug ?? null,
+      commentId: full.commentId ?? null,
+      body: full.body ?? null,
+      date: full.date,
+      read: false,
+      createdAt: now.toISOString(),
+    });
+    return full;
+  }
+
+  async markNotificationsRead(handle: string): Promise<number> {
+    const rows = await this.db
+      .update(sumiNotifications)
+      .set({ read: true })
+      .where(sql`${sumiNotifications.handle} = ${handle} AND ${sumiNotifications.read} = false`)
+      .returning({ id: sumiNotifications.id });
+    return rows.length;
+  }
+
   // ---- Tags ----
 
   async listTags(): Promise<TagInfo[]> {
@@ -713,4 +768,31 @@ function toPageMeta(r: PageRow): PageMeta {
 
 function toPage(r: PageRow): Page {
   return { ...toPageMeta(r), handle: r.handle, body: r.body };
+}
+
+function toNotification(r: NotificationRow): Notification {
+  const type = r.type;
+  if (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow") {
+    // Defensive: DB rows with an unknown type should not crash the list page.
+    return {
+      id: r.id,
+      handle: r.handle,
+      actor: r.actor,
+      date: r.date,
+      read: r.read,
+      type: "comment",
+    };
+  }
+  return {
+    id: r.id,
+    handle: r.handle,
+    type,
+    actor: r.actor,
+    date: r.date,
+    read: r.read,
+    ...(r.postHandle !== null ? { postHandle: r.postHandle } : {}),
+    ...(r.postSlug !== null ? { postSlug: r.postSlug } : {}),
+    ...(r.commentId !== null ? { commentId: r.commentId } : {}),
+    ...(r.body !== null ? { body: r.body } : {}),
+  };
 }

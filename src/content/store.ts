@@ -1,4 +1,4 @@
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewNotification, NewPage, NewPost, NewProject, Notification, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
 
 export interface ListPostsOptions {
   handle?: string;
@@ -62,6 +62,12 @@ export interface ContentStore {
   getPage(handle: string, slug: string): Promise<Page | null>;
   savePage(handle: string, page: NewPage): Promise<string>;
   deletePage(handle: string, slug: string): Promise<void>;
+  /** Notifications for a creator, newest first. */
+  listNotifications(handle: string): Promise<Notification[]>;
+  /** Add a notification for a creator, capped to the most recent 100. */
+  addNotification(handle: string, notification: NewNotification, now: Date): Promise<Notification>;
+  /** Mark all of a creator's notifications read; returns how many were unread. */
+  markNotificationsRead(handle: string): Promise<number>;
   /** All tags in use (published posts) with their post counts, most-used first. */
   listTags(): Promise<TagInfo[]>;
   /** Full-text search across published posts (title, body, excerpt, tags). Newest first. */

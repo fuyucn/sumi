@@ -138,6 +138,18 @@ notifications, native mobile app.
   Postgres `sumi_projects`/`sumi_pages`, D1 `projects`/`pages`) and stays out of
   `listPosts`; pages registered in the sitemap collector.
 
+### FR-14 Notifications (NEW — this PRD)
+- Inbox at `/notifications` for the signed-in creator: comments, replies, likes
+  and new followers, newest first, with a read/unread state and "Mark all read".
+- Triggered server-side from the community actions: a comment or reply notifies
+  the post author (`commentId` + body snippet), a like notifies the post author,
+  a follow notifies the followee; self-actions never notify yourself.
+- Anti-spam dedupe: the same actor + type + post within the same day collapses to
+  a single unread notification, so like/follow toggling cannot flood the inbox.
+- Bell entry with an unread badge in the nav (client-fetches the unread count);
+  storage per backend: GitHub `content/@<handle>/notifications.json` (capped at
+  100), Postgres `sumi_notifications`, D1 `notifications`.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -158,12 +170,13 @@ notifications, native mobile app.
 - [x] Friends (友链) page at `/friends` with add/remove for signed-in creators; works on all three backends.
 - [x] `/archive` renders published posts grouped by year; article bylines show reading time + word count.
 - [x] `/projects` showcases featured work; `/@handle/p/<slug>` renders custom markdown pages; both are editable in `/write` and work on all three backends.
+- [x] Comments, replies, likes, and follows notify the recipient in `/notifications`; nav shows an unread badge and "Mark all read" works on all three backends.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Notifications; agent/automation content generation; per-project gallery images.
+- Agent/automation content generation; per-project gallery images.
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced

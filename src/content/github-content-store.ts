@@ -1,6 +1,6 @@
 import type { GitHubClient } from "@/lib/github";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, Profile, Project } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewNotification, NewPage, NewPost, NewProject, Note, Notification, Page, PageMeta, Post, PostMeta, Profile, Project } from "./types";
 import {
   parseComment,
   parseMagazine,
@@ -30,6 +30,7 @@ import {
   magazinesDir,
   noteFile,
   notesDir,
+  notificationsFile,
   pageFile,
   pagesDir,
   postDir,
@@ -519,6 +520,64 @@ export class GitHubContentStore implements ContentStore {
     if (existing) await this.client.deleteFile(path, `Delete page: @${handle}/${slug}`, existing.sha);
   }
 
+  // ---- Notifications ----
+
+  async listNotifications(handle: string): Promise<Notification[]> {
+    const file = await this.client.getFile(notificationsFile(handle));
+    if (!file) return [];
+    try {
+      const parsed: { notifications?: unknown } = JSON.parse(file.content);
+      const arr = Array.isArray(parsed.notifications) ? parsed.notifications : null;
+      if (!arr) return [];
+      return arr
+        .filter((x): x is Record<string, unknown> => typeof x === "object" && x !== null)
+        .map((x) => parseNotification(x))
+        .filter((n): n is Notification => n !== null)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    } catch {
+      return [];
+    }
+  }
+
+  async addNotification(handle: string, notification: NewNotification, now: Date): Promise<Notification> {
+    const full: Notification = {
+      id: `ntf-${now.toISOString().replace(/[:.]/g, "-")}`,
+      handle,
+      date: now.toISOString(),
+      read: false,
+      ...notification,
+    };
+    await this.writeNotifications(handle, (current) => [full, ...current].slice(0, MAX_NOTIFICATIONS));
+    return full;
+  }
+
+  async markNotificationsRead(handle: string): Promise<number> {
+    let marked = 0;
+    await this.writeNotifications(handle, (current) =>
+      current.map((n) => {
+        if (n.read) return n;
+        marked += 1;
+        return { ...n, read: true };
+      }),
+    );
+    return marked;
+  }
+
+  private async writeNotifications(
+    handle: string,
+    update: (current: Notification[]) => Notification[],
+  ): Promise<void> {
+    const path = notificationsFile(handle);
+    const existing = await this.client.getFile(path);
+    const current = existing ? await this.listNotifications(handle) : [];
+    await this.client.putTextFile(
+      path,
+      JSON.stringify({ notifications: update(current) }, null, 2),
+      `Update notifications for @${handle}`,
+      existing?.sha,
+    );
+  }
+
   async listTags(): Promise<TagInfo[]> {
     const counts = new Map<string, number>();
     for (const handle of await this.listHandles()) {
@@ -573,4 +632,29 @@ export class GitHubContentStore implements ContentStore {
       }
     }
   }
+}
+
+const MAX_NOTIFICATIONS = 100;
+
+function parseNotification(x: Record<string, unknown>): Notification | null {
+  const id = typeof x.id === "string" ? x.id : "";
+  const handle = typeof x.handle === "string" ? x.handle : "";
+  const actor = typeof x.actor === "string" ? x.actor : "";
+  const date = typeof x.date === "string" ? x.date : "";
+  const type = x.type;
+  if (!id || !handle || !actor || !date || (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow")) {
+    return null;
+  }
+  return {
+    id,
+    handle,
+    actor,
+    date,
+    read: x.read === true,
+    type,
+    ...(typeof x.postHandle === "string" && x.postHandle ? { postHandle: x.postHandle } : {}),
+    ...(typeof x.postSlug === "string" && x.postSlug ? { postSlug: x.postSlug } : {}),
+    ...(typeof x.commentId === "string" && x.commentId ? { commentId: x.commentId } : {}),
+    ...(typeof x.body === "string" && x.body ? { body: x.body } : {}),
+  };
 }
