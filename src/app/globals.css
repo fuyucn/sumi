@@ -292,7 +292,24 @@ body {
 
 /* TipTap / ProseMirror prose surface */
 .ProseMirror {
-  @apply prose prose-stone max-w-none min-h-[50vh] focus:outline-none;
+  @apply prose max-w-none min-h-[50vh] focus:outline-none;
+  --tw-prose-body: var(--color-ink-soft);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-lead: var(--color-ink-muted);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-counters: var(--color-ink-muted);
+  --tw-prose-bullets: var(--color-line-strong);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-quotes: var(--color-ink-soft);
+  --tw-prose-quote-borders: var(--color-seal);
+  --tw-prose-captions: var(--color-ink-muted);
+  --tw-prose-kbd: var(--color-ink);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-pre-code: var(--color-ink-soft);
+  --tw-prose-pre-bg: var(--color-paper-deep);
+  --tw-prose-th-borders: var(--color-line-strong);
+  --tw-prose-td-borders: var(--color-line);
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
