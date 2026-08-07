@@ -15,12 +15,17 @@ export function buildContentStore(token: string, repo: string): ContentStore {
 /**
  * Build the Postgres mirror content store (DbContentStore) when `DB_MIRROR=1`
  * and a DATABASE_URL is configured. Returns null when the mirror is disabled.
+ * Cached per process: `createDb` opens one connection and never closes it, so
+ * building a store per request would exhaust the database's connection budget.
  */
+let _dbContentStore: ContentStore | null | undefined;
 export async function getDbContentStore(): Promise<ContentStore | null> {
   if (!env.DB_MIRROR) return null;
+  if (_dbContentStore !== undefined) return _dbContentStore;
   const { createDb } = await import("@/lib/db");
   const { DbContentStore } = await import("./db-content-store");
-  return new DbContentStore(createDb(env.DATABASE_URL) as never);
+  _dbContentStore = new DbContentStore(createDb(env.DATABASE_URL) as never);
+  return _dbContentStore;
 }
 
 /**

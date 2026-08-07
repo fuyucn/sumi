@@ -23,10 +23,16 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
       >
         {date}
       </time>
-      <div className="relative z-10">
-        <h2 className="font-serif text-2xl font-medium leading-snug tracking-tight text-ink transition-all duration-300 group-hover:translate-x-1 group-hover:text-seal">
-          {post.title}
-        </h2>
+      <div className="pointer-events-none relative z-10">
+        <Link
+          href={`/@${handle}/${post.slug}`}
+          className="pointer-events-auto block"
+          aria-label={post.title}
+        >
+          <h2 className="font-serif text-2xl font-medium leading-snug tracking-tight text-ink transition-all duration-300 group-hover:translate-x-1 group-hover:text-seal">
+            {post.title}
+          </h2>
+        </Link>
         {post.excerpt ? (
           <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted line-clamp-2">
             {post.excerpt}
@@ -35,7 +41,7 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
           <Link
             href={`/@${handle}`}
-            className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+            className="link-underline pointer-events-auto font-medium text-ink-muted transition-colors hover:text-ink"
           >
             @{handle}
           </Link>
@@ -51,7 +57,7 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
               <Link
                 key={t}
                 href={`/tag/${encodeURIComponent(t)}`}
-                className="transition-colors hover:text-seal"
+                className="pointer-events-auto transition-colors hover:text-seal"
               >
                 #{t}
               </Link>
