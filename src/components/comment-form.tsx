@@ -53,14 +53,14 @@ export function CommentForm({
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="Write a comment…"
-        className="mt-2 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
+        className="field mt-2"
       />
       {error ? <p className="mt-2 text-sm text-seal">{error}</p> : null}
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
           disabled={isPending || body.trim().length === 0}
-          className="rounded-full bg-ink px-4 py-1.5 font-medium text-paper hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary"
         >
           {isPending ? "Posting…" : "Comment"}
         </button>

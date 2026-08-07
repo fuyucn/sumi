@@ -23,7 +23,7 @@ export default async function MagazinesPage() {
         </h1>
         <Link
           href="/write/magazines/new"
-          className="rounded-full bg-ink px-4 py-1.5 font-medium text-paper hover:bg-ink-soft"
+          className="btn-primary px-4 py-1.5"
         >
           New magazine
         </Link>

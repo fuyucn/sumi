@@ -63,7 +63,7 @@ export default async function NotesPage({
       {notes.length === 0 ? (
         <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
           {isOwner
-            ? "No notes yet — pin your first thought above."
+            ? "No notes yet. Pin your first thought above."
             : "No notes yet."}
         </p>
       ) : (

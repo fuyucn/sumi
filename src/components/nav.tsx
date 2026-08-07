@@ -68,7 +68,7 @@ export function Nav() {
                 aria-current={isActive(`/@${handle}`, true) ? "page" : undefined}
               >
                 <User size={15} weight="duotone" aria-hidden />
-                <span>@{handle}</span>
+                <span className="hidden sm:inline">@{handle}</span>
               </Link>
               <Link
                 href="/settings"
@@ -80,7 +80,7 @@ export function Nav() {
               </Link>
               <Link
                 href="/write"
-                className="press ml-1 flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 font-medium text-paper transition-colors hover:bg-ink-soft"
+                className="btn-primary ml-1 px-4 py-1.5"
               >
                 <Feather size={15} weight="duotone" aria-hidden />
                 Write

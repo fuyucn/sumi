@@ -261,3 +261,96 @@ body {
   height: 0;
   pointer-events: none;
 }
+
+/* Shared component tokens: fields, buttons, and card surfaces so every form
+   and action speaks the same shape language (input 10 / card 14 / pill 999). */
+@layer components {
+  .field {
+    width: 100%;
+    border-radius: var(--radius-input);
+    border: 1px solid var(--color-line-strong);
+    background-color: var(--color-paper);
+    padding: 0.5rem 0.75rem;
+    color: var(--color-ink);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+  .field::placeholder {
+    color: var(--color-ink-faint);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-seal);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-seal) 22%, transparent);
+  }
+  .field:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .card {
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-line);
+    background-color: var(--color-paper);
+    box-shadow: var(--shadow-card);
+  }
+
+  .btn-primary,
+  .btn-seal,
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-pill);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease,
+      border-color 0.2s ease,
+      transform 0.12s ease,
+      opacity 0.2s ease;
+  }
+  .btn-primary:active,
+  .btn-seal:active,
+  .btn-ghost:active {
+    transform: translateY(1px) scale(0.98);
+  }
+  .btn-primary:disabled,
+  .btn-seal:disabled,
+  .btn-ghost:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .btn-primary {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+    padding: 0.5rem 1.25rem;
+  }
+  .btn-primary:hover {
+    background-color: var(--color-ink-soft);
+  }
+
+  .btn-seal {
+    background-color: var(--color-seal);
+    color: var(--color-paper);
+    padding: 0.375rem 0.75rem;
+  }
+  .btn-seal:hover {
+    background-color: var(--color-seal-soft);
+  }
+
+  .btn-ghost {
+    border: 1px solid var(--color-line-strong);
+    background-color: transparent;
+    color: var(--color-ink-soft);
+    padding: 0.375rem 1rem;
+  }
+  .btn-ghost:hover {
+    background-color: color-mix(in srgb, var(--color-ink) 3%, transparent);
+    color: var(--color-ink);
+  }
+}

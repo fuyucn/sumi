@@ -31,11 +31,11 @@ export default async function SearchPage({
           defaultValue={query}
           placeholder="Search posts…"
           aria-label="Search posts"
-          className="min-w-0 flex-1 rounded-[10px] border border-line-strong bg-paper px-4 py-2 text-ink placeholder:text-ink-faint transition-colors focus:border-seal/60"
+          className="field min-w-0 flex-1"
         />
         <button
           type="submit"
-          className="rounded-full bg-ink px-5 py-2 font-medium text-paper transition-colors hover:bg-ink-soft"
+          className="btn-primary shrink-0 px-5"
         >
           Search
         </button>

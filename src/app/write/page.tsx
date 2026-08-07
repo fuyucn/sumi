@@ -40,7 +40,7 @@ function PostRow({ post, handle, isDraft }: { post: PostMeta; handle: string; is
           </span>
           <Link
             href={editHref}
-            className="rounded-full border border-line-strong px-3 py-1 text-sm text-ink-soft transition-colors hover:bg-ink/[0.03]"
+            className="btn-ghost px-3 py-1"
           >
             Edit
           </Link>
@@ -140,7 +140,7 @@ export default async function WriteDashboard() {
         </div>
         <Link
           href="/write/new"
-          className="shrink-0 rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition-colors hover:bg-ink-soft"
+          className="btn-primary shrink-0 px-5"
         >
           + New post
         </Link>
@@ -149,7 +149,7 @@ export default async function WriteDashboard() {
       {posts.length === 0 ? (
         <div className="border-t border-line py-24 text-center">
           <p className="font-serif text-lg text-ink-muted">Nothing here yet.</p>
-          <p className="mt-2 text-sm text-ink-faint">Start your first post — it autosaves to your browser as you type.</p>
+          <p className="mt-2 text-sm text-ink-faint">Start your first post. It autosaves to your browser as you type.</p>
         </div>
       ) : (
         <>

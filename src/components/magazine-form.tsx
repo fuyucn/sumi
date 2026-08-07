@@ -67,7 +67,7 @@ export function MagazineForm({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Magazine title"
-          className="mt-2 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
+          className="field mt-2"
         />
       </label>
       <label className="mt-6 block">
@@ -77,7 +77,7 @@ export function MagazineForm({
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional description"
           rows={3}
-          className="mt-2 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
+          className="field mt-2 resize-y"
         />
       </label>
       <fieldset className="mt-6">
@@ -109,7 +109,7 @@ export function MagazineForm({
             type="button"
             onClick={handleDelete}
             disabled={busy}
-            className="rounded-full border border-line-strong px-4 py-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-seal disabled:opacity-40"
+            className="btn-ghost text-ink-muted hover:text-seal"
           >
             Delete
           </button>
@@ -117,7 +117,7 @@ export function MagazineForm({
         <button
           type="submit"
           disabled={busy}
-          className="ml-auto rounded-full bg-ink px-4 py-1.5 font-medium text-paper hover:bg-ink-soft disabled:opacity-40"
+          className="btn-primary ml-auto"
         >
           {busy ? "Saving…" : "Save"}
         </button>

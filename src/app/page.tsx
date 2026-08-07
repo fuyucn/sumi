@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
+import { Reveal } from "@/components/reveal";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -41,12 +42,12 @@ export default async function Home() {
             <span className="text-seal">.</span>
           </h1>
           <p className="mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
-            A quiet place for your words. Ink on paper, committed to Git, read
-            at your own pace.
+            Your words, inked onto warm paper and kept in your own Git
+            repository. Write, note, and share at your own pace.
           </p>
           <Link
             href="/write"
-            className="press mt-8 inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-medium text-paper transition-colors hover:bg-ink-soft"
+            className="btn-primary mt-8 px-6 py-3"
           >
             Start writing
           </Link>
@@ -104,20 +105,22 @@ export default async function Home() {
         </aside>
       </section>
 
-      <dl className="mt-14 grid grid-cols-3 divide-x divide-line border-y border-line">
-        {[
-          { label: "Posts", value: feed.length },
-          { label: "Writers", value: creators },
-          { label: "Tags", value: totalTags },
-        ].map((stat) => (
-          <div key={stat.label} className="px-5 py-5 sm:px-8">
-            <dt className="text-xs tracking-wide text-ink-faint">{stat.label}</dt>
-            <dd className="mt-1 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums">
-              {stat.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <Reveal as="section">
+        <dl className="mt-14 grid grid-cols-3 divide-x divide-line border-y border-line">
+          {[
+            { label: "Posts", value: feed.length },
+            { label: "Writers", value: creators },
+            { label: "Tags", value: totalTags },
+          ].map((stat) => (
+            <div key={stat.label} className="px-5 py-5 sm:px-8">
+              <dt className="text-xs tracking-wide text-ink-faint">{stat.label}</dt>
+              <dd className="mt-1 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums">
+                {stat.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </Reveal>
 
       <section className="mt-20 lg:mt-28">
         <div className="flex items-end justify-between gap-6 border-b border-line pb-4">
@@ -142,16 +145,16 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-line">
+          <Reveal as="div" className="divide-y divide-line">
             {feed.slice(0, 6).map(({ handle, post }) => (
               <PostCard key={`${handle}/${post.slug}`} handle={handle} post={post} />
             ))}
-          </div>
+          </Reveal>
         )}
       </section>
 
       {tags.length > 0 ? (
-        <section className="mt-20">
+        <Reveal as="section" className="mt-20">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
             Filed under
           </h2>
@@ -171,7 +174,7 @@ export default async function Home() {
               </Link>
             ))}
           </div>
-        </section>
+        </Reveal>
       ) : null}
     </main>
   );

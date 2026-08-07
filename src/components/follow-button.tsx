@@ -42,7 +42,7 @@ export function FollowButton({
       className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
         following
           ? "border-line-strong bg-ink text-paper hover:bg-ink/90"
-          : "border-seal bg-seal text-white hover:bg-seal/90"
+          : "border-seal bg-seal text-paper hover:bg-seal/90"
       }`}
     >
       {following ? "Following" : "Follow"}

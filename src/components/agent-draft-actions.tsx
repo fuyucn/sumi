@@ -27,7 +27,7 @@ export function AgentDraftActions({ handle, slug }: { handle: string; slug: stri
         type="button"
         disabled={isPending}
         onClick={() => run(approveAgentDraftAction)}
-        className="rounded-full bg-seal px-3 py-1 text-sm font-medium text-paper transition-colors hover:bg-seal/90 disabled:cursor-not-allowed disabled:opacity-50"
+        className="btn-seal"
       >
         {isPending ? "…" : "Approve & publish"}
       </button>

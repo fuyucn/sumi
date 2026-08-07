@@ -20,7 +20,7 @@ export default async function FriendsPage() {
         Friends
       </h1>
       <p className="mt-2 font-serif text-lg text-ink-muted">
-        友链 · a little ring of the web.
+        A small ring of the web, a few links worth keeping.
       </p>
 
       {signedIn ? (
@@ -32,7 +32,7 @@ export default async function FriendsPage() {
       {friends.length === 0 ? (
         <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
           {signedIn
-            ? "No friends yet — add your first link above."
+            ? "No friends yet. Add your first link above."
             : "No friends yet."}
         </p>
       ) : (
@@ -40,7 +40,7 @@ export default async function FriendsPage() {
           {friends.map((friend) => (
             <li
               key={friend.id}
-              className="group flex items-start gap-3 rounded border border-line-strong bg-paper p-4 shadow-sm transition-shadow hover:shadow-md"
+              className="card group flex items-start gap-3 p-4 transition-shadow hover:shadow-card-hover"
             >
               {friend.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element

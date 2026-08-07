@@ -54,7 +54,7 @@ export function ProfileForm({
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
           placeholder="How readers should know you"
-          className="mt-1 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
+          className="field mt-1"
         />
       </div>
       <div>
@@ -67,7 +67,7 @@ export function ProfileForm({
           onChange={(e) => setBio(e.target.value)}
           rows={4}
           placeholder="A few words about you and your writing"
-          className="mt-1 w-full rounded border border-line-strong bg-paper px-3 py-2 text-ink focus:outline-none"
+          className="field mt-1 resize-y"
         />
       </div>
       {error ? <p className="text-sm text-seal">{error}</p> : null}
@@ -76,7 +76,7 @@ export function ProfileForm({
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-full bg-ink px-4 py-1.5 font-medium text-paper hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary"
         >
           {isPending ? "Saving…" : "Save"}
         </button>

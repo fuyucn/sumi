@@ -93,8 +93,8 @@ export function PostForm({
             {new Date(recoveredAt).toLocaleTimeString("en-US", {
               hour: "2-digit",
               minute: "2-digit",
-            })}{" "}
-            — you can keep writing from where you left off.
+            })}
+            . You can keep writing from where you left off.
           </span>
           <button
             type="button"
@@ -133,14 +133,14 @@ export function PostForm({
         <button
           disabled={busy}
           onClick={() => submit(false)}
-          className="rounded-full border border-line-strong px-4 py-2 text-sm font-medium text-ink-soft transition-colors hover:bg-ink/[0.03] disabled:opacity-40"
+          className="btn-ghost px-4"
         >
           Save draft
         </button>
         <button
           disabled={busy}
           onClick={() => submit(true)}
-          className="rounded-full bg-ink px-5 py-2 text-sm font-medium text-paper transition-colors hover:bg-ink-soft disabled:opacity-40"
+          className="btn-primary px-5"
         >
           {busy ? "Publishing…" : "Publish"}
         </button>

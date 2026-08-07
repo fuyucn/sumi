@@ -24,7 +24,7 @@ export function NoteComposer({ handle }: { handle: string }) {
           }
         });
       }}
-      className="rounded border border-line-strong bg-paper p-4 shadow-sm"
+      className="card p-4"
     >
       <label htmlFor="note-body" className="block text-sm text-ink-muted">
         Write as @{handle}
@@ -35,7 +35,7 @@ export function NoteComposer({ handle }: { handle: string }) {
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="A fleeting thought… (Markdown ok)"
-        className="mt-2 w-full resize-y rounded border border-line-strong bg-paper px-3 py-2 text-ink placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-seal"
+        className="field mt-2 resize-y"
       />
       {error ? <p className="mt-2 text-sm text-seal">{error}</p> : null}
       <div className="mt-3 flex items-center justify-between">
@@ -43,7 +43,7 @@ export function NoteComposer({ handle }: { handle: string }) {
         <button
           type="submit"
           disabled={isPending || body.trim().length === 0}
-          className="press rounded-full bg-ink px-4 py-1.5 font-medium text-paper transition-colors hover:bg-ink-soft disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary"
         >
           {isPending ? "Pinning…" : "Post note"}
         </button>
