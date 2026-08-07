@@ -113,3 +113,140 @@ export function parseNote(
     body: content.trim(),
   };
 }
+
+// ---- Projects (showcase) ----
+
+export function serializeProject(project: {
+  slug: string;
+  handle: string;
+  title: string;
+  description?: string;
+  url?: string;
+  repo?: string;
+  tech?: string[];
+  coverImage?: string;
+  featured?: boolean;
+  order?: number;
+  createdAt: string;
+  updatedAt: string;
+}): string {
+  const data: Record<string, unknown> = {
+    title: project.title,
+    createdAt: project.createdAt,
+    updatedAt: project.updatedAt,
+  };
+  if (project.description) data.description = project.description;
+  if (project.url) data.url = project.url;
+  if (project.repo) data.repo = project.repo;
+  if (project.tech && project.tech.length > 0) data.tech = project.tech;
+  if (project.coverImage) data.coverImage = project.coverImage;
+  if (project.featured) data.featured = true;
+  if (project.order !== undefined && project.order !== 0) data.order = project.order;
+  return matter.stringify("", data);
+}
+
+export function parseProject(
+  md: string,
+  slug: string,
+  handle: string,
+): {
+  slug: string;
+  handle: string;
+  title: string;
+  description?: string;
+  url?: string;
+  repo?: string;
+  tech?: string[];
+  coverImage?: string;
+  featured?: boolean;
+  order?: number;
+  createdAt: string;
+  updatedAt: string;
+} {
+  const { data } = matter(md);
+  return {
+    slug,
+    handle,
+    title: typeof data.title === "string" ? data.title : slug,
+    ...(typeof data.description === "string" ? { description: data.description } : {}),
+    ...(typeof data.url === "string" ? { url: data.url } : {}),
+    ...(typeof data.repo === "string" ? { repo: data.repo } : {}),
+    ...(Array.isArray(data.tech) ? { tech: data.tech.map(String) } : {}),
+    ...(typeof data.coverImage === "string" ? { coverImage: data.coverImage } : {}),
+    ...(data.featured === true ? { featured: true } : {}),
+    ...(typeof data.order === "number" ? { order: data.order } : {}),
+    createdAt: typeof data.createdAt === "string" ? data.createdAt : "",
+    updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : "",
+  };
+}
+
+// ---- Independent pages (自定义独立页) ----
+
+export function serializePage(page: {
+  slug: string;
+  handle: string;
+  title: string;
+  description?: string;
+  showInNav?: boolean;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}): string {
+  const data: Record<string, unknown> = {
+    title: page.title,
+    createdAt: page.createdAt,
+    updatedAt: page.updatedAt,
+  };
+  if (page.description) data.description = page.description;
+  if (page.showInNav) data.showInNav = true;
+  return matter.stringify(page.body, data);
+}
+
+export function parsePageMeta(
+  md: string,
+  slug: string,
+): {
+  slug: string;
+  title: string;
+  description?: string;
+  showInNav?: boolean;
+  createdAt: string;
+  updatedAt: string;
+} {
+  const { data } = matter(md);
+  return {
+    slug,
+    title: typeof data.title === "string" ? data.title : slug,
+    ...(typeof data.description === "string" ? { description: data.description } : {}),
+    ...(data.showInNav === true ? { showInNav: true } : {}),
+    createdAt: typeof data.createdAt === "string" ? data.createdAt : "",
+    updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : "",
+  };
+}
+
+export function parsePage(
+  md: string,
+  slug: string,
+  handle: string,
+): {
+  slug: string;
+  handle: string;
+  title: string;
+  description?: string;
+  showInNav?: boolean;
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+} {
+  const { data, content } = matter(md);
+  return {
+    slug,
+    title: typeof data.title === "string" ? data.title : slug,
+    ...(typeof data.description === "string" ? { description: data.description } : {}),
+    ...(data.showInNav === true ? { showInNav: true } : {}),
+    createdAt: typeof data.createdAt === "string" ? data.createdAt : "",
+    updatedAt: typeof data.updatedAt === "string" ? data.updatedAt : "",
+    handle,
+    body: content.trimEnd(),
+  };
+}

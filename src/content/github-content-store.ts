@@ -1,17 +1,22 @@
 import type { GitHubClient } from "@/lib/github";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, Profile, Project } from "./types";
 import {
   parseComment,
   parseMagazine,
   parseNote,
+  parsePage,
+  parsePageMeta,
   parsePost,
   parseProfile,
+  parseProject,
   serializeComment,
   serializeMagazine,
   serializeNote,
+  serializePage,
   serializePost,
   serializeProfile,
+  serializeProject,
 } from "./frontmatter";
 import {
   CONTENT_DIR,
@@ -25,9 +30,13 @@ import {
   magazinesDir,
   noteFile,
   notesDir,
+  pageFile,
+  pagesDir,
   postDir,
   postFile,
   profileFile,
+  projectFile,
+  projectsDir,
   safeCommentName,
   safeNoteName,
   slugify,
@@ -397,6 +406,118 @@ export class GitHubContentStore implements ContentStore {
     if (existing) await this.client.deleteFile(path, `Delete magazine: @${handle}/${slug}`, existing.sha);
   }
 
+  // ---- Projects (showcase) ----
+
+  async listProjects(handle: string): Promise<Project[]> {
+    let entries;
+    try {
+      entries = await this.client.listDir(projectsDir(handle));
+    } catch {
+      return [];
+    }
+    const out: Project[] = [];
+    for (const entry of entries) {
+      if (entry.type !== "file" || !entry.name.endsWith(".md")) continue;
+      const file = await this.client.getFile(entry.path);
+      if (!file) continue;
+      out.push(parseProject(file.content, entry.name.slice(0, -3), handle));
+    }
+    out.sort(
+      (a, b) =>
+        (b.featured ? 1 : 0) - (a.featured ? 1 : 0) ||
+        (a.order ?? 99) - (b.order ?? 99) ||
+        a.title.localeCompare(b.title),
+    );
+    return out;
+  }
+
+  async getProject(handle: string, slug: string): Promise<Project | null> {
+    const file = await this.client.getFile(projectFile(handle, slug));
+    if (!file) return null;
+    return parseProject(file.content, slug, handle);
+  }
+
+  async saveProject(handle: string, project: NewProject): Promise<string> {
+    const slug = slugify(project.title);
+    const path = projectFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    const existingProject = existing ? parseProject(existing.content, slug, handle) : null;
+    const now = new Date().toISOString();
+    const full: Project = {
+      slug,
+      handle,
+      title: project.title,
+      createdAt: existingProject?.createdAt || now,
+      updatedAt: now,
+      ...(project.description !== undefined && project.description ? { description: project.description } : {}),
+      ...(project.url !== undefined && project.url ? { url: project.url } : {}),
+      ...(project.repo !== undefined && project.repo ? { repo: project.repo } : {}),
+      ...(project.tech && project.tech.length > 0 ? { tech: project.tech } : {}),
+      ...(project.coverImage !== undefined && project.coverImage ? { coverImage: project.coverImage } : {}),
+      ...(project.featured ? { featured: true } : {}),
+      ...(project.order !== undefined && project.order !== 0 ? { order: project.order } : {}),
+    };
+    await this.client.putTextFile(path, serializeProject(full), `Save project: @${handle}/${slug}`, existing?.sha);
+    return slug;
+  }
+
+  async deleteProject(handle: string, slug: string): Promise<void> {
+    const path = projectFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    if (existing) await this.client.deleteFile(path, `Delete project: @${handle}/${slug}`, existing.sha);
+  }
+
+  // ---- Independent pages (自定义独立页) ----
+
+  async listPages(handle: string): Promise<PageMeta[]> {
+    let entries;
+    try {
+      entries = await this.client.listDir(pagesDir(handle));
+    } catch {
+      return [];
+    }
+    const out: PageMeta[] = [];
+    for (const entry of entries) {
+      if (entry.type !== "file" || !entry.name.endsWith(".md")) continue;
+      const file = await this.client.getFile(entry.path);
+      if (!file) continue;
+      out.push(parsePageMeta(file.content, entry.name.slice(0, -3)));
+    }
+    out.sort((a, b) => b.createdAt.localeCompare(a.createdAt) || a.title.localeCompare(b.title));
+    return out;
+  }
+
+  async getPage(handle: string, slug: string): Promise<Page | null> {
+    const file = await this.client.getFile(pageFile(handle, slug));
+    if (!file) return null;
+    return parsePage(file.content, slug, handle);
+  }
+
+  async savePage(handle: string, page: NewPage): Promise<string> {
+    const slug = slugify(page.title);
+    const path = pageFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    const existingPage = existing ? parsePage(existing.content, slug, handle) : null;
+    const now = new Date().toISOString();
+    const full: Page = {
+      slug,
+      handle,
+      title: page.title,
+      body: page.body,
+      createdAt: existingPage?.createdAt || now,
+      updatedAt: now,
+      ...(page.description !== undefined && page.description ? { description: page.description } : {}),
+      ...(page.showInNav ? { showInNav: true } : {}),
+    };
+    await this.client.putTextFile(path, serializePage(full), `Save page: @${handle}/${slug}`, existing?.sha);
+    return slug;
+  }
+
+  async deletePage(handle: string, slug: string): Promise<void> {
+    const path = pageFile(handle, slug);
+    const existing = await this.client.getFile(path);
+    if (existing) await this.client.deleteFile(path, `Delete page: @${handle}/${slug}`, existing.sha);
+  }
 
   async listTags(): Promise<TagInfo[]> {
     const counts = new Map<string, number>();

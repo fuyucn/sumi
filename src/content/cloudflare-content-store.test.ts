@@ -109,6 +109,32 @@ CREATE TABLE IF NOT EXISTS friends (
   bio TEXT,
   created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS projects (
+  handle TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  url TEXT,
+  repo TEXT,
+  tech TEXT NOT NULL DEFAULT '[]',
+  cover_image TEXT,
+  featured INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (handle, slug)
+);
+CREATE TABLE IF NOT EXISTS pages (
+  handle TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  body TEXT NOT NULL,
+  show_in_nav INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (handle, slug)
+);
 `;
 
 function fakeBucket(): R2BucketLike & { map: Map<string, Uint8Array> } {
@@ -266,6 +292,61 @@ test("magazine CRUD", async () => {
   await store.deleteMagazine("alice", "my-zine");
   expect(await store.getMagazine("alice", "my-zine")).toBeNull();
   expect(await store.listMagazines("alice")).toEqual([]);
+});
+
+test("projects + pages round-trip with featured-first ordering", async () => {
+  const { store } = inMemoryStore();
+  const pslug = await store.saveProject("alice", {
+    title: "Sumi Engine",
+    description: "d",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+  expect(pslug).toBe("sumi-engine");
+  expect(await store.getProject("alice", "sumi-engine")).toMatchObject({
+    slug: "sumi-engine",
+    handle: "alice",
+    title: "Sumi Engine",
+    description: "d",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+
+  await store.saveProject("alice", { title: "Zeta", order: 1 });
+  await store.saveProject("alice", { title: "Alpha", featured: true, order: 1 });
+  expect((await store.listProjects("alice")).map((p) => p.title)).toEqual([
+    "Alpha",
+    "Sumi Engine",
+    "Zeta",
+  ]);
+
+  const pgSlug = await store.savePage("alice", {
+    title: "About",
+    description: "who",
+    body: "# hi",
+    showInNav: true,
+  });
+  expect(pgSlug).toBe("about");
+  expect(await store.getPage("alice", "about")).toMatchObject({
+    slug: "about",
+    handle: "alice",
+    title: "About",
+    description: "who",
+    body: "# hi",
+    showInNav: true,
+  });
+  expect((await store.listPages("alice")).map((p) => p.slug)).toEqual(["about"]);
+
+  await store.deleteProject("alice", "sumi-engine");
+  await store.deletePage("alice", "about");
+  expect(await store.getProject("alice", "sumi-engine")).toBeNull();
+  expect(await store.getPage("alice", "about")).toBeNull();
 });
 
 test("comments list/add round-trip sorted by date", async () => {

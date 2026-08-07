@@ -57,6 +57,9 @@ export default function RootLayout({
               <Link href="/archive" className="link-underline transition-colors hover:text-ink-muted">
                 Archive
               </Link>
+              <Link href="/projects" className="link-underline transition-colors hover:text-ink-muted">
+                Projects
+              </Link>
               <Link href="/tags" className="link-underline transition-colors hover:text-ink-muted">
                 Tags
               </Link>

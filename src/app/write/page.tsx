@@ -179,6 +179,34 @@ export default async function WriteDashboard() {
           ) : null}
         </>
       )}
+      <section className="mt-12">
+        <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
+          Collections
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link
+            href="/write/magazines"
+            className="card group flex items-center justify-between"
+          >
+            <span className="font-serif text-lg font-medium text-ink">Magazines</span>
+            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+          </Link>
+          <Link
+            href="/write/projects"
+            className="card group flex items-center justify-between"
+          >
+            <span className="font-serif text-lg font-medium text-ink">Projects</span>
+            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+          </Link>
+          <Link
+            href="/write/pages"
+            className="card group flex items-center justify-between"
+          >
+            <span className="font-serif text-lg font-medium text-ink">Pages</span>
+            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+          </Link>
+        </div>
+      </section>
       <AgentReviewSection agentDrafts={agentDrafts} />
     </main>
   );

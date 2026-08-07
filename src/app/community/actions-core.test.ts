@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment } from "@/content/types";
-import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runGetLikeState, runSaveMagazine, runSaveProfile, runToggleFollow, runToggleLike } from "./actions-core";
+import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runDeletePage, runDeleteProject, runGetLikeState, runSaveMagazine, runSavePage, runSaveProfile, runSaveProject, runToggleFollow, runToggleLike } from "./actions-core";
 
 function fakeStore(): ContentStore {
   return {
@@ -33,6 +33,14 @@ function fakeStore(): ContentStore {
     async getMagazine() { return null; },
     async saveMagazine(handle, m) { return m.title.toLowerCase().replace(/\s+/g, "-"); },
     async deleteMagazine() {},
+    async listProjects() { return []; },
+    async getProject() { return null; },
+    async saveProject() { return "proj"; },
+    async deleteProject() {},
+    async listPages() { return []; },
+    async getPage() { return null; },
+    async savePage() { return "pg"; },
+    async deletePage() {},
     async listTags() { return []; },
     async searchPosts() { return []; },
   };
@@ -75,6 +83,43 @@ test("magazine save + delete", async () => {
   const del = await runDeleteMagazine(deps, "my-zine");
   expect(del.ok).toBe(true);
   const guardDel = await runDeleteMagazine({ userId: null, handle: null, store: null }, "my-zine");
+  expect(guardDel.ok).toBe(false);
+});
+
+test("project save validates URL, guards, and deletes", async () => {
+  const guard = await runSaveProject({ userId: null, handle: null, store: null }, { title: "X" });
+  expect(guard.ok).toBe(false);
+  const empty = await runSaveProject(deps, { title: "   " });
+  expect(empty.ok).toBe(false);
+  const badUrl = await runSaveProject(deps, { title: "Sumi", url: "not-a-url", tech: ["next"] });
+  expect(badUrl.ok).toBe(false);
+  const ok = await runSaveProject(deps, {
+    title: "Sumi Engine",
+    description: "d",
+    url: "https://sumi.example",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+  expect(ok.ok).toBe(true);
+  if (ok.ok) expect(ok.data.slug).toBe("proj");
+  const del = await runDeleteProject(deps, "sumi-engine");
+  expect(del.ok).toBe(true);
+  const guardDel = await runDeleteProject({ userId: null, handle: null, store: null }, "sumi-engine");
+  expect(guardDel.ok).toBe(false);
+});
+
+test("page save guards, rejects empty body, and deletes", async () => {
+  const guard = await runSavePage({ userId: null, handle: null, store: null }, { title: "X", body: "x" });
+  expect(guard.ok).toBe(false);
+  const empty = await runSavePage(deps, { title: "About", body: "   " });
+  expect(empty.ok).toBe(false);
+  const ok = await runSavePage(deps, { title: " About ", description: "who", body: "# hi", showInNav: true });
+  expect(ok.ok).toBe(true);
+  if (ok.ok) expect(ok.data.slug).toBe("pg");
+  const del = await runDeletePage(deps, "about");
+  expect(del.ok).toBe(true);
+  const guardDel = await runDeletePage({ userId: null, handle: null, store: null }, "about");
   expect(guardDel.ok).toBe(false);
 });
 

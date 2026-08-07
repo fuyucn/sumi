@@ -84,3 +84,31 @@ CREATE TABLE IF NOT EXISTS friends (
   bio TEXT,
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS projects (
+  handle TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  url TEXT,
+  repo TEXT,
+  tech TEXT NOT NULL DEFAULT '[]',
+  cover_image TEXT,
+  featured INTEGER NOT NULL DEFAULT 0,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (handle, slug)
+);
+
+CREATE TABLE IF NOT EXISTS pages (
+  handle TEXT NOT NULL,
+  slug TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT,
+  body TEXT NOT NULL,
+  show_in_nav INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (handle, slug)
+);

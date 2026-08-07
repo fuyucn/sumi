@@ -1,4 +1,4 @@
-import { boolean, customType, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, customType, integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
 
 // drizzle-orm/pg-core has no built-in bytea helper; use a custom type so the
 // DB mirror can store raw image bytes.
@@ -150,6 +150,40 @@ export const sumiFriends = pgTable("sumi_friends", {
   createdAt: text("created_at").notNull(),
 });
 
+export const sumiProjects = pgTable(
+  "sumi_projects",
+  {
+    handle: text("handle").notNull(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    url: text("url"),
+    repo: text("repo"),
+    tech: text("tech").notNull().default("[]"),
+    coverImage: text("cover_image"),
+    featured: boolean("featured").notNull().default(false),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.handle, t.slug] })],
+);
+
+export const sumiPages = pgTable(
+  "sumi_pages",
+  {
+    handle: text("handle").notNull(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    body: text("body").notNull(),
+    showInNav: boolean("show_in_nav").notNull().default(false),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.handle, t.slug] })],
+);
+
 // Images stored by the Postgres mirror backend (DbContentStore). The GitHub /
 // Cloudflare backends own their own object stores; the DB mirror needs a home
 // for agent/user-uploaded images so the whole publishing flow works on
@@ -192,6 +226,8 @@ export const schema = {
   sumiProfiles,
   sumiNotes,
   sumiFriends,
+  sumiProjects,
+  sumiPages,
   sumiImages,
   agentKeys,
 };

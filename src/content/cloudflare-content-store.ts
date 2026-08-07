@@ -1,4 +1,4 @@
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, PostStatus, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
@@ -75,6 +75,32 @@ interface FriendRow {
   avatar: string | null;
   bio: string | null;
   created_at: string;
+}
+
+interface ProjectRow {
+  handle: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  repo: string | null;
+  tech: string;
+  cover_image: string | null;
+  featured: number;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PageRow {
+  handle: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  body: string;
+  show_in_nav: number;
+  created_at: string;
+  updated_at: string;
 }
 
 function parseTags(raw: string | null): string[] {
@@ -430,6 +456,91 @@ export class CloudflareContentStore implements ContentStore {
     await this.run(`DELETE FROM magazines WHERE handle = ? AND slug = ?`, handle, slug);
   }
 
+  // ---- Projects (showcase) ----
+
+  async listProjects(handle: string): Promise<Project[]> {
+    const rows = await this.rows<ProjectRow>(
+      `SELECT * FROM projects WHERE handle = ? ORDER BY featured DESC, sort_order ASC, title ASC`,
+      handle,
+    );
+    return rows.map((r) => toProject(r));
+  }
+
+  async getProject(handle: string, slug: string): Promise<Project | null> {
+    const row = await this.row<ProjectRow>(
+      `SELECT * FROM projects WHERE handle = ? AND slug = ?`,
+      handle,
+      slug,
+    );
+    return row ? toProject(row) : null;
+  }
+
+  async saveProject(handle: string, project: NewProject): Promise<string> {
+    const slug = slugify(project.title);
+    const now = new Date().toISOString();
+    await this.run(
+      `INSERT INTO projects (handle, slug, title, description, url, repo, tech, cover_image, featured, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (handle, slug) DO UPDATE SET
+         title = excluded.title,
+         description = excluded.description,
+         url = excluded.url,
+         repo = excluded.repo,
+         tech = excluded.tech,
+         cover_image = excluded.cover_image,
+         featured = excluded.featured,
+         sort_order = excluded.sort_order,
+         updated_at = excluded.updated_at`,
+      handle, slug, project.title, project.description ?? null, project.url ?? null, project.repo ?? null,
+      JSON.stringify(project.tech ?? []), project.coverImage ?? null, project.featured ? 1 : 0, project.order ?? 0, now, now,
+    );
+    return slug;
+  }
+
+  async deleteProject(handle: string, slug: string): Promise<void> {
+    await this.run(`DELETE FROM projects WHERE handle = ? AND slug = ?`, handle, slug);
+  }
+
+  // ---- Independent pages (自定义独立页) ----
+
+  async listPages(handle: string): Promise<PageMeta[]> {
+    const rows = await this.rows<PageRow>(
+      `SELECT * FROM pages WHERE handle = ? ORDER BY created_at DESC`,
+      handle,
+    );
+    return rows.map((r) => toPageMeta(r));
+  }
+
+  async getPage(handle: string, slug: string): Promise<Page | null> {
+    const row = await this.row<PageRow>(
+      `SELECT * FROM pages WHERE handle = ? AND slug = ?`,
+      handle,
+      slug,
+    );
+    return row ? toPage(row) : null;
+  }
+
+  async savePage(handle: string, page: NewPage): Promise<string> {
+    const slug = slugify(page.title);
+    const now = new Date().toISOString();
+    await this.run(
+      `INSERT INTO pages (handle, slug, title, description, body, show_in_nav, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (handle, slug) DO UPDATE SET
+         title = excluded.title,
+         description = excluded.description,
+         body = excluded.body,
+         show_in_nav = excluded.show_in_nav,
+         updated_at = excluded.updated_at`,
+      handle, slug, page.title, page.description ?? null, page.body, page.showInNav ? 1 : 0, now, now,
+    );
+    return slug;
+  }
+
+  async deletePage(handle: string, slug: string): Promise<void> {
+    await this.run(`DELETE FROM pages WHERE handle = ? AND slug = ?`, handle, slug);
+  }
+
   // ---- Tags ----
 
   async listTags(): Promise<TagInfo[]> {
@@ -521,4 +632,36 @@ function toMagazine(r: MagazineRow): Magazine {
     items: parseItems(r.items),
     ...(r.description !== null ? { description: r.description } : {}),
   };
+}
+
+function toProject(r: ProjectRow): Project {
+  return {
+    slug: r.slug,
+    handle: r.handle,
+    title: r.title,
+    tech: parseItems(r.tech),
+    featured: r.featured === 1,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    ...(r.description !== null ? { description: r.description } : {}),
+    ...(r.url !== null ? { url: r.url } : {}),
+    ...(r.repo !== null ? { repo: r.repo } : {}),
+    ...(r.cover_image !== null ? { coverImage: r.cover_image } : {}),
+    ...(r.sort_order !== 0 ? { order: r.sort_order } : {}),
+  };
+}
+
+function toPageMeta(r: PageRow): PageMeta {
+  return {
+    slug: r.slug,
+    title: r.title,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    ...(r.description !== null ? { description: r.description } : {}),
+    ...(r.show_in_nav === 1 ? { showInNav: true } : {}),
+  };
+}
+
+function toPage(r: PageRow): Page {
+  return { ...toPageMeta(r), handle: r.handle, body: r.body };
 }

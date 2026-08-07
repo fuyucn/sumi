@@ -87,6 +87,7 @@ export function collectSitemapUrls(posts: PublicPostRef[], baseUrl: string): str
   const base = baseUrl.replace(/\/$/, "");
   const urls = [`${base}/`];
   urls.push(`${base}/archive`);
+  urls.push(`${base}/projects`);
   for (const handle of [...new Set(posts.map((p) => p.handle))].sort()) {
     urls.push(`${base}/@${handle}`);
   }

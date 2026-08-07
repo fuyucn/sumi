@@ -122,6 +122,22 @@ notifications, native mobile app.
   (`estimateReadingTime` in `src/lib/reading-time.ts`); CJK characters count as
   words, code fences/images/link URLs are ignored.
 
+### FR-13 Projects showcase & independent pages (NEW — this PRD)
+- Projects library at `/projects`: every creator's featured work, card grid with
+  title, description, tech stack, links (site + repo), and cover image. Sorting
+  is featured-first, then explicit order, then title.
+- Creator's own `/write/projects` list + editor (`project-form.tsx`): title,
+  description, URL, repo, tech stack via a searchable tag picker, cover image,
+  featured flag, and sort order. `saveProjectAction`/`deleteProjectAction` gate
+  on sign-in and validate URL/required fields.
+- Independent pages (自定义独立页) at `/@handle/p/<slug>`: arbitrary markdown
+  pages per creator with optional `showInNav` link on their homepage. Editor at
+  `/write/pages` uses the shared Tiptap `Editor`; `savePageAction`/
+  `deletePageAction` gate on sign-in and require a title + body.
+- All CRUD lands in the same content layout (GitHub `content/@<handle>/projects|pages`,
+  Postgres `sumi_projects`/`sumi_pages`, D1 `projects`/`pages`) and stays out of
+  `listPosts`; pages registered in the sitemap collector.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -141,12 +157,13 @@ notifications, native mobile app.
 - [x] Handnotes (手记) timeline at `/[handle]/notes` with an inline composer for the owner; newest first.
 - [x] Friends (友链) page at `/friends` with add/remove for signed-in creators; works on all three backends.
 - [x] `/archive` renders published posts grouped by year; article bylines show reading time + word count.
+- [x] `/projects` showcases featured work; `/@handle/p/<slug>` renders custom markdown pages; both are editable in `/write` and work on all three backends.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Notifications; projects showcase; independent pages (自定义独立页).
+- Notifications; agent/automation content generation; per-project gallery images.
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced

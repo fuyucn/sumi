@@ -23,6 +23,29 @@ export const magazineFormSchema = z.object({
   items: z.array(z.string().trim().min(1)).default([]),
 });
 
+export const projectFormSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(120),
+  description: z.string().trim().max(2000).default(""),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .default("")
+    .refine((u) => u === "" || /^https?:\/\//i.test(u), "URL must start with http:// or https://"),
+  repo: z.string().trim().max(500).default(""),
+  tech: z.array(z.string().trim().min(1)).default([]),
+  coverImage: z.string().trim().max(500).default(""),
+  featured: z.boolean().default(false),
+  order: z.coerce.number().int().min(0).max(999).default(0),
+});
+
+export const pageFormSchema = z.object({
+  title: z.string().trim().min(1, "Title is required").max(120),
+  description: z.string().trim().max(500).default(""),
+  body: z.string().trim().min(1, "Content is required").max(100_000),
+  showInNav: z.boolean().default(false),
+});
+
 export const likeFormSchema = z.object({
   postHandle: z.string().trim().min(1),
   slug: z.string().trim().min(1),
@@ -241,6 +264,68 @@ export async function runDeleteMagazine(deps: SessionDeps, slug: string): Promis
   if (err) return { ok: false, error: err };
   if (!slug) return { ok: false, error: "Missing magazine slug." };
   await deps.store!.deleteMagazine(deps.handle!, slug);
+  return { ok: true, data: null };
+}
+
+export async function runSaveProject(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ slug: string }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = projectFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const slug = await deps.store!.saveProject(deps.handle!, {
+    title: f.title,
+    tech: f.tech,
+    featured: f.featured,
+    order: f.order,
+    ...(f.description ? { description: f.description } : {}),
+    ...(f.url ? { url: f.url } : {}),
+    ...(f.repo ? { repo: f.repo } : {}),
+    ...(f.coverImage ? { coverImage: f.coverImage } : {}),
+  });
+  return { ok: true, data: { slug } };
+}
+
+export async function runDeleteProject(deps: SessionDeps, slug: string): Promise<ActionResult<null>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  if (!slug) return { ok: false, error: "Missing project slug." };
+  await deps.store!.deleteProject(deps.handle!, slug);
+  return { ok: true, data: null };
+}
+
+export async function runSavePage(
+  deps: SessionDeps,
+  form: unknown,
+): Promise<ActionResult<{ slug: string }>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  let f;
+  try {
+    f = pageFormSchema.parse(form);
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Invalid input" };
+  }
+  const slug = await deps.store!.savePage(deps.handle!, {
+    title: f.title,
+    body: f.body,
+    showInNav: f.showInNav,
+    ...(f.description ? { description: f.description } : {}),
+  });
+  return { ok: true, data: { slug } };
+}
+
+export async function runDeletePage(deps: SessionDeps, slug: string): Promise<ActionResult<null>> {
+  const err = guard(deps);
+  if (err) return { ok: false, error: err };
+  if (!slug) return { ok: false, error: "Missing page slug." };
+  await deps.store!.deletePage(deps.handle!, slug);
   return { ok: true, data: null };
 }
 

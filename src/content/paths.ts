@@ -70,6 +70,18 @@ export function notesDir(handle: string): string {
 export function noteFile(handle: string, id: string): string {
   return `${notesDir(handle)}/${id}.md`;
 }
+export function projectsDir(handle: string): string {
+  return `${userDir(handle)}/projects`;
+}
+export function projectFile(handle: string, slug: string): string {
+  return `${projectsDir(handle)}/${slug}.md`;
+}
+export function pagesDir(handle: string): string {
+  return `${userDir(handle)}/pages`;
+}
+export function pageFile(handle: string, slug: string): string {
+  return `${pagesDir(handle)}/${slug}.md`;
+}
 /** Site-wide friend links live in a single JSON file at the content root. */
 export function friendsFile(): string {
   return `${CONTENT_DIR}/friends.json`;

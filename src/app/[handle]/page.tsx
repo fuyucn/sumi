@@ -20,6 +20,8 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   if (!store) notFound();
   const posts = await store.listPosts({ handle, status: "published" });
   const notes = await store.listNotes(handle);
+  const projects = await store.listProjects(handle);
+  const pages = (await store.listPages(handle)).filter((p) => p.showInNav);
   const profile = await store.getProfile(handle);
   const hasProfile = !!(profile && (profile.displayName || profile.bio));
   const user = await getCurrentUser();
@@ -50,6 +52,23 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           >
             {notes.length} {notes.length === 1 ? "note" : "notes"} →
           </Link>
+          {projects.length > 0 ? (
+            <Link
+              href="/projects"
+              className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              {projects.length} {projects.length === 1 ? "project" : "projects"} →
+            </Link>
+          ) : null}
+          {pages.map((page) => (
+            <Link
+              key={page.slug}
+              href={`/@${handle}/p/${page.slug}`}
+              className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              {page.title} →
+            </Link>
+          ))}
           {signedInHandle !== null && signedInHandle !== handle ? (
             <FollowButton
               handle={handle}

@@ -85,3 +85,47 @@ export interface Friend extends NewFriend {
   id: string;
   createdAt: string; // ISO 8601
 }
+
+// ---- Projects (showcase) ----
+
+export interface NewProject {
+  title: string;
+  description?: string;
+  url?: string;
+  repo?: string;
+  tech?: string[];
+  coverImage?: string;
+  featured?: boolean;
+  /** Lower number sorts first within the same featured tier. */
+  order?: number;
+}
+
+export interface Project extends NewProject {
+  slug: string;
+  handle: string;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+// ---- Independent pages (自定义独立页) ----
+
+export interface NewPage {
+  title: string;
+  description?: string;
+  body: string;
+  showInNav?: boolean;
+}
+
+export interface PageMeta {
+  slug: string;
+  title: string;
+  description?: string;
+  showInNav?: boolean;
+  createdAt: string; // ISO 8601
+  updatedAt: string; // ISO 8601
+}
+
+export interface Page extends PageMeta {
+  handle: string;
+  body: string;
+}

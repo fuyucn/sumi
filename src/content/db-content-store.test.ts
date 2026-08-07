@@ -86,6 +86,32 @@ CREATE TABLE "sumi_friends" (
   "bio" text,
   "created_at" text NOT NULL
 );
+CREATE TABLE "sumi_projects" (
+  "handle" text NOT NULL,
+  "slug" text NOT NULL,
+  "title" text NOT NULL,
+  "description" text,
+  "url" text,
+  "repo" text,
+  "tech" text DEFAULT '[]' NOT NULL,
+  "cover_image" text,
+  "featured" boolean DEFAULT false NOT NULL,
+  "sort_order" integer DEFAULT 0 NOT NULL,
+  "created_at" text NOT NULL,
+  "updated_at" text NOT NULL,
+  CONSTRAINT "sumi_projects_handle_slug_pk" PRIMARY KEY("handle","slug")
+);
+CREATE TABLE "sumi_pages" (
+  "handle" text NOT NULL,
+  "slug" text NOT NULL,
+  "title" text NOT NULL,
+  "description" text,
+  "body" text NOT NULL,
+  "show_in_nav" boolean DEFAULT false NOT NULL,
+  "created_at" text NOT NULL,
+  "updated_at" text NOT NULL,
+  CONSTRAINT "sumi_pages_handle_slug_pk" PRIMARY KEY("handle","slug")
+);
 `;
 
 async function makeStore() {
@@ -174,6 +200,61 @@ test("profile + magazine round-trip", async () => {
   });
   await store.deleteMagazine("alice", "my-zine");
   expect(await store.getMagazine("alice", "my-zine")).toBeNull();
+});
+
+test("projects + pages round-trip with featured-first ordering", async () => {
+  const { store } = await makeStore();
+  const pslug = await store.saveProject("alice", {
+    title: "Sumi Engine",
+    description: "d",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+  expect(pslug).toBe("sumi-engine");
+  expect(await store.getProject("alice", "sumi-engine")).toMatchObject({
+    slug: "sumi-engine",
+    handle: "alice",
+    title: "Sumi Engine",
+    description: "d",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+
+  await store.saveProject("alice", { title: "Zeta", order: 1 });
+  await store.saveProject("alice", { title: "Alpha", featured: true, order: 1 });
+  expect((await store.listProjects("alice")).map((p) => p.title)).toEqual([
+    "Alpha",
+    "Sumi Engine",
+    "Zeta",
+  ]);
+
+  const pgSlug = await store.savePage("alice", {
+    title: "About",
+    description: "who",
+    body: "# hi",
+    showInNav: true,
+  });
+  expect(pgSlug).toBe("about");
+  expect(await store.getPage("alice", "about")).toMatchObject({
+    slug: "about",
+    handle: "alice",
+    title: "About",
+    description: "who",
+    body: "# hi",
+    showInNav: true,
+  });
+  expect((await store.listPages("alice")).map((p) => p.slug)).toEqual(["about"]);
+
+  await store.deleteProject("alice", "sumi-engine");
+  await store.deletePage("alice", "about");
+  expect(await store.getProject("alice", "sumi-engine")).toBeNull();
+  expect(await store.getPage("alice", "about")).toBeNull();
 });
 
 test("listTags counts published posts only, newest-used sort, drafts excluded", async () => {

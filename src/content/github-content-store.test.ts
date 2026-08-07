@@ -237,6 +237,81 @@ test("magazines dir does not leak into listPosts", async () => {
   expect(posts.map((p) => p.slug)).toEqual(["one"]);
 });
 
+// ---- Projects / Pages ----
+test("project CRUD, featured-first ordering, and delete", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const slug = await store.saveProject("alice", {
+    title: "Sumi Engine",
+    description: "a full-stack space",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+  expect(slug).toBe("sumi-engine");
+  const project = await store.getProject("alice", "sumi-engine");
+  expect(project).toMatchObject({
+    slug: "sumi-engine",
+    handle: "alice",
+    title: "Sumi Engine",
+    description: "a full-stack space",
+    url: "https://sumi.example",
+    repo: "https://github.com/example/sumi",
+    tech: ["next", "drizzle"],
+    featured: true,
+    order: 2,
+  });
+  expect(project?.createdAt).toBeTruthy();
+  expect(project?.updatedAt).toBeTruthy();
+
+  // featured sorts first, order breaks ties within a tier, title breaks the rest
+  await store.saveProject("alice", { title: "Alpha", order: 1 });
+  await store.saveProject("alice", { title: "Beta", featured: true, order: 1 });
+  expect((await store.listProjects("alice")).map((p) => p.title)).toEqual([
+    "Beta",
+    "Sumi Engine",
+    "Alpha",
+  ]);
+
+  await store.deleteProject("alice", "sumi-engine");
+  expect(await store.getProject("alice", "sumi-engine")).toBeNull();
+});
+
+test("page CRUD and delete", async () => {
+  const store = new GitHubContentStore(fakeClient());
+  const slug = await store.savePage("alice", {
+    title: "About Me",
+    description: "who I am",
+    body: "# About\n\nhello",
+    showInNav: true,
+  });
+  expect(slug).toBe("about-me");
+  const page = await store.getPage("alice", "about-me");
+  expect(page).toMatchObject({
+    slug: "about-me",
+    handle: "alice",
+    title: "About Me",
+    description: "who I am",
+    body: "# About\n\nhello",
+    showInNav: true,
+  });
+  expect((await store.listPages("alice")).map((p) => p.slug)).toEqual(["about-me"]);
+  await store.deletePage("alice", "about-me");
+  expect(await store.getPage("alice", "about-me")).toBeNull();
+  expect(await store.listPages("alice")).toEqual([]);
+});
+
+test("projects and pages dirs do not leak into listPosts", async () => {
+  const client = fakeClient();
+  const store = new GitHubContentStore(client);
+  await store.savePost("alice", { title: "One", body: "a", status: "published" });
+  await store.saveProject("alice", { title: "Proj" });
+  await store.savePage("alice", { title: "Page", body: "x" });
+  const posts = await store.listPosts({ handle: "alice" });
+  expect(posts.map((p) => p.slug)).toEqual(["one"]);
+});
+
 // ---- Tags ----
 test("listTags counts published post tags across handles, drafts excluded, sorted by count desc then name asc", async () => {
   const client = fakeClient();

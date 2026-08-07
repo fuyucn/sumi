@@ -10,11 +10,13 @@ import {
   sumiLikes,
   sumiMagazines,
   sumiNotes,
+  sumiPages,
   sumiPosts,
   sumiProfiles,
+  sumiProjects,
 } from "@/db/schema";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
-import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPost, Note, Post, PostMeta, PostStatus, Profile } from "./types";
+import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewPage, NewPost, NewProject, Note, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
 import { slugify } from "./paths";
 import { rankRows } from "./search-rank";
 
@@ -55,6 +57,32 @@ interface MagazineRow {
   title: string;
   description: string | null;
   items: string;
+}
+
+interface ProjectRow {
+  handle: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  url: string | null;
+  repo: string | null;
+  tech: string;
+  coverImage: string | null;
+  featured: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface PageRow {
+  handle: string;
+  slug: string;
+  title: string;
+  description: string | null;
+  body: string;
+  showInNav: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 function parseJsonList(raw: string | null): string[] {
@@ -459,6 +487,122 @@ export class DbContentStore implements ContentStore {
       .where(sql`${sumiMagazines.handle} = ${handle} AND ${sumiMagazines.slug} = ${slug}`);
   }
 
+  // ---- Projects (showcase) ----
+
+  async listProjects(handle: string): Promise<Project[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiProjects)
+      .where(sql`${sumiProjects.handle} = ${handle}`)
+      .orderBy(sql`${sumiProjects.featured} DESC, ${sumiProjects.sortOrder} ASC, ${sumiProjects.title} ASC`);
+    return rows.map((r) => toProject(r));
+  }
+
+  async getProject(handle: string, slug: string): Promise<Project | null> {
+    const rows = await this.db
+      .select()
+      .from(sumiProjects)
+      .where(sql`${sumiProjects.handle} = ${handle} AND ${sumiProjects.slug} = ${slug}`)
+      .limit(1);
+    return rows.length ? toProject(rows[0]) : null;
+  }
+
+  async saveProject(handle: string, project: NewProject): Promise<string> {
+    const slug = slugify(project.title);
+    const now = new Date().toISOString();
+    await this.db
+      .insert(sumiProjects)
+      .values({
+        handle,
+        slug,
+        title: project.title,
+        description: project.description ?? null,
+        url: project.url ?? null,
+        repo: project.repo ?? null,
+        tech: JSON.stringify(project.tech ?? []),
+        coverImage: project.coverImage ?? null,
+        featured: project.featured ?? false,
+        sortOrder: project.order ?? 0,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [sumiProjects.handle, sumiProjects.slug],
+        set: {
+          title: project.title,
+          description: project.description ?? null,
+          url: project.url ?? null,
+          repo: project.repo ?? null,
+          tech: JSON.stringify(project.tech ?? []),
+          coverImage: project.coverImage ?? null,
+          featured: project.featured ?? false,
+          sortOrder: project.order ?? 0,
+          updatedAt: now,
+        },
+      });
+    return slug;
+  }
+
+  async deleteProject(handle: string, slug: string): Promise<void> {
+    await this.db
+      .delete(sumiProjects)
+      .where(sql`${sumiProjects.handle} = ${handle} AND ${sumiProjects.slug} = ${slug}`);
+  }
+
+  // ---- Independent pages (自定义独立页) ----
+
+  async listPages(handle: string): Promise<PageMeta[]> {
+    const rows = await this.db
+      .select()
+      .from(sumiPages)
+      .where(sql`${sumiPages.handle} = ${handle}`)
+      .orderBy(sql`${sumiPages.createdAt} DESC`);
+    return rows.map((r) => toPageMeta(r));
+  }
+
+  async getPage(handle: string, slug: string): Promise<Page | null> {
+    const rows = await this.db
+      .select()
+      .from(sumiPages)
+      .where(sql`${sumiPages.handle} = ${handle} AND ${sumiPages.slug} = ${slug}`)
+      .limit(1);
+    return rows.length ? toPage(rows[0]) : null;
+  }
+
+  async savePage(handle: string, page: NewPage): Promise<string> {
+    const slug = slugify(page.title);
+    const now = new Date().toISOString();
+    await this.db
+      .insert(sumiPages)
+      .values({
+        handle,
+        slug,
+        title: page.title,
+        description: page.description ?? null,
+        body: page.body,
+        showInNav: page.showInNav ?? false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: [sumiPages.handle, sumiPages.slug],
+        set: {
+          title: page.title,
+          description: page.description ?? null,
+          body: page.body,
+          showInNav: page.showInNav ?? false,
+          updatedAt: now,
+        },
+      });
+    return slug;
+  }
+
+  async deletePage(handle: string, slug: string): Promise<void> {
+    await this.db
+      .delete(sumiPages)
+      .where(sql`${sumiPages.handle} = ${handle} AND ${sumiPages.slug} = ${slug}`);
+  }
+
   // ---- Tags ----
 
   async listTags(): Promise<TagInfo[]> {
@@ -537,4 +681,36 @@ function toMagazine(r: MagazineRow): Magazine {
     items: parseJsonList(r.items),
     ...(r.description !== null ? { description: r.description } : {}),
   };
+}
+
+function toProject(r: ProjectRow): Project {
+  return {
+    slug: r.slug,
+    handle: r.handle,
+    title: r.title,
+    tech: parseJsonList(r.tech),
+    featured: r.featured,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    ...(r.description !== null ? { description: r.description } : {}),
+    ...(r.url !== null ? { url: r.url } : {}),
+    ...(r.repo !== null ? { repo: r.repo } : {}),
+    ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),
+    ...(r.sortOrder !== 0 ? { order: r.sortOrder } : {}),
+  };
+}
+
+function toPageMeta(r: PageRow): PageMeta {
+  return {
+    slug: r.slug,
+    title: r.title,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    ...(r.description !== null ? { description: r.description } : {}),
+    ...(r.showInNav ? { showInNav: true } : {}),
+  };
+}
+
+function toPage(r: PageRow): Page {
+  return { ...toPageMeta(r), handle: r.handle, body: r.body };
 }

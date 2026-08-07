@@ -7,7 +7,11 @@ import {
   runDeleteComment,
   runDeleteFriend,
   runDeleteMagazine,
+  runDeletePage,
+  runDeleteProject,
   runDeleteNote,
+  runSavePage,
+  runSaveProject,
   runSaveMagazine,
   runSaveProfile,
   runToggleFollow,
@@ -48,6 +52,22 @@ export async function saveMagazineAction(form: unknown) {
 
 export async function deleteMagazineAction(slug: string) {
   return runDeleteMagazine(await resolveDeps(), slug);
+}
+
+export async function saveProjectAction(form: unknown) {
+  return runSaveProject(await resolveDeps(), form);
+}
+
+export async function deleteProjectAction(slug: string) {
+  return runDeleteProject(await resolveDeps(), slug);
+}
+
+export async function savePageAction(form: unknown) {
+  return runSavePage(await resolveDeps(), form);
+}
+
+export async function deletePageAction(slug: string) {
+  return runDeletePage(await resolveDeps(), slug);
 }
 
 export async function toggleLikeAction(form: unknown) {

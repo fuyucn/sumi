@@ -75,4 +75,38 @@ export const friends = sqliteTable("friends", {
   createdAt: text("created_at").notNull(),
 });
 
-export const schema = { posts, comments, magazines, profiles, notes, friends };
+export const projects = sqliteTable(
+  "projects",
+  {
+    handle: text("handle").notNull(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    url: text("url"),
+    repo: text("repo"),
+    tech: text("tech").notNull().default("[]"),
+    coverImage: text("cover_image"),
+    featured: integer("featured").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.handle, t.slug] })],
+);
+
+export const pages = sqliteTable(
+  "pages",
+  {
+    handle: text("handle").notNull(),
+    slug: text("slug").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    body: text("body").notNull(),
+    showInNav: integer("show_in_nav").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.handle, t.slug] })],
+);
+
+export const schema = { posts, comments, magazines, profiles, notes, friends, projects, pages };
