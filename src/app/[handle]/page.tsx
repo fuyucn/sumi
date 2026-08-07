@@ -7,6 +7,7 @@ import { CreatorMagazines } from "@/components/creator-magazines";
 import { FollowButton } from "@/components/follow-button";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const projects = await store.listProjects(handle);
   const pages = (await store.listPages(handle)).filter((p) => p.showInNav);
   const profile = await store.getProfile(handle);
+  const authorName = displayName(handle, profile);
   const hasProfile = !!(profile && (profile.displayName || profile.bio));
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
@@ -38,7 +40,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
           <CreatorProfile handle={handle} />
         ) : (
           <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
-            @{handle}
+            {authorName}
           </h1>
         )}
         <div className="mt-3 flex flex-wrap items-center gap-4">
@@ -85,7 +87,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {posts.map((post) => (
-            <PostCard key={post.slug} handle={handle} post={post} />
+            <PostCard key={post.slug} handle={handle} post={post} authorName={authorName} />
           ))}
         </div>
       )}

@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addNoteAction } from "@/app/community/actions";
+import { AuthorName } from "@/components/author-name";
 
 export function NoteComposer({ handle }: { handle: string }) {
   const router = useRouter();
@@ -27,7 +28,7 @@ export function NoteComposer({ handle }: { handle: string }) {
       className="card p-4"
     >
       <label htmlFor="note-body" className="block text-sm text-ink-muted">
-        Write as @{handle}
+        Write as <AuthorName handle={handle} />
       </label>
       <textarea
         id="note-body"

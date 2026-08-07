@@ -3,9 +3,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+  Article,
   Bell,
   Feather,
   GearSix,
+  House,
   MagnifyingGlass,
   SignIn,
   Tag,
@@ -13,6 +15,7 @@ import {
 } from "@phosphor-icons/react";
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AuthorName } from "@/components/author-name";
 
 export function Nav() {
   const { data } = useSession();
@@ -63,20 +66,28 @@ export function Nav() {
         </Link>
         <nav className="flex items-center gap-1 text-sm">
           <Link
+            href="/"
+            className={linkClass(isActive("/"))}
+            aria-current={isActive("/") ? "page" : undefined}
+          >
+            <House size={15} weight="duotone" aria-hidden />
+            <span className="hidden sm:inline">Home</span>
+          </Link>
+          <Link
+            href="/archive"
+            className={linkClass(isActive("/archive"))}
+            aria-current={isActive("/archive") ? "page" : undefined}
+          >
+            <Article size={15} weight="duotone" aria-hidden />
+            <span className="hidden sm:inline">Posts</span>
+          </Link>
+          <Link
             href="/search"
             className={linkClass(isActive("/search"))}
             aria-current={isActive("/search") ? "page" : undefined}
           >
             <MagnifyingGlass size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Search</span>
-          </Link>
-          <Link
-            href="/tags"
-            className={linkClass(isActive("/tags") || isActive("/tag/", true))}
-            aria-current={isActive("/tags") || isActive("/tag/", true) ? "page" : undefined}
-          >
-            <Tag size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Tags</span>
+            <span className="hidden sm:inline">Index</span>
           </Link>
           {handle ? (
             <>
@@ -100,7 +111,9 @@ export function Nav() {
                 aria-current={isActive(`/@${handle}`, true) ? "page" : undefined}
               >
                 <User size={15} weight="duotone" aria-hidden />
-                <span className="hidden sm:inline">@{handle}</span>
+                <span className="hidden sm:inline">
+                  <AuthorName handle={handle} />
+                </span>
               </Link>
               <Link
                 href="/settings"
@@ -128,6 +141,14 @@ export function Nav() {
               <span className="hidden sm:inline">Sign in</span>
             </Link>
           )}
+          <Link
+            href="/tags"
+            className={linkClass(isActive("/tags") || isActive("/tag/", true))}
+            aria-current={isActive("/tags") || isActive("/tag/", true) ? "page" : undefined}
+          >
+            <Tag size={15} weight="duotone" aria-hidden />
+            <span className="hidden sm:inline">Tags</span>
+          </Link>
         </nav>
         <ThemeToggle />
       </div>

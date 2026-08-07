@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,8 @@ async function load(handleRaw: string, slugRaw: string) {
   const handle = handleParam.slice(1);
   const page = await store.getPage(handle, decodeURIComponent(slugRaw));
   if (!page) return null;
-  return { handle, page };
+  const authorName = displayName(handle, await store.getProfile(handle));
+  return { handle, page, authorName };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string; slug: string }> }): Promise<Metadata> {
@@ -41,7 +43,7 @@ export default async function IndependentPage({ params }: { params: Promise<{ ha
             href={`/@${data.handle}`}
             className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            @{data.handle}
+            {data.authorName}
           </Link>
           {page.description ? (
             <>

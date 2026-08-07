@@ -4,12 +4,14 @@ import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { Reveal } from "@/components/reveal";
 import { env } from "@/lib/env";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
   const feed = await listFeed();
   const store = await getReadContentStore();
+  const names = await getDisplayNameMap(feed.map(({ handle }) => handle));
   const tags = (await store?.listTags()) ?? [];
   const creators = new Set(feed.map(({ handle }) => handle)).size;
   const totalTags = tags.reduce((sum, t) => sum + t.count, 0);
@@ -74,7 +76,7 @@ export default async function Home() {
                   {featured.post.title}
                 </h2>
                 <p className="mt-1.5 text-sm text-ink-faint">
-                  @{featured.handle}
+                  {names.get(featured.handle)}
                   {featured.post.publishedAt
                     ? ` · ${new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
                         year: "numeric",
@@ -147,7 +149,12 @@ export default async function Home() {
         ) : (
           <Reveal as="div" className="divide-y divide-line">
             {feed.slice(0, 6).map(({ handle, post }) => (
-              <PostCard key={`${handle}/${post.slug}`} handle={handle} post={post} />
+              <PostCard
+                key={`${handle}/${post.slug}`}
+                handle={handle}
+                post={post}
+                authorName={names.get(handle)}
+              />
             ))}
           </Reveal>
         )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { listFeed, type FeedItem } from "@/content/feed";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ function formatDay(iso: string): string {
 
 export default async function ArchivePage() {
   const feed = await listFeed();
+  const names = await getDisplayNameMap(feed.map(({ handle }) => handle));
   const groups = groupByYear(feed);
 
   return (
@@ -80,7 +82,7 @@ export default async function ArchivePage() {
                         {post.title}
                       </Link>
                       <p className="mt-1 text-sm text-ink-faint">
-                        @{handle}
+                        {names.get(handle)}
                         {post.tags.length > 0
                           ? ` · ${post.tags.map((t) => `#${t}`).join(" ")}`
                           : ""}

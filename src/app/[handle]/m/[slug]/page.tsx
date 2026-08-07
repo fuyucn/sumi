@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getReadContentStore } from "@/content";
 import type { Post } from "@/content/types";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function MagazinePage({
   if (!store) notFound();
   const mag = await store.getMagazine(handle, magSlug);
   if (!mag) notFound();
+  const authorName = displayName(handle, await store.getProfile(handle));
 
   const posts = (
     await Promise.all((mag.items ?? []).map((s) => store!.getPost(handle, s)))
@@ -30,7 +32,7 @@ export default async function MagazinePage({
         href={`/@${handle}`}
         className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
       >
-        @{handle}
+        {authorName}
       </Link>
       <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-ink">
         {mag.title}

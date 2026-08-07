@@ -5,6 +5,7 @@ import { getUserHandle } from "@/lib/user";
 import { getAiStore, getContentStoreForUser } from "@/content";
 import { ProfileForm } from "@/components/profile-form";
 import { AiProviderForm } from "@/components/ai-provider-form";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
   if (!handle) redirect("/sign-in");
   const store = await getContentStoreForUser(user.id);
   const profile = (await store?.getProfile(handle)) ?? {};
+  const authorName = displayName(handle, profile);
   const aiStore = await getAiStore();
   const provider = aiStore ? await aiStore.getProvider(handle) : null;
 
@@ -28,7 +30,7 @@ export default async function SettingsPage() {
           href={`/@${handle}`}
           className="link-underline text-ink-muted transition-colors hover:text-ink"
         >
-          @{handle}
+          {authorName}
         </Link>
       </p>
       <div className="mt-10">
@@ -36,7 +38,7 @@ export default async function SettingsPage() {
           Profile
         </h2>
         <div className="mt-5">
-          <ProfileForm initial={profile} />
+          <ProfileForm initial={profile} handle={handle} />
         </div>
       </div>
       <div className="mt-12">

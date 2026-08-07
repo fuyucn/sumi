@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import type { Project } from "@/content/types";
 import { ProjectGallery } from "@/components/project-gallery";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,7 @@ function repoUrl(repo: string): string | null {
 
 export default async function ProjectsPage() {
   const items = await loadProjects();
+  const names = await getDisplayNameMap(items.map(({ handle }) => handle));
 
   return (
     <main className="max-w-4xl mx-auto px-5 pt-14 pb-24 rise">
@@ -98,7 +100,7 @@ export default async function ProjectsPage() {
                       href={`/@${handle}`}
                       className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
                     >
-                      @{handle}
+                      {names.get(handle)}
                     </Link>
                     {project.repo && repoUrl(project.repo) ? (
                       <a

@@ -7,6 +7,7 @@ import { CommentForm } from "@/components/comment-form";
 import { ReplyComposer } from "@/components/reply-composer";
 import { DeleteCommentButton } from "@/components/delete-comment-button";
 import { replyAllowed } from "@/lib/comment-depth";
+import { AuthorName } from "@/components/author-name";
 import type { Comment } from "@/content/types";
 
 function indexByParent(comments: Comment[]): Map<string | null, Comment[]> {
@@ -40,7 +41,7 @@ function CommentNode({
       <div className="py-5 first:pt-0 last:pb-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <span className="link-underline font-medium text-ink-muted transition-colors hover:text-ink">
-            @{comment.handle}
+            <AuthorName handle={comment.handle} />
           </span>
           <span aria-hidden className="text-line-strong">
             ·

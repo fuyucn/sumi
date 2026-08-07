@@ -6,6 +6,7 @@ import { getContentStoreForUser } from "@/content";
 import type { Notification, NotificationType } from "@/content/types";
 import { NotificationIcon } from "@/components/notification-icon";
 import { markNotificationsReadAction } from "@/app/community/actions";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ function formatDate(iso: string): string {
   });
 }
 
-function NotificationRow({ n }: { n: Notification }) {
+function NotificationRow({ n, actorName }: { n: Notification; actorName: string }) {
   const label = typeLabel[n.type] ?? typeLabel.comment;
   const postHref = n.postHandle && n.postSlug ? `/@${n.postHandle}/${n.postSlug}` : null;
   const isAi = n.type === "ai";
@@ -53,7 +54,7 @@ function NotificationRow({ n }: { n: Notification }) {
               href={`/@${n.actor}`}
               className="link-underline font-medium text-ink transition-colors hover:text-seal"
             >
-              @{n.actor}
+              {actorName}
             </Link>
           )}{" "}
           {isAi ? (
@@ -96,6 +97,9 @@ export default async function NotificationsPage() {
   if (!handle) redirect("/sign-in");
   const store = await getContentStoreForUser(user.id);
   const notifications = (await store?.listNotifications(handle)) ?? [];
+  const names = await getDisplayNameMap(
+    notifications.map((n) => n.actor).filter((a): a is string => Boolean(a)),
+  );
   const unread = notifications.filter((n) => !n.read).length;
 
   return (
@@ -126,7 +130,11 @@ export default async function NotificationsPage() {
         <>
           <ul className="mt-10 divide-y divide-line border-y border-line">
             {notifications.map((n) => (
-              <NotificationRow key={n.id} n={n} />
+              <NotificationRow
+                key={n.id}
+                n={n}
+                actorName={n.actor ? names.get(n.actor) ?? `@${n.actor}` : ""}
+              />
             ))}
           </ul>
           {unread > 0 ? (

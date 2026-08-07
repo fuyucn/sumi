@@ -11,6 +11,7 @@ import { getUserHandle } from "@/lib/user";
 import { env } from "@/lib/env";
 import { estimateReadingTime } from "@/lib/reading-time";
 import { extractHeadings } from "@/lib/heading-slug";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,8 @@ async function load(handleRaw: string, slugRaw: string) {
   const handle = handleParam.slice(1);
   const post = await store.getPost(handle, decodeURIComponent(slugRaw));
   if (!post || post.status !== "published") return null;
-  return { handle, post, store };
+  const authorName = displayName(handle, await store.getProfile(handle));
+  return { handle, post, store, authorName };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ handle: string; slug: string }> }): Promise<Metadata> {
@@ -65,7 +67,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
             href={`/@${data.handle}`}
             className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            @{data.handle}
+            {data.authorName}
           </a>
           {post.agent ? (
             <>

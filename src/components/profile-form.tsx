@@ -5,8 +5,10 @@ import { saveProfileAction } from "@/app/community/actions";
 
 export function ProfileForm({
   initial,
+  handle,
 }: {
   initial?: { displayName?: string; bio?: string };
+  handle: string;
 }) {
   const router = useRouter();
   const [displayName, setDisplayName] = useState(initial?.displayName ?? "");
@@ -53,9 +55,12 @@ export function ProfileForm({
           type="text"
           value={displayName}
           onChange={(e) => setDisplayName(e.target.value)}
-          placeholder="How readers should know you"
+          placeholder={`@${handle}`}
           className="field mt-1"
         />
+        <p className="mt-1 text-xs text-ink-faint">
+          留空时对外显示为 @{handle}
+        </p>
       </div>
       <div>
         <label htmlFor="bio" className="text-sm font-medium text-ink-muted">

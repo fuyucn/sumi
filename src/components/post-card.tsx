@@ -1,7 +1,15 @@
 import Link from "next/link";
 import type { PostMeta } from "@/content/types";
 
-export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
+export function PostCard({
+  handle,
+  post,
+  authorName,
+}: {
+  handle: string;
+  post: PostMeta;
+  authorName?: string;
+}) {
   const date = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -43,7 +51,7 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
             href={`/@${handle}`}
             className="link-underline pointer-events-auto font-medium text-ink-muted transition-colors hover:text-ink"
           >
-            @{handle}
+            {authorName || `@${handle}`}
           </Link>
           {post.agent ? (
             <span className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium text-seal">

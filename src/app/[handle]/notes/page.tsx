@@ -6,6 +6,7 @@ import { getUserHandle } from "@/lib/user";
 import { Markdown } from "@/components/markdown";
 import { NoteComposer } from "@/components/note-composer";
 import { DeleteNoteButton } from "@/components/delete-note-button";
+import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function NotesPage({
   if (!store) notFound();
   const notes = await store.listNotes(handle);
   const profile = await store.getProfile(handle);
+  const authorName = displayName(handle, profile);
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
   const isOwner = signedInHandle === handle;
@@ -45,7 +47,7 @@ export default async function NotesPage({
         href={`/@${handle}`}
         className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
       >
-        @{handle}
+        {authorName}
       </Link>
       <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-ink">
         Notes

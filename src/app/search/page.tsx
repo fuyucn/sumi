@@ -1,5 +1,6 @@
 import { getReadContentStore } from "@/content";
 import { PostCard } from "@/components/post-card";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function SearchPage({
   const query = q.trim();
   const store = await getReadContentStore();
   const results = query ? (await store?.searchPosts(query)) ?? [] : null;
+  const names = results ? await getDisplayNameMap(results.map(({ handle }) => handle)) : new Map<string, string>();
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
@@ -51,7 +53,12 @@ export default async function SearchPage({
           {results && results.length > 0 ? (
             <div className="mt-4 divide-y divide-line border-t border-line">
               {results.map(({ handle, post }) => (
-                <PostCard key={`${handle}/${post.slug}`} handle={handle} post={post} />
+                <PostCard
+                  key={`${handle}/${post.slug}`}
+                  handle={handle}
+                  post={post}
+                  authorName={names.get(handle)}
+                />
               ))}
             </div>
           ) : null}

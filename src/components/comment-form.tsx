@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addCommentAction } from "@/app/community/actions";
+import { AuthorName } from "@/components/author-name";
 
 export function CommentForm({
   postHandle,
@@ -45,7 +46,7 @@ export function CommentForm({
       className={`${parentId ? "" : "mt-6"} min-w-0`}
     >
       <label className="block text-sm text-ink-muted" htmlFor={`comment-${postHandle}-${slug}${parentId ? "-" + parentId : ""}`}>
-        Reply as @{authorHandle}
+        Reply as <AuthorName handle={authorHandle} />
       </label>
       <textarea
         id={`comment-${postHandle}-${slug}${parentId ? "-" + parentId : ""}`}

@@ -1,5 +1,6 @@
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
+import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
 
@@ -8,6 +9,7 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
   const tag = decodeURIComponent(slug);
   const feed = await listFeed();
   const matches = feed.filter(({ post }) => post.tags.includes(tag));
+  const names = await getDisplayNameMap(matches.map(({ handle }) => handle));
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-12">
@@ -27,7 +29,12 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {matches.map(({ handle, post }) => (
-            <PostCard key={`${handle}/${post.slug}`} handle={handle} post={post} />
+            <PostCard
+              key={`${handle}/${post.slug}`}
+              handle={handle}
+              post={post}
+              authorName={names.get(handle)}
+            />
           ))}
         </div>
       )}
