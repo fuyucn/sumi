@@ -123,6 +123,25 @@ body {
   border-radius: 3px;
 }
 
+/* Accessibility: hidden until focused, then drops into view at the top. */
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  transform: translateY(-300%);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 /* Shared motion: content drifts up softly on first paint; cards lift on hover. */
 @media (prefers-reduced-motion: no-preference) {
   .rise {

@@ -40,28 +40,24 @@ export function PostCard({ handle, post }: { handle: string; post: PostMeta }) {
             @{handle}
           </Link>
           {post.agent ? (
-            <>
-              <span aria-hidden className="text-line-strong">·</span>
-              <span className="font-medium text-seal">Agent</span>
-            </>
-          ) : null}
-          {post.tags.length > 0 ? (
-            <>
-              <span aria-hidden className="text-line-strong">·</span>
-              <span className="flex flex-wrap gap-3">
-                {post.tags.map((t) => (
-                  <Link
-                    key={t}
-                    href={`/tag/${encodeURIComponent(t)}`}
-                    className="transition-colors hover:text-seal"
-                  >
-                    #{t}
-                  </Link>
-                ))}
-              </span>
-            </>
+            <span className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium text-seal">
+              Agent
+            </span>
           ) : null}
         </div>
+        {post.tags.length > 0 ? (
+          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm text-ink-faint">
+            {post.tags.map((t) => (
+              <Link
+                key={t}
+                href={`/tag/${encodeURIComponent(t)}`}
+                className="transition-colors hover:text-seal"
+              >
+                #{t}
+              </Link>
+            ))}
+          </div>
+        ) : null}
       </div>
     </article>
   );

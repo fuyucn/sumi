@@ -31,7 +31,7 @@ export default async function SearchPage({
           defaultValue={query}
           placeholder="Search posts…"
           aria-label="Search posts"
-          className="min-w-0 flex-1 rounded-[10px] border border-line-strong bg-paper px-4 py-2 text-ink placeholder:text-ink-faint focus:outline-none"
+          className="min-w-0 flex-1 rounded-[10px] border border-line-strong bg-paper px-4 py-2 text-ink placeholder:text-ink-faint transition-colors focus:border-seal/60"
         />
         <button
           type="submit"
