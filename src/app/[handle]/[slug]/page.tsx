@@ -7,6 +7,7 @@ import { LikeButton } from "@/components/like-button";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { env } from "@/lib/env";
+import { estimateReadingTime } from "@/lib/reading-time";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
   const likers = await data.store.listLikes(data.handle, decodedSlug);
+  const reading = estimateReadingTime(post.body);
   const imageBase = repo
     ? `https://raw.githubusercontent.com/${repo}/main/content/@${data.handle}/${decodedSlug}/`
     : undefined;
@@ -77,6 +79,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
               </time>
             </>
           ) : null}
+          <span aria-hidden className="text-line-strong">·</span>
+          <span>
+            {reading.minutes} min read · {reading.words.toLocaleString("en-US")}{" "}
+            {reading.words === 1 ? "word" : "words"}
+          </span>
         </div>
       </header>
       {post.coverImage ? (

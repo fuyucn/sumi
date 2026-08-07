@@ -114,6 +114,14 @@ notifications, native mobile app.
 - Portal home (asymmetric identity + stats + seal CTA + latest ink + tag cloud);
   editorial post index with date column and hover lift.
 
+### FR-12 Archive & reading time (NEW — this PRD)
+- `/archive` timeline groups every published post by year (newest first), with
+  a per-post day column, owner handle, and tag line; linked from the footer and
+  registered in the sitemap.
+- Article pages show an estimated reading time and word count in the byline
+  (`estimateReadingTime` in `src/lib/reading-time.ts`); CJK characters count as
+  words, code fences/images/link URLs are ignored.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -132,12 +140,13 @@ notifications, native mobile app.
 - [x] Portal home, tag cloud, and ink-on-paper design system ship in the UI.
 - [x] Handnotes (手记) timeline at `/[handle]/notes` with an inline composer for the owner; newest first.
 - [x] Friends (友链) page at `/friends` with add/remove for signed-in creators; works on all three backends.
+- [x] `/archive` renders published posts grouped by year; article bylines show reading time + word count.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Notifications; projects showcase.
+- Notifications; projects showcase; independent pages (自定义独立页).
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced
