@@ -3,8 +3,10 @@ import { env } from "@/lib/env";
 import { getGithubToken } from "./github-token";
 import { GitHubContentStore } from "./github-content-store";
 import type { ContentStore } from "./store";
+import type { AiStore } from "./ai-store";
 
 export type { ContentStore } from "./store";
+export type { AiStore, AiProviderConfig, AiTask, AiSummaryResult } from "./ai-store";
 export { GitHubContentStore } from "./github-content-store";
 
 /** Build a content store from an explicit token + repo (no I/O). */
@@ -77,6 +79,21 @@ export async function getAgentContentStore(): Promise<ContentStore | null> {
   const token = env.GITHUB_CONTENT_TOKEN;
   if (!repo) return null;
   return buildContentStore(token ?? "", repo);
+}
+
+/**
+ * Build the AI store (provider config + summary tasks) on the Postgres mirror.
+ * Null when the mirror is disabled, so the feature degrades gracefully on the
+ * GitHub / Cloudflare D1 backends. Cached per process like getDbContentStore.
+ */
+let _aiStore: AiStore | null | undefined;
+export async function getAiStore(): Promise<AiStore | null> {
+  if (!env.DB_MIRROR) return null;
+  if (_aiStore !== undefined) return _aiStore;
+  const { createDb } = await import("@/lib/db");
+  const { DbAiStore } = await import("./db-ai-store");
+  _aiStore = new DbAiStore(createDb(env.DATABASE_URL) as never);
+  return _aiStore;
 }
 
 /** A content store for PUBLIC reads (no signed-in user needed). Null if none configured. */

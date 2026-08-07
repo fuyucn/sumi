@@ -155,36 +155,41 @@ rl.on("line", async (line) => {
   try {
     switch (msg.method) {
       case "initialize":
-        writeResponse(msg.id, {
+        writeResult(msg.id, {
           protocolVersion: msg.params?.protocolVersion ?? "2024-11-05",
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: "sumi", version: "0.1.0" },
         });
         break;
       case "ping":
-        writeResponse(msg.id, {});
+        writeResult(msg.id, {});
         break;
       case "tools/list":
-        writeResponse(msg.id, { tools: TOOLS });
+        writeResult(msg.id, { tools: TOOLS });
         break;
       case "tools/call": {
         const { name, arguments: args } = msg.params ?? {};
         try {
           const result = await dispatch(name, args ?? {});
-          writeResponse(msg.id, textContent(typeof result === "string" ? result : JSON.stringify(result, null, 2)));
+          writeResult(msg.id, textContent(typeof result === "string" ? result : JSON.stringify(result, null, 2)));
         } catch (err) {
-          writeResponse(msg.id, textContent(String(err?.message ?? err), true));
+          writeResult(msg.id, textContent(String(err?.message ?? err), true));
         }
         break;
       }
       default:
-        writeResponse(msg.id, { error: { code: -32601, message: `Method not found: ${msg.method}` } });
+        writeError(msg.id, -32601, `Method not found: ${msg.method}`);
     }
   } catch (err) {
-    writeResponse(msg.id, { error: { code: -32603, message: String(err?.message ?? err) } });
+    writeError(msg.id, -32603, String(err?.message ?? err));
   }
 });
 
-function writeResponse(id, payload) {
-  process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, ...payload }) + "\n");
+// MCP responses must wrap successful payloads in `result` (JSON-RPC 2.0).
+function writeResult(id, result) {
+  process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n");
+}
+
+function writeError(id, code, message) {
+  process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n");
 }

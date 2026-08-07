@@ -228,6 +228,39 @@ export const agentKeys = pgTable("agent_keys", {
   lastUsedAt: timestamp("last_used_at"),
 });
 
+// ---- AI provider config + summary tasks ----
+
+// Per-handle AI provider configuration (OpenAI-compatible chat completions).
+// Only the owner sees the masked key; the server stores it for the backend it
+// runs on (Postgres mirror). Keyed by creator handle so each author can bring
+// their own provider.
+export const sumiAiProviders = pgTable("sumi_ai_providers", {
+  handle: text("handle").primaryKey(),
+  baseUrl: text("base_url").notNull().default("https://api.openai.com/v1"),
+  apiKey: text("api_key").notNull(),
+  model: text("model").notNull().default("gpt-4o-mini"),
+  enabled: boolean("enabled").notNull().default(false),
+  updatedAt: text("updated_at").notNull(),
+});
+
+// One row per AI job (kind = "summary" for now). Tasks are only created when
+// the author clicks the generate button in the editor; `generateSummaryAction`
+// runs the LLM call inline and stores the result for display above the article.
+export const sumiAiTasks = pgTable("sumi_ai_tasks", {
+  id: text("id").primaryKey(),
+  handle: text("handle").notNull(),
+  postHandle: text("post_handle").notNull(),
+  postSlug: text("post_slug").notNull(),
+  kind: text("kind").notNull().default("summary"),
+  status: text("status").notNull().default("pending"),
+  result: text("result"),
+  error: text("error"),
+  model: text("model"),
+  createdAt: text("created_at").notNull(),
+  startedAt: text("started_at"),
+  finishedAt: text("finished_at"),
+});
+
 export const schema = {
   user,
   session,
@@ -246,4 +279,6 @@ export const schema = {
   sumiNotifications,
   sumiImages,
   agentKeys,
+  sumiAiProviders,
+  sumiAiTasks,
 };

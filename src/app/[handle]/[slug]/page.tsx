@@ -1,13 +1,16 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getReadContentStore } from "@/content";
+import { getAiStore, getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
 import { Comments } from "@/components/comments";
 import { LikeButton } from "@/components/like-button";
+import { AiSummaryPanel } from "@/components/ai-summary-panel";
+import { ReadingProgress } from "@/components/reading-progress";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { env } from "@/lib/env";
 import { estimateReadingTime } from "@/lib/reading-time";
+import { extractHeadings } from "@/lib/heading-slug";
 
 export const dynamic = "force-dynamic";
 
@@ -41,11 +44,18 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const signedInHandle = user ? await getUserHandle(user.id) : null;
   const likers = await data.store.listLikes(data.handle, decodedSlug);
   const reading = estimateReadingTime(post.body);
+  const aiStore = await getAiStore();
+  const aiTask = aiStore ? await aiStore.getTask(data.handle, decodedSlug) : null;
+  const headingInfos = extractHeadings(post.body);
+  const headings = headingInfos.map((h) => h.slug);
+  const sections = headingInfos.map((h) => ({ id: h.slug, label: h.text }));
   const imageBase = repo
     ? `https://raw.githubusercontent.com/${repo}/main/content/@${data.handle}/${decodedSlug}/`
     : undefined;
+
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
+      <ReadingProgress sections={sections} />
       <header>
         <h1 className="font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {post.title}
@@ -101,6 +111,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           className="mt-8 w-full rounded-card border border-line object-cover shadow-card"
         />
       ) : null}
+      <AiSummaryPanel
+        handle={data.handle}
+        slug={decodedSlug}
+        initialTask={aiTask}
+        headings={headings}
+      />
       <hr className="mt-8 mb-10 border-line" />
       <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
         <Markdown baseUrl={imageBase}>{post.body}</Markdown>

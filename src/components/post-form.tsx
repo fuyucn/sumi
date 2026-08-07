@@ -3,15 +3,25 @@ import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Editor } from "./editor";
 import { TagPicker } from "./tag-picker";
+import { AiSummaryEditor } from "./ai-summary-editor";
 import { useDraftAutosave, type DraftData } from "./use-autosave";
 import { savePostAction, uploadImageAction } from "@/app/write/actions";
+import type { AiTask } from "@/content/ai-store";
+import type { HeadingInfo } from "@/lib/heading-slug";
 
 export function PostForm({
   initial,
   draftKey = "new",
+  postSlug,
+  initialAiTask,
+  aiHeadings,
 }: {
   initial?: { title: string; tags: string; body: string; publishedAt?: string };
   draftKey?: string;
+  /** Set when editing an existing post (the AI 导读 panel needs a slug). */
+  postSlug?: string;
+  initialAiTask?: AiTask | null;
+  aiHeadings?: HeadingInfo[];
 }) {
   const router = useRouter();
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -114,6 +124,10 @@ export function PostForm({
       />
       <TagPicker value={tags} onChange={handleTags} />
       <Editor key={editorKey} initialMarkdown={initialBody} onChange={handleBody} uploadImage={handleUploadImage} />
+
+      {postSlug ? (
+        <AiSummaryEditor slug={postSlug} body={body} initialTask={initialAiTask} headings={aiHeadings} />
+      ) : null}
 
       <div className="mt-2 flex items-center justify-end gap-3 border-t border-line pt-5">
         {error ? (

@@ -196,6 +196,9 @@ body {
     transform: translateY(-3px);
     box-shadow: var(--shadow-card-hover);
   }
+  html {
+    scroll-padding-top: 6rem;
+  }
 
   @keyframes rise {
     from {
@@ -206,6 +209,12 @@ body {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
 }
 

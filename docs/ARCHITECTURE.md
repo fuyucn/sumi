@@ -216,6 +216,27 @@ graph TD
 
 > Postgres 主存储（`DbContentStore`）用 `sumi_*` 表承载同样的数据；Cloudflare D1 用 `notes` / `friends` 表，建表 SQL 见 `drizzle/d1-schema.sql`（`drizzle/*.sql` 迁移为 Postgres 方言，不适用于 D1）。
 
+### 5.3 AI 导读存储（Postgres 镜像专属）
+
+AI 功能依赖 Postgres 镜像（`DB_MIRROR=1`），通过独立的 `AiStore` 接缝
+（`src/content/ai-store.ts` 接口 + `src/content/db-ai-store.ts` 实现）读写两张表；
+Cloudflare D1 / GitHub 后端 `getAiStore()` 返回 null，功能优雅降级：
+
+- `sumi_ai_providers` — 按 creator handle 一行：`base_url / api_key / model / enabled / updated_at`。
+  API Key 仅服务端存储，页面只回传「是否已配置」的占位符，绝不回显明文。
+- `sumi_ai_tasks` — 按文章去重的一行任务：`handle + post_slug + kind(summary) +
+  status(pending/running/done/failed) + result(JSON: tldr+points) + error + model`。
+
+```mermaid
+graph LR
+    E["作者在 /write/[slug] 编辑器<br/>点击「一键生成 AI 导读」"] --> A["generateSummaryAction<br/>同步执行"]
+    A --> T[("sumi_ai_tasks<br/>pending")]
+    A --> L["LLM chat/completions<br/>(作者配置的 provider)"]
+    L --> F["finishTask<br/>done/failed + result"]
+    F --> R["编辑页即时展示<br/>+ 文章页 AI 导读卡片"]
+    R --> U["文章页 /api/ai/task<br/>读取已存结果"]
+```
+
 ---
 
 ## 6. 核心业务流程（Flow 图）
@@ -415,6 +436,36 @@ sequenceDiagram
   草稿带 `agent: true` 标记并归属 `agent_keys.agent_handle`。
 - 同一套 `ContentStore` 接缝 → GitHub / Postgres 镜像 / Cloudflare D1 三种后端
   无需改动即可支持 agent 发布；远程 MCP 仅限长驻 Node 运行时（Docker / VPS）。
+
+### 6.10 AI 导读生成（共读）
+
+```mermaid
+sequenceDiagram
+    participant A as 作者
+    participant W as /write/[slug] 编辑器
+    participant Q as sumi_ai_tasks
+    participant LLM as 作者配置的 LLM
+    participant UI as 文章页 AI 导读卡片
+
+    A->>W: 点击「一键生成 AI 导读」（或「重新生成」）
+    W->>Q: enqueueSummary — 去重/重置为 pending
+    W->>LLM: generateSummary — chat/completions（导读 prompt，附章节锚点列表）
+    LLM-->>W: { tldr, points[{text, anchor}] }
+    W->>Q: finishTask(done, result, model)
+    UI->>Q: GET /api/ai/task 读取已存结果
+    Q-->>UI: task 状态
+    UI-->>UI: done → 展示导读，要点带 #anchor 跳转链接；failed → 回编辑页重试
+```
+
+- 作者在 `/settings → AI 导读` 配置 provider（OpenAI 兼容：OpenAI / DeepSeek /
+  Moonshot / Ollama / OpenCode Zen 等），`testProvider` 提供「测试连接」。
+- 生成是**手动**的：发布文章不会自动创建任务；作者在编辑页点击按钮才会生成，
+  不满意可随时「重新生成」。没有后台任务执行器，`generateSummaryAction` 在
+  请求内同步完成生成并落库；文章页短时轮询只为等待该请求完成。
+- 导读要点返回 `anchor`（文章小标题 slug），正文标题由 `Markdown` 渲染为带
+  `id` 的锚点，要点即可点击跳转到对应章节；锚点不在正文中时降级为纯文本。
+- 失败不会破坏编辑流程：`generateSummaryAction` 内部 try/catch，失败时任务
+  标记为 failed 并返回错误提示，作者可配置后重试。
 
 ---
 

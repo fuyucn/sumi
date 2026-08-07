@@ -3,6 +3,7 @@ import {
   ArrowBendUpLeft,
   ChatCircle,
   Heart,
+  Sparkle,
   UserPlus,
   type Icon,
 } from "@phosphor-icons/react";
@@ -13,6 +14,7 @@ const typeIcons: Record<NotificationType, Icon> = {
   reply: ArrowBendUpLeft,
   like: Heart,
   follow: UserPlus,
+  ai: Sparkle,
 };
 
 export function NotificationIcon({

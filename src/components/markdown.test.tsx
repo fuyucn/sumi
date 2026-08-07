@@ -4,8 +4,13 @@ import { Markdown, resolveUrl } from "./markdown";
 
 test("renders markdown headings and bold to HTML", () => {
   const html = renderToStaticMarkup(<Markdown>{"# Title\n\nsome **bold** text"}</Markdown>);
-  expect(html).toContain("<h1>Title</h1>");
+  expect(html).toContain('<h1 id="title" class="scroll-mt-24">Title</h1>');
   expect(html).toContain("<strong>bold</strong>");
+});
+
+test("renders CJK headings with stable anchor ids", () => {
+  const html = renderToStaticMarkup(<Markdown>{"## 安装 与 启动\n\n正文"}</Markdown>);
+  expect(html).toContain('<h2 id="安装-与-启动" class="scroll-mt-24">');
 });
 
 test("renders GFM tables", () => {

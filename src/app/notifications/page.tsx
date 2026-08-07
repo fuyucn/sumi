@@ -14,6 +14,7 @@ const typeLabel: Record<NotificationType, string> = {
   reply: "replied to your comment",
   like: "liked your post",
   follow: "followed you",
+  ai: "updated your post's AI 导读",
 };
 
 function formatDate(iso: string): string {
@@ -32,6 +33,7 @@ function formatDate(iso: string): string {
 function NotificationRow({ n }: { n: Notification }) {
   const label = typeLabel[n.type] ?? typeLabel.comment;
   const postHref = n.postHandle && n.postSlug ? `/@${n.postHandle}/${n.postSlug}` : null;
+  const isAi = n.type === "ai";
   return (
     <li className="flex gap-3 py-4">
       <span
@@ -44,13 +46,21 @@ function NotificationRow({ n }: { n: Notification }) {
       </span>
       <div className="min-w-0 flex-1 text-sm leading-relaxed">
         <p className="text-ink">
-          <Link
-            href={`/@${n.actor}`}
-            className="link-underline font-medium text-ink transition-colors hover:text-seal"
-          >
-            @{n.actor}
-          </Link>{" "}
-          {label}
+          {isAi ? (
+            <span className="font-medium text-ink">AI 导读</span>
+          ) : (
+            <Link
+              href={`/@${n.actor}`}
+              className="link-underline font-medium text-ink transition-colors hover:text-seal"
+            >
+              @{n.actor}
+            </Link>
+          )}{" "}
+          {isAi ? (
+            <span className="text-ink-muted">updated</span>
+          ) : (
+            label
+          )}
           {postHref ? (
             <>
               {" "}

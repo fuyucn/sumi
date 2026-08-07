@@ -776,7 +776,7 @@ function toPage(r: PageRow): Page {
 
 function toNotification(r: NotificationRow): Notification {
   const type = r.type;
-  if (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow") {
+  if (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow" && type !== "ai") {
     // Defensive: DB rows with an unknown type should not crash the list page.
     return {
       id: r.id,

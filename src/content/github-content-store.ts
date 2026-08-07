@@ -643,7 +643,13 @@ function parseNotification(x: Record<string, unknown>): Notification | null {
   const actor = typeof x.actor === "string" ? x.actor : "";
   const date = typeof x.date === "string" ? x.date : "";
   const type = x.type;
-  if (!id || !handle || !actor || !date || (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow")) {
+  if (
+    !id ||
+    !handle ||
+    !actor ||
+    !date ||
+    (type !== "comment" && type !== "reply" && type !== "like" && type !== "follow" && type !== "ai")
+  ) {
     return null;
   }
   return {

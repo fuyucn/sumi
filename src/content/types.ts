@@ -134,7 +134,7 @@ export interface Page extends PageMeta {
 
 // ---- Notifications ----
 
-export type NotificationType = "comment" | "reply" | "like" | "follow";
+export type NotificationType = "comment" | "reply" | "like" | "follow" | "ai";
 
 export interface NewNotification {
   type: NotificationType;

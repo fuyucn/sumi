@@ -9,7 +9,8 @@ export async function PUT(req: NextRequest, { params }: RouteContext): Promise<N
   const { auth, body } = await agentRequest(req);
   if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const parsed = agentPostUpdateSchema.safeParse(JSON.parse(body || "{}") as unknown);
   if (!parsed.success) return apiError(400, parsed.error.issues[0]?.message ?? "Invalid body");
 
@@ -36,7 +37,8 @@ export async function DELETE(req: NextRequest, { params }: RouteContext): Promis
   const { auth } = await agentRequest(req);
   if (!auth.ok) return apiError(auth.status ?? 401, auth.error);
 
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const store = await getAgentContentStore();
   if (!store) return apiError(503, "No content backend configured");
 

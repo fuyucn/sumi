@@ -11,7 +11,8 @@ export default async function ProjectEditPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params;
+  const { slug: rawSlug } = await params;
+  const slug = decodeURIComponent(rawSlug);
   const user = await getCurrentUser();
   if (!user) redirect("/sign-in");
   const handle = await getUserHandle(user.id);
