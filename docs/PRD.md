@@ -1,26 +1,30 @@
 # Sumi 墨 — Product Requirements Document
 
-> Status: v1 · Page: product requirements for completing the Sumi publishing platform
+> Status: v1.2 · Page: product requirements for the Sumi personal-space platform
 > Companion spec: `docs/superpowers/specs/2026-06-12-open-source-note-platform-design.md`
 
 ## 1. Summary
 
-Sumi (墨) is an open-source, Vercel-deployable, multi-creator publishing platform
-styled after note.com. Creators sign in with GitHub (allowlist-gated), write
-Markdown in a clean TipTap editor, and every article, image, comment, and magazine
-is committed to a GitHub repository the owner controls — a portable, version-controlled
-archive of everything published.
+Sumi (墨) is an open-source **personal-space portal** styled after mx-space / Shiro:
+a full-stack homepage + blog + notes system that runs on **free Cloudflare
+infrastructure** (D1 + R2) or your own Docker / VPS. Creators sign in with GitHub
+(allowlist-gated), write Markdown in a clean TipTap editor, and every article,
+image, comment, magazine, and profile is committed to a repository the owner
+controls, or stored in D1+R2, a portable, version-controlled archive of
+everything published.
 
 ## 2. Goals & Non-goals
 
 Goals:
-1. One-click Vercel deploy.
+1. One-command Docker deploy (`docker compose up -d`) plus free Cloudflare deploy.
 2. GitHub login + content stored in a GitHub repo.
 3. A great writing experience (TipTap → Markdown).
 4. Contributor-friendly: single codebase, TypeScript end-to-end.
+5. Ink-on-paper design language: Geist + Newsreader, Phosphor icons, portal home
+   with identity, latest posts, and tag cloud.
 
 Non-goals (explicitly out of scope): paid content, algorithmic recommendations,
-nested comments, mobile app, likes/follows (future, stored in Neon).
+notifications, native mobile app.
 
 ## 3. Personas
 
@@ -31,7 +35,7 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 
 ## 4. Core user journeys
 
-1. Sign in with GitHub (allowlist only) → land on a curated home feed.
+1. Sign in with GitHub (allowlist only) → land on the portal home (identity, stats, latest ink, tag cloud).
 2. Write → add title/tags → save draft or publish → article readable at `/@handle/<slug>`.
 3. Upload an image into a post (committed to the content repo).
 4. Read an article → view/leave a comment.
@@ -41,9 +45,10 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 ## 5. Architecture (already built)
 
 - Next.js (App Router) + TypeScript on Vercel.
-- Accounts/sessions → Neon Postgres via Drizzle + Better Auth (GitHub OAuth, allowlist gate).
-- Content (articles/images/comments/magazines) → a GitHub repo via Octokit.
-- `ContentStore` abstraction is the migration seam between GitHub and a future DB store.
+- Next.js (App Router) + TypeScript, deployable to Cloudflare Workers, Docker, or a VPS.
+- Accounts/sessions → Postgres/D1 via Drizzle + Better Auth (GitHub OAuth, allowlist gate).
+- Content (articles/images/comments/magazines/profile) → a GitHub repo via Octokit, or D1+R2 on Cloudflare.
+- `ContentStore` abstraction is the seam between GitHub, Postgres mirror, and Cloudflare backends.
 
 ## 6. Functional requirements
 
@@ -90,6 +95,25 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
   (created by the `0001` migration). Enabled with `DB_MIRROR=1`; reads/search
   then come from Postgres instead of GitHub.
 
+### FR-9 Likes & follows (done)
+- Like/unlike any published post; count + active state stored per post
+  (`likes.json`) and mirrored in `sumi_likes`.
+- Follow/unfollow creators with a Follow button on the profile page, stored in
+  `following.json` files and mirrored in `sumi_follows`.
+
+### FR-10 Deployment (done)
+- **Cloudflare free tier**: `pnpm cf:build && pnpm cf:deploy`; D1 (`DB`) for
+  sessions/content, R2 (`IMAGES`) for images. `CF_ENABLED=1` selects this backend.
+- **Docker one-click**: `docker compose up -d --build` at `http://localhost:3005`.
+- **Custom VPS**: `bash scripts/deploy-vps.sh` (Node/pnpm/PM2, migrations, PM2 daemon).
+
+### FR-11 UI design system (done)
+- Ink-on-paper tokens in `src/app/globals.css`: washi paper, sumi ink, single
+  cinnabar seal accent, light/dark modes, tinted shadows, paper grain.
+- Geist (UI) + Newsreader (reading) via `next/font/google`; Phosphor icon family.
+- Portal home (asymmetric identity + stats + seal CTA + latest ink + tag cloud);
+  editorial post index with date column and hover lift.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -104,17 +128,15 @@ nested comments, mobile app, likes/follows (future, stored in Neon).
 - [x] Creator can edit their profile in `/settings`; it renders on their homepage.
 - [x] `/search` returns published posts by full-text query.
 - [x] `DB_MIRROR=1` serves reads/search from the Postgres mirror.
+- [x] Likes and follows work on GitHub + mirror backends.
+- [x] Portal home, tag cloud, and ink-on-paper design system ship in the UI.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Likes (スキ) and follows: implemented, stored in the Postgres/DB mirror
-  (`sumi_likes`, `sumi_follows`) plus per-post `likes.json` and per-user
-  `following.json` files on the GitHub backend. Neon remark from the original
-  design no longer applies — it all lives where the content lives.
-- Notifications; full-text search index tuning / DB-backed ranking (done:
-  relevance scoring + pg_trgm GIN index).
+- Notifications; handnotes (手记) timeline; friends/links (友链) page; projects showcase.
+- Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced
   server-side across all backends, still renders replies as threaded).

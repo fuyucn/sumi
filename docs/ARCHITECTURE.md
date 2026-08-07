@@ -1,19 +1,20 @@
 # Sumi 墨 — 架构设计与核心流程
 
 > 状态: v1 · 与 `docs/PRD.md` 配套，描述当前已实现的系统架构、数据模型与关键业务流程。
-> 更新日期: 2026-08-02
+> 更新日期: 2026-08-07
 
 ---
 
 ## 1. 概述
 
-Sumi 是一个开源的**多创作者发布平台**（借鉴 note.com 的产品形态）。它的核心设计理念是:
+Sumi 是一个开源的**个人空间门户**（对标 mx-space / Shiro 的产品形态:首页门户 + 文章 + 手记 + 标签体系），
+同时保留多创作者协作能力（allowlist 门禁下的 GitHub 登录）。它的核心设计理念是:
 
 - **内容即 Git**: 所有文章、图片、评论、杂志都以 Markdown + frontmatter 文件的形式，通过 GitHub API 提交到**创作者自己拥有的仓库**，天然可迁移、可版本化。
-- **账号与内容分离**: 登录/会话数据放在 Postgres（Neon 或自托管），内容数据放在 GitHub 仓库。两者通过 OAuth token 关联。
-- **Serverless 友好**: 不在本地文件系统写内容，所有读写都走 GitHub API / 数据库，可部署到 Vercel 或 Docker 自托管。
+- **账号与内容分离**: 登录/会话数据放在 Postgres / D1，内容数据放在 GitHub 仓库或 Cloudflare D1+R2。两者通过 OAuth token 关联。
+- **Serverless 友好**: 不在本地文件系统写内容，所有读写都走 GitHub API / 数据库绑定，可部署到 Cloudflare Workers、Docker 自托管或自定义 VPS。
 
-一句话概括数据流:**GitHub OAuth 登录 → Postgres 存会话 →（内容全部走）患者仓库的 GitHub API**。
+一句话概括数据流:**GitHub OAuth 登录 → 会话库存会话 → 内容读写走 ContentStore（GitHub / D1+R2 任一后端）**。
 
 ---
 
@@ -22,21 +23,22 @@ Sumi 是一个开源的**多创作者发布平台**（借鉴 note.com 的产品�
 ```mermaid
 flowchart TB
     subgraph Client["客户端"]
-        WB["外部浏览器<br/>http://localhost:3000"]
+        WB["外部浏览器<br/>http://localhost:3005"]
         IB["内置浏览器 (proxy)<br/>app.sumi.orb.local"]
     end
 
     subgraph Next["Sumi — Next.js 16 (App Router, TS)"]
-        Pages["页面 (SSR)<br/>home / article / creator / write / settings"]
-        SA["Server Actions<br/>savePost / addComment / saveProfile / saveMagazine"]
+        Pages["页面 (SSR)<br/>portal home / article / creator / tags / search / write / settings"]
+        SA["Server Actions<br/>savePost / addComment / saveProfile / saveMagazine / like / follow"]
         API["API 路由<br/>/api/auth/*"]
         Auth["Better Auth<br/>GitHub OAuth + allowlist"]
         Env["env 校验 (zod)"]
     end
 
     subgraph DataLayer["数据层"]
-        PG[("Postgres / Neon<br/>user/session/account (Drizzle ORM)")]
+        PG[("Postgres / Neon / D1<br/>user/session/account (Drizzle ORM)")]
         Repo["GitHub 内容仓库<br/>content/... (Octokit)"]
+        CF[("Cloudflare D1 + R2<br/>CF_ENABLED=1 时替代 GitHub 后端")]
     end
 
     OAuth["GitHub OAuth 授权页"]
@@ -50,6 +52,8 @@ flowchart TB
     Auth --> PG
     Pages --> Repo
     SA --> Repo
+    Pages -.-> CF
+    SA -.-> CF
     Auth --> OAuth
     OAuth --> API
 ```
@@ -63,7 +67,9 @@ flowchart TB
 | 层 | 技术 | 用途 |
 |---|---|---|
 | 框架 | Next.js 16 (App Router) + React 19 + TypeScript | SSR 页面 / Server Actions / API 路由 |
-| 样式 | Tailwind CSS 4 + `@tailwindcss/typography` | UI 与阅读排版 |
+| 样式 | Tailwind CSS 4 + `@tailwindcss/typography` | 设计令牌（墨纸朱印）+ 阅读排版 |
+| 字体/图标 | `next/font` Geist + Newsreader / `@phosphor-icons/react` | 无衬线 UI + 衬线阅读字体;单一图标族 |
+| 动效 | `motion`（CSS 令牌 `.rise/.lift/.press` 为主） | 入场、卡片 lift、按压缩放 |
 | 编辑器 | TipTap 3 + `tiptap-markdown` | 富文本 ↔ Markdown 双向转换 |
 | Markdown | `gray-matter`(frontmatter) + `react-markdown` + `remark-gfm` | 解析/序列化与渲染 |
 | 认证 | Better Auth + GitHub OAuth | 登录、会话、allowlist 门禁 |
@@ -71,16 +77,23 @@ flowchart TB
 | GitHub | `@octokit/rest` | 内容仓库读写 |
 | 校验 | zod | env / 表单 / 输入校验 |
 | 测试 | Vitest + PGlite + vite-tsconfig-paths | 单测、auth 门禁、内容 store |
-| 部署 | Docker compose（一键自托管）/ VPS 脚本 / Cloudflare Workers (OpenNext) / Vercel | Docker/VPS 用 `output: "standalone"`，CF 由 OpenNext 复用该产物 |
+| 部署 | Docker compose（一键自托管, :3005）/ VPS 脚本 / Cloudflare Workers (OpenNext) | Docker/VPS 用 `output: "standalone"`，CF 由 OpenNext 复用该产物 |
 
 ---
 
 ## 4. 分层与模块
 
 ### 4.1 表现层（页面与组件）
-- `src/app/*` — App Router 页面:**首页 feed**、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、标签页 `/tag/[slug]`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
+- `src/app/*` — App Router 页面:**门户首页**（身份区 + 最新文章 + 标签云）、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、标签库 `/tags` 与标签页 `/tag/[slug]`、搜索 `/search`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
 - `src/components/*` — 客户端组件:TipTap 编辑器、评论表单、杂志表单、资料表单、导航栏等。
 - 公共读页面一律通过 `getReadContentStore()`（匿名 Octokit）读公开仓库，无需登录即可浏览。
+
+**UI 设计系统（ink-on-paper）**: 全局令牌定义在 `src/app/globals.css` 的 `@theme` 中:
+- 配色: 纸 `paper #f7f4ec` 系 + 墨 `ink #1e1b16` 系 + 单一朱印色 `seal #b3402e`（亮/暗双模式）。
+- 字体: 无衬线 `Geist`（UI）+ 衬线 `Newsreader`（阅读正文与标题），经 `next/font/google` 自托管。
+- 形状: 卡片 14px / 输入 10px / 交互元素 pill 的统一圆角规则;阴影按背景色着色。
+- 动效: `.rise` 入场、`.lift` 卡片悬停、`.press` 按压反馈，均包裹 `prefers-reduced-motion`。
+- 品牌: 首页门户含身份区（统计数字、墨印卡片 CTA）、最新文章索引（日期栏 + 悬停位移）、标签云（按使用量缩放字号）。
 
 ### 4.2 应用层（Server Actions 与 API）
 - `src/app/write/actions.ts` + `actions-core.ts` — 保存/删除文章、图片上传（`"use server"`）。
@@ -305,7 +318,7 @@ sequenceDiagram
     A-->>C: 跳转 /@handle/m/<slug> 或刷新创作者主页
 ```
 
-### 6.8 部署拓扑（Docker 一键 + Vercel）
+### 6.8 部署拓扑（Docker 一键 + Cloudflare + 自定义 VPS）
 
 ```mermaid
 flowchart LR
@@ -313,22 +326,26 @@ flowchart LR
         direction TB
         DB["db: postgres:16-alpine<br/>(healthcheck + pgdata 卷)"]
         MIG["migrate: drizzle-kit migrate<br/>(one-shot, 成功才起 app)"]
-        APP["app: Next.js standalone<br/>:3000 (uid 1001)"]
+        APP["app: Next.js standalone<br/>:3005 → 容器 :3000 (uid 1001)"]
         DB -->|healthy| MIG -->|completed| APP
     end
 
-    subgraph Cloud["Vercel (可选)"]
+    subgraph Cloud["Cloudflare (免费, CF_ENABLED=1)"]
         direction TB
-        VAPP["Next.js serverless"]
-        NEON[("Neon Postgres")]
-        VAPP --> NEON
+        WAPP["OpenNext Worker"]
+        D1[("D1 会话/内容")]
+        R2[("R2 图片 + 缓存")]
+        WAPP --> D1
+        WAPP --> R2
     end
 
     Local -->|GITHUB_CONTENT_REPO| GHRepo["GitHub 内容仓库"]
     Cloud -->|GITHUB_CONTENT_REPO| GHRepo
 ```
 
-- Docker 构建走 `output: "standalone"` 多阶段镜像；`migrate` 服务与 `app` 通过 `depends_on: service_completed_successfully` 保证迁移先行（`Dockerfile` / `docker-compose.yml`）。
+- **Docker 一键**: `docker compose up -d --build`，宿主端口 `:3005` 映射容器 `:3000`。`migrate` 与 `app` 通过 `depends_on: service_completed_successfully` 保证迁移先行（`Dockerfile` / `docker-compose.yml`）。
+- **Cloudflare 免费托管**: `pnpm cf:build && pnpm cf:deploy`，OpenNext 把 Next 构建为 Worker；会话/内容走 D1（`DB` 绑定），图片走 R2（`IMAGES` 绑定），前置资源创建见 §11.2。
+- **自定义 VPS**: `bash scripts/deploy-vps.sh` 幂等安装 Node/pnpm/PM2、构建、迁移并常驻运行。
 - `env_file: .env` 注入配置；`BETTER_AUTH_TRUSTED_ORIGINS` 用于信任本地代理来源（如内置浏览器 `app.sumi.orb.local`），详见 `README` 的 Docker 一节。
 
 ---
@@ -361,8 +378,8 @@ flowchart LR
 
 ## 9. 测试与验证
 
-- **单元测试**: Vitest 18 个文件 / 82 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub store 集成（mock Octokit）、auth 门禁（PGlite 内存库）。
-- **质量门禁**: `pnpm typecheck`、`pnpm test`、`pnpm lint`、`pnpm build`、以及 Docker 冒烟（`docker compose up -d` + `curl :3000` = 200）。
+- **单元测试**: Vitest 27 个文件 / 161 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、搜索相关性、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub/Cloudflare store 集成（mock）、auth 门禁（PGlite 内存库）、评论深度与删除。
+- **质量门禁**: `pnpm typecheck`、`pnpm test`、`pnpm lint`、`pnpm build`、以及 Docker 冒烟（`docker compose up -d` + `curl :3005` = 200）。
 
 ---
 
@@ -392,7 +409,7 @@ Sumi 的单一代码库可部署到三种目标，它们共享同一套 `next.co
 | **2. 自定义 VPS** | `bash scripts/deploy-vps.sh` | 自有 Postgres/Neon + GitHub 内容仓库 | 脚本幂等安装 Node/pnpm/PM2、构建、迁移并常驻运行 |
 | **3. Cloudflare (Workers/OpenNext)** | `pnpm cf:build && pnpm cf:deploy` | D1 绑定 `DB` + R2 绑定 `IMAGES` | OpenNext 把 Next 构建成 Worker，数据走 CF 绑定 |
 
-> 备注：Cloudflare 是**可选的第三条路径**，不是强制迁移。默认（Docker/VPS/Vercel）仍走 Postgres + GitHub API。
+> 备注：Cloudflare 是**首选免费路径**（`CF_ENABLED=1` 时内容走 D1+R2），Docker/VPS 则默认走 Postgres + GitHub API。三条路径共享同一套 `ContentStore` 抽象与 env 校验，可随时切换。
 
 ### 11.1 运行时如何选择存储后端（ContentStore 工厂）
 
