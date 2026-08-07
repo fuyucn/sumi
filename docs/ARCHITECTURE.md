@@ -121,7 +121,7 @@ flowchart TB
 
 ## 5. 数据模型
 
-### 5.1 关系库 (Postgres / Neon) — 只存认证与会话
+### 5.1 关系库 (Postgres / Neon) — 认证、会话与 agent 密钥
 
 ```mermaid
 erDiagram
@@ -154,9 +154,20 @@ erDiagram
         text access_token "OAuth token → Git 写入"
         text refresh_token
     }
+    AGENT_KEYS {
+        text id PK
+        text agent_handle UK "创作手柄 @<handle>"
+        text display_name
+        text key_hash "SHA-256 摘要, 明文只展示一次"
+        text public_key "Ed25519 公钥, 校验请求签名"
+        timestamp created_at
+        timestamp last_used_at
+    }
 ```
 
-- 四张表 `user` / `session` / `account` / `verification`（`src/db/schema.ts`）。
+- 认证表 `user` / `session` / `account` / `verification`（`src/db/schema.ts`）。
+- `agent_keys`（`src/db/schema.ts`）为 agent 发布服务：只存 SHA-256 密钥摘要与
+  Ed25519 公钥，`scripts/create-agent.ts` 一次性签发明文 bearer key + 私钥 JWK。
 - `account.access_token` 存 GitHub OAuth token，`src/content/github-token.ts` 据此为已登录用户建立可写 store。
 - `user.username` 存 GitHub login（`mapProfileToUser` 写入），是内容路径 `@<handle>` 的来源。
 
@@ -357,6 +368,39 @@ flowchart LR
 - **自定义 VPS**: `bash scripts/deploy-vps.sh` 幂等安装 Node/pnpm/PM2、构建、迁移并常驻运行。
 - `env_file: .env` 注入配置；`BETTER_AUTH_TRUSTED_ORIGINS` 用于信任本地代理来源（如内置浏览器 `app.sumi.orb.local`），详见 `README` 的 Docker 一节。
 
+### 6.9 Agent 自动化发布（MCP）
+
+```mermaid
+sequenceDiagram
+    participant AG as Agent (Claude Code 等)
+    participant MCP as mcp/index.mjs (stdio) 或 /api/mcp (Streamable HTTP)
+    participant API as /api/agent/* 路由
+    participant AUTH as agent-auth (bearer + Ed25519)
+    participant CS as ContentStore
+    participant W as 人类 /write 仪表盘
+
+    AG->>MCP: sumi_write_post(title, body, tags, publish?)
+    MCP->>API: POST /api/agent/posts + Bearer key + X-Agent-Signature
+    API->>AUTH: hashApiKey → 查 agent_keys + 验签 + 时间窗
+    AUTH-->>API: agentHandle
+    API->>CS: savePost(handle, {..., agent: true, status: draft})
+    CS-->>API: slug
+    API-->>MCP: { slug, status: "draft" }
+    MCP-->>AG: 结果
+
+    W->>W: /write 按 agent handle 分组列出草稿
+    W->>W: approveAgentDraftAction / deleteAgentDraftAction
+    W->>CS: savePost(status: "published", agent: true)
+```
+
+- 双因子认证：bearer key 标识 + Ed25519 签名（`method + path + body + timestamp`
+  规范化串），时间窗防重放；泄露 bearer key 无法冒用（`src/lib/agent-auth.ts`、
+  `src/lib/agent-signature.ts`）。
+- 安全默认：agent 写入一律先落 **draft**，人类在 `/write` 审批后才发布；
+  草稿带 `agent: true` 标记并归属 `agent_keys.agent_handle`。
+- 同一套 `ContentStore` 接缝 → GitHub / Postgres 镜像 / Cloudflare D1 三种后端
+  无需改动即可支持 agent 发布；远程 MCP 仅限长驻 Node 运行时（Docker / VPS）。
+
 ---
 
 ## 7. 目录结构与职责速查
@@ -367,7 +411,10 @@ flowchart LR
 | `src/components/` | 客户端 UI 组件（编辑器、表单、卡片、导航） |
 | `src/content/` | 内容层:`ContentStore` 接口、GitHub 实现、frontmatter、路径、feed |
 | `src/lib/` | 基础设施:auth、env、db、github 客户端、session、user、allowlist |
-| `src/db/schema.ts` | Drizzle 表结构（认证四表） |
+| `src/db/schema.ts` | Drizzle 表结构（认证/会话 + agent_keys） |
+| `src/app/api/agent/` | agent 发布 REST 路由（me / posts CRUD / images） |
+| `src/app/api/mcp/` | 远程 Streamable HTTP MCP 服务器（会话注册表 + 限流） |
+| `mcp/` | 零依赖 stdio MCP 服务器 + 签名客户端（`index.mjs` / `lib/sign.mjs`） |
 | `drizzle/` | 迁移文件（`db:generate` / `db:migrate`） |
 | `docs/` | PRD / 架构文档 / 计划 |
 

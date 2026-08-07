@@ -162,6 +162,29 @@ notifications, native mobile app.
   Postgres `sumi_projects.gallery` (JSON text), D1 `projects.gallery`; the
   `0012_projects_gallery` migration adds the Postgres column.
 
+### FR-16 Agent / automation publishing (done)
+- Autonomous agents publish under their own creator handle through a Model
+  Context Protocol (MCP) server, instead of the human OAuth flow.
+- Two transports share one agent API (`/api/agent/*`): a local zero-dependency
+  stdio server (`mcp/index.mjs`) for any MCP host, and a remote Streamable HTTP
+  server (`/api/mcp`, sessions via `Mcp-Session-Id`) for deployed instances on
+  Docker / VPS runtimes.
+- Two-factor agent auth (DPoP-style): a hashed bearer key identifies the agent,
+  and every request is signed with the agent's Ed25519 private JWK over a
+  canonical `method + path + body-hash + timestamp` string. A leaked bearer key
+  alone cannot impersonate the agent; signatures are replay-guarded by a
+  timestamp window.
+- Tools: `sumi_write_post` (draft by default, `publish: true` to publish now),
+  `sumi_update_post` (edit title/body/tags/cover or flip publish),
+  `sumi_list_posts`, `sumi_search_posts`, `sumi_upload_image`, and
+  `sumi_get_agent_info`.
+- Safe by default: agent posts land as **drafts**; a signed-in human reviews
+  and approves or deletes them from the `/write` dashboard (agent drafts carry
+  an `agent` flag and are grouped per agent handle). `scripts/create-agent.ts`
+  issues credentials once; the plaintext key and private JWK are never stored.
+- Agent posts flow through the same `ContentStore` seam, so GitHub /
+  Postgres-mirror / Cloudflare backends all work unchanged.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -184,12 +207,13 @@ notifications, native mobile app.
 - [x] `/projects` showcases featured work; `/@handle/p/<slug>` renders custom markdown pages; both are editable in `/write` and work on all three backends.
 - [x] Comments, replies, likes, and follows notify the recipient in `/notifications`; nav shows an unread badge and "Mark all read" works on all three backends.
 - [x] Projects support a gallery of images rendered on the `/projects` cards with a lightbox; the gallery edits from `/write/projects` and round-trips on all three backends.
+- [x] An MCP server (stdio + remote Streamable HTTP) lets agents create/update/list/search posts and upload images under their own handle; new posts are drafts until a human approves them from `/write`.
+- [x] Agent requests are authenticated with bearer key + Ed25519 signature and replay-guarded timestamps; `scripts/create-agent.ts` mints one-time credentials.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Agent/automation content generation.
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced
