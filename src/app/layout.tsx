@@ -31,6 +31,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${newsreader.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("sumi-theme");var r=document.documentElement;if(t==="light"){r.classList.add("light");r.setAttribute("data-theme","light")}else if(t==="dark"){r.classList.add("dark");r.setAttribute("data-theme","dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="paper-grain font-sans bg-paper text-ink min-h-[100dvh] flex flex-col antialiased">
         <a
           href="#main"

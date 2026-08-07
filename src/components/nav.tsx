@@ -12,6 +12,7 @@ import {
   User,
 } from "@phosphor-icons/react";
 import { useSession } from "@/lib/auth-client";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Nav() {
   const { data } = useSession();
@@ -128,6 +129,7 @@ export function Nav() {
             </Link>
           )}
         </nav>
+        <ThemeToggle />
       </div>
     </header>
   );

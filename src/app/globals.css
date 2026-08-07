@@ -70,51 +70,83 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
-/* Dark mode — "ink at night": warm near-black paper, soft warm ink, a brighter
-   cinnabar so the seal still reads. */
+/* Dark mode — "ink at night": warm near-black paper with a moonlit atmosphere,
+   soft warm ink, and a brighter cinnabar so the seal still reads. Surfaces
+   layer downward (page > card > sunken well), never pure black or white. */
 :root {
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-theme="light"]) {
     color-scheme: dark;
-    --color-paper: #17140f;
-    --color-paper-raised: #201c16;
-    --color-paper-deep: #241f18;
+    --color-paper: #161310;
+    --color-paper-raised: #1f1b15;
+    --color-paper-deep: #100d0a;
     --color-ink: #ece5d8;
     --color-ink-soft: #c9c1b2;
-    --color-ink-muted: #9c9484;
-    --color-ink-faint: #6e675a;
-    --color-line: #322c24;
-    --color-line-strong: #433b30;
+    --color-ink-muted: #a09787;
+    --color-ink-faint: #7a7262;
+    --color-line: #2c2720;
+    --color-line-strong: #3e372c;
     --color-seal: #e06a4f;
     --color-seal-soft: #ee8a72;
     --color-seal-wash: #3d2823;
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 14px 36px -18px rgb(0 0 0 / 0.55);
-    --shadow-card-hover: 0 2px 4px rgb(0 0 0 / 0.34), 0 22px 48px -20px rgb(0 0 0 / 0.62);
-    --shadow-pop: 0 28px 64px -26px rgb(0 0 0 / 0.7);
+    --shadow-card: 0 1px 2px rgb(10 7 4 / 0.35), 0 14px 36px -18px rgb(10 7 4 / 0.6);
+    --shadow-card-hover: 0 2px 4px rgb(10 7 4 / 0.4), 0 22px 48px -20px rgb(10 7 4 / 0.68);
+    --shadow-pop: 0 28px 64px -26px rgb(10 7 4 / 0.75);
   }
 }
 :root.dark,
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --color-paper: #17140f;
-  --color-paper-raised: #201c16;
-  --color-paper-deep: #241f18;
+  --color-paper: #161310;
+  --color-paper-raised: #1f1b15;
+  --color-paper-deep: #100d0a;
   --color-ink: #ece5d8;
   --color-ink-soft: #c9c1b2;
-  --color-ink-muted: #9c9484;
-  --color-ink-faint: #6e675a;
-  --color-line: #322c24;
-  --color-line-strong: #433b30;
+  --color-ink-muted: #a09787;
+  --color-ink-faint: #7a7262;
+  --color-line: #2c2720;
+  --color-line-strong: #3e372c;
   --color-seal: #e06a4f;
   --color-seal-soft: #ee8a72;
   --color-seal-wash: #3d2823;
+  --shadow-card: 0 1px 2px rgb(10 7 4 / 0.35), 0 14px 36px -18px rgb(10 7 4 / 0.6);
+  --shadow-card-hover: 0 2px 4px rgb(10 7 4 / 0.4), 0 22px 48px -20px rgb(10 7 4 / 0.68);
+  --shadow-pop: 0 28px 64px -26px rgb(10 7 4 / 0.75);
+  scrollbar-color: var(--color-line-strong) var(--color-paper-deep);
+}
+
+/* Moonlit atmosphere: a dim cinnabar glow high on the right, a faint warm
+   counter-glow low on the left, and a soft vignette over the whole page. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) body {
+    background-image:
+      radial-gradient(1100px 480px at 85% -6%, color-mix(in srgb, var(--color-seal) 7%, transparent), transparent 60%),
+      radial-gradient(1000px 560px at -8% 32%, color-mix(in srgb, var(--color-seal-soft) 4%, transparent), transparent 55%),
+      radial-gradient(900px 460px at 50% 112%, color-mix(in srgb, var(--color-ink) 26%, transparent), transparent 62%);
+  }
+}
+:root.dark body,
+:root[data-theme="dark"] body {
+  background-image:
+    radial-gradient(1100px 480px at 85% -6%, color-mix(in srgb, var(--color-seal) 7%, transparent), transparent 60%),
+    radial-gradient(1000px 560px at -8% 32%, color-mix(in srgb, var(--color-seal-soft) 4%, transparent), transparent 55%),
+    radial-gradient(900px 460px at 50% 112%, color-mix(in srgb, var(--color-ink) 26%, transparent), transparent 62%);
 }
 
 ::selection {
   background-color: color-mix(in srgb, var(--color-seal) 20%, transparent);
   color: var(--color-ink);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) ::selection {
+    background-color: color-mix(in srgb, var(--color-seal) 30%, transparent);
+  }
+}
+:root.dark ::selection,
+:root[data-theme="dark"] ::selection {
+  background-color: color-mix(in srgb, var(--color-seal) 30%, transparent);
 }
 
 *:focus-visible {
@@ -285,6 +317,18 @@ body {
   .field:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+  }
+
+  /* Sunken input wells at night: fields fall below the page instead of
+     flattening into it. */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light):not([data-theme="light"]) .field {
+      background-color: var(--color-paper-deep);
+    }
+  }
+  :root.dark .field,
+  :root[data-theme="dark"] .field {
+    background-color: var(--color-paper-deep);
   }
 
   .card {

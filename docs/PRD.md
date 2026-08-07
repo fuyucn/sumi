@@ -110,6 +110,10 @@ notifications, native mobile app.
 ### FR-11 UI design system (done)
 - Ink-on-paper tokens in `src/app/globals.css`: washi paper, sumi ink, single
   cinnabar seal accent, light/dark modes, tinted shadows, paper grain.
+- Dark mode "ink at night": warm layered near-black surfaces (page > card >
+  sunken input), moonlit radial glow, warm shadows; a nav toggle cycles
+  light / dark / system with a no-flash pre-render init and localStorage
+  persistence.
 - Geist (UI) + Newsreader (reading) via `next/font/google`; Phosphor icon family.
 - Portal home (asymmetric identity + stats + seal CTA + latest ink + tag cloud);
   editorial post index with date column and hover lift.
