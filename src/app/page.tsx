@@ -27,6 +27,8 @@ export default async function Home() {
       : cover
         ? `${imageBase}${cover}`
         : undefined;
+  // The featured card already shows feed[0]; don't repeat it in the list.
+  const recent = featured ? feed.slice(1, 7) : feed.slice(0, 6);
 
   const tagSize = (count: number) => {
     const ratio = count / maxTagCount;
@@ -148,7 +150,7 @@ export default async function Home() {
           </div>
         ) : (
           <Reveal as="div" className="divide-y divide-line">
-            {feed.slice(0, 6).map(({ handle, post }) => (
+            {recent.map(({ handle, post }) => (
               <PostCard
                 key={`${handle}/${post.slug}`}
                 handle={handle}
