@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS projects (
   repo TEXT,
   tech TEXT NOT NULL DEFAULT '[]',
   cover_image TEXT,
+  gallery TEXT,
   featured INTEGER NOT NULL DEFAULT 0,
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
@@ -315,6 +316,8 @@ test("projects + pages round-trip with featured-first ordering", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });
@@ -327,6 +330,8 @@ test("projects + pages round-trip with featured-first ordering", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });

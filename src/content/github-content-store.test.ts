@@ -246,6 +246,8 @@ test("project CRUD, featured-first ordering, and delete", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });
@@ -259,6 +261,8 @@ test("project CRUD, featured-first ordering, and delete", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });

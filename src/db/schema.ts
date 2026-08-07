@@ -161,6 +161,7 @@ export const sumiProjects = pgTable(
     repo: text("repo"),
     tech: text("tech").notNull().default("[]"),
     coverImage: text("cover_image"),
+    gallery: text("gallery"),
     featured: boolean("featured").notNull().default(false),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: text("created_at").notNull(),

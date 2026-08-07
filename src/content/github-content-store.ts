@@ -455,6 +455,7 @@ export class GitHubContentStore implements ContentStore {
       ...(project.repo !== undefined && project.repo ? { repo: project.repo } : {}),
       ...(project.tech && project.tech.length > 0 ? { tech: project.tech } : {}),
       ...(project.coverImage !== undefined && project.coverImage ? { coverImage: project.coverImage } : {}),
+      ...(project.gallery && project.gallery.length > 0 ? { gallery: project.gallery } : {}),
       ...(project.featured ? { featured: true } : {}),
       ...(project.order !== undefined && project.order !== 0 ? { order: project.order } : {}),
     };

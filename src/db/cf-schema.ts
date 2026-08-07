@@ -86,6 +86,7 @@ export const projects = sqliteTable(
     repo: text("repo"),
     tech: text("tech").notNull().default("[]"),
     coverImage: text("cover_image"),
+    gallery: text("gallery"),
     featured: integer("featured").notNull().default(0),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: text("created_at").notNull(),

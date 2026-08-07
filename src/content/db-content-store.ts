@@ -69,6 +69,7 @@ interface ProjectRow {
   repo: string | null;
   tech: string;
   coverImage: string | null;
+  gallery: string | null;
   featured: boolean;
   sortOrder: number;
   createdAt: string;
@@ -536,6 +537,7 @@ export class DbContentStore implements ContentStore {
         repo: project.repo ?? null,
         tech: JSON.stringify(project.tech ?? []),
         coverImage: project.coverImage ?? null,
+        gallery: JSON.stringify(project.gallery ?? []),
         featured: project.featured ?? false,
         sortOrder: project.order ?? 0,
         createdAt: now,
@@ -550,6 +552,7 @@ export class DbContentStore implements ContentStore {
           repo: project.repo ?? null,
           tech: JSON.stringify(project.tech ?? []),
           coverImage: project.coverImage ?? null,
+          gallery: JSON.stringify(project.gallery ?? []),
           featured: project.featured ?? false,
           sortOrder: project.order ?? 0,
           updatedAt: now,
@@ -751,6 +754,7 @@ function toProject(r: ProjectRow): Project {
     ...(r.url !== null ? { url: r.url } : {}),
     ...(r.repo !== null ? { repo: r.repo } : {}),
     ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),
+    ...(r.gallery !== null && r.gallery.length > 0 ? { gallery: parseJsonList(r.gallery) } : {}),
     ...(r.sortOrder !== 0 ? { order: r.sortOrder } : {}),
   };
 }

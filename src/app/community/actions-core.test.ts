@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import type { ContentStore } from "@/content/store";
 import type { Comment, NewNotification, Notification } from "@/content/types";
 import { runAddComment, runAddFriend, runAddNote, runDeleteComment, runDeleteFriend, runDeleteMagazine, runDeleteNote, runDeletePage, runDeleteProject, runGetLikeState, runMarkNotificationsRead, runSaveMagazine, runSavePage, runSaveProfile, runSaveProject, runToggleFollow, runToggleLike } from "./actions-core";
@@ -35,7 +35,7 @@ function fakeStore(): ContentStore {
     async deleteMagazine() {},
     async listProjects() { return []; },
     async getProject() { return null; },
-    async saveProject() { return "proj"; },
+    saveProject: vi.fn(async () => "proj"),
     async deleteProject() {},
     async listPages() { return []; },
     async getPage() { return null; },
@@ -96,16 +96,26 @@ test("project save validates URL, guards, and deletes", async () => {
   expect(empty.ok).toBe(false);
   const badUrl = await runSaveProject(deps, { title: "Sumi", url: "not-a-url", tech: ["next"] });
   expect(badUrl.ok).toBe(false);
+  const badGallery = await runSaveProject(deps, {
+    title: "Sumi",
+    gallery: ["https://cdn.example/ok.png", "not-a-url"],
+  });
+  expect(badGallery.ok).toBe(false);
   const ok = await runSaveProject(deps, {
     title: "Sumi Engine",
     description: "d",
     url: "https://sumi.example",
     tech: ["next", "drizzle"],
+    gallery: ["https://cdn.example/1.png", "https://cdn.example/2.png"],
     featured: true,
     order: 2,
   });
   expect(ok.ok).toBe(true);
   if (ok.ok) expect(ok.data.slug).toBe("proj");
+  expect(deps.store!.saveProject).toHaveBeenCalledWith(
+    "alice",
+    expect.objectContaining({ gallery: ["https://cdn.example/1.png", "https://cdn.example/2.png"] }),
+  );
   const del = await runDeleteProject(deps, "sumi-engine");
   expect(del.ok).toBe(true);
   const guardDel = await runDeleteProject({ userId: null, handle: null, store: null }, "sumi-engine");

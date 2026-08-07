@@ -125,6 +125,7 @@ export function serializeProject(project: {
   repo?: string;
   tech?: string[];
   coverImage?: string;
+  gallery?: string[];
   featured?: boolean;
   order?: number;
   createdAt: string;
@@ -140,6 +141,7 @@ export function serializeProject(project: {
   if (project.repo) data.repo = project.repo;
   if (project.tech && project.tech.length > 0) data.tech = project.tech;
   if (project.coverImage) data.coverImage = project.coverImage;
+  if (project.gallery && project.gallery.length > 0) data.gallery = project.gallery;
   if (project.featured) data.featured = true;
   if (project.order !== undefined && project.order !== 0) data.order = project.order;
   return matter.stringify("", data);
@@ -158,6 +160,7 @@ export function parseProject(
   repo?: string;
   tech?: string[];
   coverImage?: string;
+  gallery?: string[];
   featured?: boolean;
   order?: number;
   createdAt: string;
@@ -173,6 +176,7 @@ export function parseProject(
     ...(typeof data.repo === "string" ? { repo: data.repo } : {}),
     ...(Array.isArray(data.tech) ? { tech: data.tech.map(String) } : {}),
     ...(typeof data.coverImage === "string" ? { coverImage: data.coverImage } : {}),
+    ...(Array.isArray(data.gallery) ? { gallery: data.gallery.map(String) } : {}),
     ...(data.featured === true ? { featured: true } : {}),
     ...(typeof data.order === "number" ? { order: data.order } : {}),
     createdAt: typeof data.createdAt === "string" ? data.createdAt : "",

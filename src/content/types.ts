@@ -95,6 +95,8 @@ export interface NewProject {
   repo?: string;
   tech?: string[];
   coverImage?: string;
+  /** Extra screenshots / gallery images for the project card and lightbox. */
+  gallery?: string[];
   featured?: boolean;
   /** Lower number sorts first within the same featured tier. */
   order?: number;

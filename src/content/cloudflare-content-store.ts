@@ -86,6 +86,7 @@ interface ProjectRow {
   repo: string | null;
   tech: string;
   cover_image: string | null;
+  gallery: string | null;
   featured: number;
   sort_order: number;
   created_at: string;
@@ -493,8 +494,8 @@ export class CloudflareContentStore implements ContentStore {
     const slug = slugify(project.title);
     const now = new Date().toISOString();
     await this.run(
-      `INSERT INTO projects (handle, slug, title, description, url, repo, tech, cover_image, featured, sort_order, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO projects (handle, slug, title, description, url, repo, tech, cover_image, gallery, featured, sort_order, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (handle, slug) DO UPDATE SET
          title = excluded.title,
          description = excluded.description,
@@ -502,11 +503,13 @@ export class CloudflareContentStore implements ContentStore {
          repo = excluded.repo,
          tech = excluded.tech,
          cover_image = excluded.cover_image,
+         gallery = excluded.gallery,
          featured = excluded.featured,
          sort_order = excluded.sort_order,
          updated_at = excluded.updated_at`,
       handle, slug, project.title, project.description ?? null, project.url ?? null, project.repo ?? null,
-      JSON.stringify(project.tech ?? []), project.coverImage ?? null, project.featured ? 1 : 0, project.order ?? 0, now, now,
+      JSON.stringify(project.tech ?? []), project.coverImage ?? null, JSON.stringify(project.gallery ?? []),
+      project.featured ? 1 : 0, project.order ?? 0, now, now,
     );
     return slug;
   }
@@ -701,6 +704,7 @@ function toProject(r: ProjectRow): Project {
     ...(r.url !== null ? { url: r.url } : {}),
     ...(r.repo !== null ? { repo: r.repo } : {}),
     ...(r.cover_image !== null ? { coverImage: r.cover_image } : {}),
+    ...(r.gallery !== null && r.gallery.length > 0 ? { gallery: parseItems(r.gallery) } : {}),
     ...(r.sort_order !== 0 ? { order: r.sort_order } : {}),
   };
 }

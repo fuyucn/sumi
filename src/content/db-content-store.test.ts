@@ -95,6 +95,7 @@ CREATE TABLE "sumi_projects" (
   "repo" text,
   "tech" text DEFAULT '[]' NOT NULL,
   "cover_image" text,
+  "gallery" text,
   "featured" boolean DEFAULT false NOT NULL,
   "sort_order" integer DEFAULT 0 NOT NULL,
   "created_at" text NOT NULL,
@@ -223,6 +224,8 @@ test("projects + pages round-trip with featured-first ordering", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });
@@ -235,6 +238,8 @@ test("projects + pages round-trip with featured-first ordering", async () => {
     url: "https://sumi.example",
     repo: "https://github.com/example/sumi",
     tech: ["next", "drizzle"],
+    coverImage: "https://cdn.example/sumi.png",
+    gallery: ["https://cdn.example/sumi-1.png", "https://cdn.example/sumi-2.png"],
     featured: true,
     order: 2,
   });

@@ -150,6 +150,18 @@ notifications, native mobile app.
   storage per backend: GitHub `content/@<handle>/notifications.json` (capped at
   100), Postgres `sumi_notifications`, D1 `notifications`.
 
+### FR-15 Project gallery images (NEW — this PRD)
+- Each project carries an optional `gallery` list of image URLs (screenshots /
+  shots), alongside the existing single cover image.
+- `/write/projects` form grows an add/remove list of gallery image URLs
+  (validated as `http(s)`); editing an existing project preserves the gallery.
+- `/projects` cards render a cover strip (cover image, falling back to the first
+  gallery image) plus a thumbnail grid with a keyboard-navigable lightbox
+  (Escape closes, arrow keys step, counter shows position).
+- Stored per backend: GitHub `gallery` frontmatter array in each project file,
+  Postgres `sumi_projects.gallery` (JSON text), D1 `projects.gallery`; the
+  `0012_projects_gallery` migration adds the Postgres column.
+
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via GitHub API / Neon.
@@ -171,12 +183,13 @@ notifications, native mobile app.
 - [x] `/archive` renders published posts grouped by year; article bylines show reading time + word count.
 - [x] `/projects` showcases featured work; `/@handle/p/<slug>` renders custom markdown pages; both are editable in `/write` and work on all three backends.
 - [x] Comments, replies, likes, and follows notify the recipient in `/notifications`; nav shows an unread badge and "Mark all read" works on all three backends.
+- [x] Projects support a gallery of images rendered on the `/projects` cards with a lightbox; the gallery edits from `/write/projects` and round-trips on all three backends.
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
 ## 9. Open questions / future
 
-- Agent/automation content generation; per-project gallery images.
+- Agent/automation content generation.
 - Full-text search index tuning / DB-backed ranking (done: relevance scoring + pg_trgm GIN index).
 - Moderation tooling for comment threads (done: comment authors or the post's
   author can delete a comment via a Delete button; nesting cap of 4 is enforced

@@ -15,6 +15,7 @@ export function ProjectForm({
     repo?: string;
     tech?: string[];
     coverImage?: string;
+    gallery?: string[];
     featured?: boolean;
     order?: number;
   };
@@ -26,6 +27,7 @@ export function ProjectForm({
   const [repo, setRepo] = useState(initial?.repo ?? "");
   const [tech, setTech] = useState<string[]>(initial?.tech ?? []);
   const [coverImage, setCoverImage] = useState(initial?.coverImage ?? "");
+  const [gallery, setGallery] = useState<string[]>(initial?.gallery ?? []);
   const [featured, setFeatured] = useState(initial?.featured ?? false);
   const [order, setOrder] = useState(String(initial?.order ?? ""));
   const [error, setError] = useState<string | null>(null);
@@ -42,6 +44,7 @@ export function ProjectForm({
       repo,
       tech,
       coverImage,
+      gallery: gallery.filter((u) => u.trim() !== ""),
       featured,
       order: order === "" ? 0 : Number(order),
     });
@@ -123,6 +126,40 @@ export function ProjectForm({
           className="field mt-2"
         />
       </label>
+      <div className="mt-6 block">
+        <span className="text-sm text-ink-muted">Gallery images</span>
+        <div className="mt-2 space-y-2">
+          {gallery.map((url, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                value={url}
+                onChange={(e) => {
+                  const next = [...gallery];
+                  next[i] = e.target.value;
+                  setGallery(next);
+                }}
+                placeholder="https://… (optional)"
+                className="field"
+              />
+              <button
+                type="button"
+                aria-label={`Remove gallery image ${i + 1}`}
+                onClick={() => setGallery(gallery.filter((_, j) => j !== i))}
+                className="btn-ghost shrink-0 px-2.5 text-sm text-ink-muted hover:text-seal"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setGallery([...gallery, ""])}
+          className="btn-ghost mt-2 px-3 py-1 text-sm text-ink-muted hover:text-ink"
+        >
+          + Add image
+        </button>
+      </div>
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
         <label className="flex items-center gap-3 text-sm text-ink-muted">
           <input

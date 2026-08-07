@@ -36,6 +36,9 @@ export const projectFormSchema = z.object({
   repo: z.string().trim().max(500).default(""),
   tech: z.array(z.string().trim().min(1)).default([]),
   coverImage: z.string().trim().max(500).default(""),
+  gallery: z
+    .array(z.string().trim().max(500).refine((u) => u === "" || /^https?:\/\//i.test(u), "Gallery URLs must start with http:// or https://"))
+    .default([]),
   featured: z.boolean().default(false),
   order: z.coerce.number().int().min(0).max(999).default(0),
 });
@@ -324,6 +327,7 @@ export async function runSaveProject(
     ...(f.url ? { url: f.url } : {}),
     ...(f.repo ? { repo: f.repo } : {}),
     ...(f.coverImage ? { coverImage: f.coverImage } : {}),
+    ...(f.gallery && f.gallery.length > 0 ? { gallery: f.gallery } : {}),
   });
   return { ok: true, data: { slug } };
 }

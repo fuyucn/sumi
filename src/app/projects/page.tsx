@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import type { Project } from "@/content/types";
+import { ProjectGallery } from "@/components/project-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -51,50 +52,69 @@ export default async function ProjectsPage() {
             const href = project.url || repoUrl(project.repo ?? "") || `/@${handle}`;
             const external = href.startsWith("http");
             return (
-              <article key={`${handle}/${project.slug}`} className="card flex flex-col">
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="min-w-0">
-                    <a
-                      href={href}
-                      target={external ? "_blank" : undefined}
-                      rel={external ? "noreferrer" : undefined}
-                      className="link-underline font-serif text-xl font-semibold tracking-tight text-ink transition-colors hover:text-seal"
-                    >
-                      {project.title}
-                    </a>
-                  </h2>
-                  {project.featured ? (
-                    <span className="shrink-0 rounded-full bg-seal/[0.1] px-2 py-0.5 text-xs font-medium text-seal">
-                      Featured
-                    </span>
+              <article key={`${handle}/${project.slug}`} className="card flex flex-col overflow-hidden">
+                {project.coverImage || (project.gallery && project.gallery.length > 0) ? (
+                  <div className="overflow-hidden border-b border-line">
+                    <img
+                      src={project.coverImage ?? project.gallery![0]}
+                      alt={project.title}
+                      width={1600}
+                      height={900}
+                      loading="lazy"
+                      className="aspect-[16/9] w-full object-cover"
+                    />
+                  </div>
+                ) : null}
+                <div className="flex grow flex-col p-5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="min-w-0">
+                      <a
+                        href={href}
+                        target={external ? "_blank" : undefined}
+                        rel={external ? "noreferrer" : undefined}
+                        className="link-underline font-serif text-xl font-semibold tracking-tight text-ink transition-colors hover:text-seal"
+                      >
+                        {project.title}
+                      </a>
+                    </h2>
+                    {project.featured ? (
+                      <span className="shrink-0 rounded-full bg-seal/[0.1] px-2 py-0.5 text-xs font-medium text-seal">
+                        Featured
+                      </span>
+                    ) : null}
+                  </div>
+                  {project.description ? (
+                    <p className="mt-2 text-sm leading-relaxed text-ink-muted">
+                      {project.description}
+                    </p>
                   ) : null}
-                </div>
-                {project.description ? (
-                  <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                    {project.description}
-                  </p>
-                ) : null}
-                {project.tech && project.tech.length > 0 ? (
-                  <p className="mt-3 text-xs text-ink-faint">
-                    {project.tech.map((t) => `#${t}`).join(" ")}
-                  </p>
-                ) : null}
-                <div className="mt-auto flex items-center gap-3 pt-4 text-sm">
-                  <Link
-                    href={`/@${handle}`}
-                    className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
-                  >
-                    @{handle}
-                  </Link>
-                  {project.repo && repoUrl(project.repo) ? (
-                    <a
-                      href={repoUrl(project.repo)!}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs text-ink-faint transition-colors hover:text-ink-muted"
+                  {project.tech && project.tech.length > 0 ? (
+                    <p className="mt-3 text-xs text-ink-faint">
+                      {project.tech.map((t) => `#${t}`).join(" ")}
+                    </p>
+                  ) : null}
+                  <div className="mt-auto flex items-center gap-3 pt-4 text-sm">
+                    <Link
+                      href={`/@${handle}`}
+                      className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
                     >
-                      repo ↗
-                    </a>
+                      @{handle}
+                    </Link>
+                    {project.repo && repoUrl(project.repo) ? (
+                      <a
+                        href={repoUrl(project.repo)!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-ink-faint transition-colors hover:text-ink-muted"
+                      >
+                        repo ↗
+                      </a>
+                    ) : null}
+                  </div>
+                  {project.gallery && project.gallery.length > 0 ? (
+                    <div className="mt-5">
+                      <ProjectGallery images={project.gallery} title={project.title} />
+                    </div>
                   ) : null}
                 </div>
               </article>
