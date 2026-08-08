@@ -97,22 +97,22 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
   };
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-5 py-20 rise">
+    <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-5 py-20">
       <div className="w-full max-w-sm text-center">
-        <p className="group inline-flex" aria-hidden>
+        <p className="group inline-flex rise" aria-hidden>
           <span className="seal-stamp flex h-14 w-14 items-center justify-center rounded-2xl bg-seal font-serif text-3xl font-semibold leading-none text-paper shadow-sm transition-colors group-hover:bg-seal-soft">
             墨
           </span>
         </p>
-        <h1 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="rise rise-delay-1 mt-5 font-serif text-3xl font-semibold tracking-tight text-ink">
           Sign in to Sumi
         </h1>
-        <p className="mx-auto mt-3 mb-8 max-w-xs font-serif text-[1.0625rem] leading-relaxed text-ink-muted">
+        <p className="rise rise-delay-2 mx-auto mt-3 mb-8 max-w-xs font-serif text-[1.0625rem] leading-relaxed text-ink-muted">
           Write and publish your thoughts. Read what others have left behind.
         </p>
 
         {passphraseRequired && !unlocked ? (
-          <div className="mb-6 rounded-card border border-line bg-paper/60 p-4 text-left shadow-card">
+          <div className="rise rise-delay-3 mb-6 rounded-card border border-line bg-paper/60 p-4 text-left shadow-card">
             <label
               htmlFor="login-passphrase"
               className="flex items-center gap-1.5 text-xs font-medium text-ink-muted"
@@ -151,7 +151,7 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
             </p>
           </div>
         ) : passphraseRequired ? (
-          <p className="mb-6 flex items-center justify-center gap-1.5 text-xs text-ink-faint">
+          <p className="rise rise-delay-3 mb-6 flex items-center justify-center gap-1.5 text-xs text-ink-faint">
             <LockKey size={13} weight="duotone" aria-hidden />
             已解锁，本浏览器保留 30 天
           </p>
@@ -162,7 +162,7 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
           onClick={start}
           disabled={pending || (passphraseRequired && !unlocked)}
           aria-busy={pending}
-          className="btn-primary w-full gap-2.5 px-4 py-3 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary rise rise-delay-4 w-full gap-2.5 px-4 py-3 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? (
             <CircleNotch size={16} weight="bold" className="animate-spin" aria-hidden />
@@ -176,7 +176,7 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
         {error ? (
           <p
             role="alert"
-            className="mt-5 rounded-card border border-line-strong bg-paper/70 px-4 py-3 text-sm leading-relaxed text-ink-muted shadow-card"
+            className="mt-5 text-sm leading-relaxed text-seal"
           >
             {error}
           </p>

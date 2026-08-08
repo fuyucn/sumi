@@ -1207,3 +1207,10 @@ textarea,
     transform: translateY(-1px);
   }
 }
+
+/* Sign-in page extends the hero stagger past the third step. */
+@media (prefers-reduced-motion: no-preference) {
+  .rise-delay-4 {
+    animation-delay: 0.32s;
+  }
+}
