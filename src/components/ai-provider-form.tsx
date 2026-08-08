@@ -162,13 +162,11 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
       ) : null}
       {saved ? (
         <p
-          className="text-sm text-ink-muted"
+          className="inline-flex items-center gap-1.5 rounded-full border border-seal/50 bg-seal/10 px-2.5 py-0.5 text-sm text-seal"
           style={{ animation: "fade-in 0.22s var(--ease-out)" }}
         >
-          <span className="inline-flex items-center gap-1.5">
-            <Check size={14} weight="bold" aria-hidden className="text-seal" />
-            已保存
-          </span>
+          <Check size={14} weight="bold" aria-hidden />
+          已保存
         </p>
       ) : null}
 
