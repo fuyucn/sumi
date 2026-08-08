@@ -2,6 +2,11 @@ import { extractHeadings } from "@/lib/heading-slug";
 import { parseSummaryPoint } from "@/lib/ai/summary-point";
 import type { AiProviderConfig, AiSummaryPoint, AiSummaryResult } from "@/content/ai-store";
 
+/** Generation must finish inside this window or the server action returns a timeout hint. */
+const GENERATION_TIMEOUT_MS = 90_000;
+/** Connectivity probe stays snappy so the settings form never hangs. */
+const TEST_TIMEOUT_MS = 15_000;
+
 /**
  * OpenAI-compatible chat completions call (plain fetch, no SDK). Any provider
  * that speaks the `/chat/completions` shape works: OpenAI, DeepSeek, Moonshot,
@@ -11,10 +16,14 @@ export async function chatCompletion(
   provider: Pick<AiProviderConfig, "baseUrl" | "apiKey" | "model">,
   messages: Array<{ role: "system" | "user" | "assistant"; content: string }>,
   maxTokens = 2048,
+  timeoutMs = GENERATION_TIMEOUT_MS,
 ): Promise<string> {
   const baseUrl = provider.baseUrl.replace(/\/+$/, "");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error("LLM 请求超时")), timeoutMs);
   const res = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
+    signal: controller.signal,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${provider.apiKey}`,
@@ -26,6 +35,7 @@ export async function chatCompletion(
       max_tokens: maxTokens,
     }),
   });
+  clearTimeout(timer);
   if (!res.ok) {
     const detail = (await res.text()).slice(0, 300);
     throw new Error(`LLM ${res.status}: ${detail}`);
@@ -90,6 +100,7 @@ export async function testProvider(provider: AiProviderConfig): Promise<{ ok: tr
       provider,
       [{ role: "user", content: "回复 OK" }],
       512,
+      TEST_TIMEOUT_MS,
     );
     return { ok: true };
   } catch (e) {

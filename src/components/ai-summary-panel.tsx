@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import type { AiTask } from "@/content/ai-store";
 import { clearSummaryAction, generateSummaryAction } from "@/app/write/actions";
+import { friendlyAiError, KEY_RE } from "@/lib/ai/error-hint";
 
 interface Props {
   handle: string;
@@ -197,7 +199,17 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
         <div className="mt-4">
           <p className="text-sm leading-relaxed text-ink-muted">
             AI 总结生成失败
-            {task.error ? <span className="mt-1 block font-mono text-xs text-ink-faint">{task.error}</span> : null}
+            {task.error ? (
+              <span className="mt-1 block text-xs text-seal">{friendlyAiError(task.error)}</span>
+            ) : null}
+            {isAuthor && KEY_RE.test(task.error ?? "") ? (
+              <Link
+                href="/settings"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-seal underline-offset-4 transition-colors hover:text-seal-soft hover:underline"
+              >
+                去 Settings 更新 API Key →
+              </Link>
+            ) : null}
           </p>
         </div>
       ) : busy ? (
