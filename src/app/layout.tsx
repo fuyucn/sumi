@@ -61,8 +61,8 @@ export default function RootLayout({
               <span>Ink on paper, kept in your space.</span>
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <Link href="/archive" className="link-underline transition-colors hover:text-ink-muted">
-                Archive
+              <Link href="/posts" className="link-underline transition-colors hover:text-ink-muted">
+                Posts
               </Link>
               <Link href="/projects" className="link-underline transition-colors hover:text-ink-muted">
                 Projects

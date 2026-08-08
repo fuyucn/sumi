@@ -2,25 +2,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Article,
   Bell,
   Feather,
   GearSix,
   House,
+  List,
   MagnifyingGlass,
   SignIn,
   Tag,
-  User,
+  X,
 } from "@phosphor-icons/react";
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { AuthorName } from "@/components/author-name";
+import { useDisplayName } from "@/components/use-display-name";
 
 const linkClass = (active: boolean) =>
   [
     "press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
     active ? "bg-seal-wash text-seal" : "text-ink-faint hover:text-ink",
+  ].join(" ");
+
+const iconClass = (active: boolean) =>
+  [
+    "press group relative flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+    active
+      ? "bg-seal-wash text-seal hover:text-seal"
+      : "text-ink-faint hover:text-ink",
   ].join(" ");
 
 function IconLink({
@@ -37,7 +47,7 @@ function IconLink({
   return (
     <Link
       href={href}
-      className={`${linkClass(active)} group relative`}
+      className={iconClass(active)}
       aria-current={active ? "page" : undefined}
       aria-label={label}
     >
@@ -52,12 +62,96 @@ function IconLink({
   );
 }
 
+function DrawerLink({
+  href,
+  active,
+  onClick,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  onClick?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={`press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+        active ? "bg-seal-wash text-seal" : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+      }`}
+      aria-current={active ? "page" : undefined}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function UserChip({ handle }: { handle: string }) {
+  const name = useDisplayName(handle);
+  const initial = (name || handle).trim().charAt(0).toUpperCase() || "?";
+  return (
+    <Link
+      href={`/@${handle}`}
+      className="press group relative flex h-9 items-center gap-2 rounded-full border border-line-strong bg-paper pl-1 pr-3 text-sm font-medium text-ink transition-colors hover:border-seal/40 hover:bg-seal-wash/40"
+      aria-label={`Profile of ${name}`}
+    >
+      <span
+        aria-hidden
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-seal text-xs font-bold text-paper"
+      >
+        {initial}
+      </span>
+      <span className="hidden max-w-28 truncate sm:inline">{name}</span>
+      <span
+        role="tooltip"
+        className="nav-tooltip pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs font-medium text-paper shadow-pop"
+      >
+        {name}
+      </span>
+    </Link>
+  );
+}
+
+function DrawerUserRow({
+  handle,
+  onClick,
+}: {
+  handle: string;
+  onClick?: () => void;
+}) {
+  const name = useDisplayName(handle);
+  const initial = (name || handle).trim().charAt(0).toUpperCase() || "?";
+  return (
+    <Link
+      href={`/@${handle}`}
+      onClick={onClick}
+      className="press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-ink/5"
+    >
+      <span
+        aria-hidden
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-seal text-xs font-bold text-paper"
+      >
+        {initial}
+      </span>
+      <span className="truncate">{name}</span>
+    </Link>
+  );
+}
+
 export function Nav() {
   const { data } = useSession();
   const user = data?.user as { username?: string; name?: string } | undefined;
   const handle = user?.username ?? user?.name;
   const pathname = usePathname();
   const [unread, setUnread] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Close the mobile drawer after navigation (also covers browser back/forward).
+    const id = requestAnimationFrame(() => setMenuOpen(false));
+    return () => cancelAnimationFrame(id);
+  }, [pathname]);
 
   useEffect(() => {
     if (!handle) return;
@@ -76,9 +170,11 @@ export function Nav() {
   const isActive = (href: string, prefix = false) =>
     prefix ? pathname.startsWith(href) : pathname === href;
 
+  const closeMenu = () => setMenuOpen(false);
+
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-paper/80 backdrop-blur-md">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
         <Link
           href="/"
           className="group flex shrink-0 items-center gap-2 font-serif text-lg font-semibold tracking-tight text-ink transition-opacity hover:opacity-90"
@@ -91,96 +187,186 @@ export function Nav() {
           </span>
           Sumi
         </Link>
-        <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto text-sm">
+
+        {/* Site navigation: Home → Posts → Tags (Tags always last). */}
+        <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 text-sm md:flex">
           <Link
             href="/"
             className={linkClass(isActive("/"))}
             aria-current={isActive("/") ? "page" : undefined}
           >
             <House size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Home</span>
+            Home
           </Link>
           <Link
-            href="/archive"
-            className={linkClass(isActive("/archive"))}
-            aria-current={isActive("/archive") ? "page" : undefined}
+            href="/posts"
+            className={linkClass(isActive("/posts"))}
+            aria-current={isActive("/posts") ? "page" : undefined}
           >
             <Article size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Posts</span>
+            Posts
           </Link>
+          <Link
+            href="/tags"
+            className={linkClass(isActive("/tags") || isActive("/tag/", true))}
+            aria-current={
+              isActive("/tags") || isActive("/tag/", true) ? "page" : undefined
+            }
+          >
+            <Tag size={15} weight="duotone" aria-hidden />
+            Tags
+          </Link>
+        </nav>
+
+        {/* Tool + user cluster. */}
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <IconLink href="/search" label="Index" active={isActive("/search")}>
+            <MagnifyingGlass size={16} weight="duotone" aria-hidden />
+          </IconLink>
           {handle ? (
             <>
-              <Link
-                href={`/@${handle}`}
-                className={linkClass(isActive(`/@${handle}`, true))}
-                aria-current={isActive(`/@${handle}`, true) ? "page" : undefined}
-              >
-                <User size={15} weight="duotone" aria-hidden />
-                <span className="hidden sm:inline">
-                  <AuthorName handle={handle} />
-                </span>
-              </Link>
+              <div className="hidden md:block">
+                <IconLink
+                  href="/notifications"
+                  label="Inbox"
+                  active={isActive("/notifications")}
+                >
+                  <Bell size={16} weight="duotone" aria-hidden />
+                  {unread > 0 ? (
+                    <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  ) : null}
+                </IconLink>
+              </div>
+              <div className="hidden md:block">
+                <IconLink
+                  href="/settings"
+                  label="Settings"
+                  active={isActive("/settings")}
+                >
+                  <GearSix size={16} weight="duotone" aria-hidden />
+                </IconLink>
+              </div>
               <Link
                 href="/write"
-                className="btn-primary ml-1 px-4 py-1.5"
+                className="btn-primary hidden px-4 py-1.5 md:inline-flex"
               >
                 <Feather size={15} weight="duotone" aria-hidden />
                 Write
               </Link>
+              <div className="hidden md:block">
+                <UserChip handle={handle} />
+              </div>
             </>
           ) : (
             <Link
               href="/sign-in"
-              className={linkClass(isActive("/sign-in"))}
-              aria-current={isActive("/sign-in") ? "page" : undefined}
+              className="btn-ghost hidden md:inline-flex"
             >
               <SignIn size={15} weight="duotone" aria-hidden />
-              <span className="hidden sm:inline">Sign in</span>
+              Sign in
             </Link>
           )}
-          <Link
-            href="/tags"
-            className={linkClass(isActive("/tags") || isActive("/tag/", true))}
-            aria-current={isActive("/tags") || isActive("/tag/", true) ? "page" : undefined}
-          >
-            <Tag size={15} weight="duotone" aria-hidden />
-            <span className="hidden sm:inline">Tags</span>
-          </Link>
-        </nav>
-        <div className="flex shrink-0 items-center gap-1">
-          <IconLink
-            href="/search"
-            label="Index"
-            active={isActive("/search")}
-          >
-            <MagnifyingGlass size={15} weight="duotone" aria-hidden />
-          </IconLink>
-          {handle ? (
-            <IconLink
-              href="/notifications"
-              label="Inbox"
-              active={isActive("/notifications")}
-            >
-              <Bell size={15} weight="duotone" aria-hidden />
-              {unread > 0 ? (
-                <span className="pointer-events-none absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              ) : null}
-            </IconLink>
-          ) : null}
-          {handle ? (
-            <IconLink
-              href="/settings"
-              label="Settings"
-              active={isActive("/settings")}
-            >
-              <GearSix size={15} weight="duotone" aria-hidden />
-            </IconLink>
-          ) : null}
           <ThemeToggle />
+          <button
+            type="button"
+            className="press flex h-9 w-9 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink md:hidden"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            {menuOpen ? (
+              <X size={18} weight="duotone" aria-hidden />
+            ) : (
+              <List size={18} weight="duotone" aria-hidden />
+            )}
+          </button>
         </div>
       </div>
+
+      {menuOpen && typeof document !== "undefined"
+        ? createPortal(
+            <div className="md:hidden">
+              <div
+                className="fixed inset-0 z-[45] bg-ink/20"
+                aria-hidden
+                onClick={closeMenu}
+              />
+              <div className="fixed inset-x-0 top-16 z-50 border-b border-line bg-paper px-5 py-4 shadow-pop animate-rise">
+            <nav className="flex flex-col gap-0.5" aria-label="Mobile">
+              <DrawerLink href="/" active={isActive("/")} onClick={closeMenu}>
+                <House size={17} weight="duotone" aria-hidden />
+                Home
+              </DrawerLink>
+              <DrawerLink
+                href="/posts"
+                active={isActive("/posts")}
+                onClick={closeMenu}
+              >
+                <Article size={17} weight="duotone" aria-hidden />
+                Posts
+              </DrawerLink>
+              <DrawerLink
+                href="/tags"
+                active={isActive("/tags") || isActive("/tag/", true)}
+                onClick={closeMenu}
+              >
+                <Tag size={17} weight="duotone" aria-hidden />
+                Tags
+              </DrawerLink>
+            </nav>
+
+            <div className="my-3 h-px bg-line" aria-hidden />
+
+            {handle ? (
+              <div className="flex flex-col gap-1">
+                <DrawerUserRow handle={handle} onClick={closeMenu} />
+                <Link
+                  href="/write"
+                  onClick={closeMenu}
+                  className="btn-primary mt-1 w-full"
+                >
+                  <Feather size={15} weight="duotone" aria-hidden />
+                  Write
+                </Link>
+                <DrawerLink
+                  href="/notifications"
+                  active={isActive("/notifications")}
+                  onClick={closeMenu}
+                >
+                  <Bell size={17} weight="duotone" aria-hidden />
+                  Inbox
+                  {unread > 0 ? (
+                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-seal px-1.5 text-[0.6875rem] font-bold leading-none text-paper">
+                      {unread > 9 ? "9+" : unread}
+                    </span>
+                  ) : null}
+                </DrawerLink>
+                <DrawerLink
+                  href="/settings"
+                  active={isActive("/settings")}
+                  onClick={closeMenu}
+                >
+                  <GearSix size={17} weight="duotone" aria-hidden />
+                  Settings
+                </DrawerLink>
+              </div>
+            ) : (
+              <Link
+                href="/sign-in"
+                onClick={closeMenu}
+                className="btn-primary w-full"
+              >
+                <SignIn size={15} weight="duotone" aria-hidden />
+                Sign in
+              </Link>
+            )}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </header>
   );
 }

@@ -50,7 +50,7 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="press flex items-center justify-center rounded-full p-2 text-ink-faint transition-colors hover:text-ink"
+      className="press flex h-9 w-9 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink"
       aria-label={LABELS[theme]}
       title={LABELS[theme]}
       onClick={() => {

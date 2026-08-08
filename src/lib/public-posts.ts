@@ -86,7 +86,7 @@ export function buildFeedXml(posts: PublicPostRef[], baseUrl: string): string {
 export function collectSitemapUrls(posts: PublicPostRef[], baseUrl: string): string[] {
   const base = baseUrl.replace(/\/$/, "");
   const urls = [`${base}/`];
-  urls.push(`${base}/archive`);
+  urls.push(`${base}/posts`);
   urls.push(`${base}/projects`);
   for (const handle of [...new Set(posts.map((p) => p.handle))].sort()) {
     urls.push(`${base}/@${handle}`);

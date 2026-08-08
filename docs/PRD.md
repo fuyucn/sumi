@@ -120,7 +120,7 @@ notifications, native mobile app.
   editorial post index with date column and hover lift.
 
 ### FR-12 Archive & reading time (NEW — this PRD)
-- `/archive` timeline groups every published post by year (newest first), with
+- `/posts` timeline groups every published post by year (newest first), with
   a per-post day column, owner handle, and tag line; linked from the footer and
   registered in the sitemap.
 - Article pages show an estimated reading time and word count in the byline
@@ -226,7 +226,7 @@ notifications, native mobile app.
 - [x] Portal home, tag cloud, and ink-on-paper design system ship in the UI.
 - [x] Handnotes (手记) timeline at `/[handle]/notes` with an inline composer for the owner; newest first.
 - [x] Friends (友链) page at `/friends` with add/remove for signed-in creators; works on all three backends.
-- [x] `/archive` renders published posts grouped by year; article bylines show reading time + word count.
+- [x] `/posts` renders published posts grouped by year; article bylines show reading time + word count.
 - [x] `/projects` showcases featured work; `/@handle/p/<slug>` renders custom markdown pages; both are editable in `/write` and work on all three backends.
 - [x] Comments, replies, likes, and follows notify the recipient in `/notifications`; nav shows an unread badge and "Mark all read" works on all three backends.
 - [x] Projects support a gallery of images rendered on the `/projects` cards with a lightbox; the gallery edits from `/write/projects` and round-trips on all three backends.

@@ -77,8 +77,8 @@ export default function NotFound() {
         <Link href="/" className="btn-primary px-6 py-3">
           Back home
         </Link>
-        <Link href="/archive" className="btn-ghost px-6 py-3">
-          Browse archive
+        <Link href="/posts" className="btn-ghost px-6 py-3">
+          Browse posts
         </Link>
       </div>
     </main>

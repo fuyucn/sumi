@@ -19,7 +19,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Magazines** — creators curate their own posts into ordered collections, viewable at `/@handle/m/<mag>`.
 - **Projects** — a `/projects` showcase of featured work with tech stack, links, and a per-project image gallery (cover + lightbox); editable from `/write/projects`.
 - **Independent pages** — arbitrary markdown pages per creator at `/@handle/p/<slug>`, optionally linked from their homepage nav.
-- **Archive** — a yearly timeline at `/archive` with reading time and word counts in article bylines.
+- **Posts** — a yearly timeline at `/posts` with reading time and word counts in article bylines.
 - **Notifications** — comments, replies, likes, and new followers land in `/notifications` with an unread badge and "mark all read", on every backend.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
