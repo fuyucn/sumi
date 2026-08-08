@@ -42,7 +42,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
         if (data.task.status === "pending" || data.task.status === "running") {
           if (attempts >= MAX_POLLS) {
             if (timer.current) clearInterval(timer.current);
-            setTask((t) => (t ? { ...t, status: "failed", error: "生成超时：请回到编辑页点击「重新生成」" } : t));
+            setTask((t) => (t ? { ...t, status: "failed", error: "生成超时：可稍后点击「重新生成」" } : t));
           }
         } else {
           if (timer.current) clearInterval(timer.current);
