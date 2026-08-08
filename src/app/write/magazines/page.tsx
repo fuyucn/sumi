@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -34,27 +35,29 @@ export default async function MagazinesPage() {
         </p>
       ) : (
         <div className="divide-y divide-line border-t border-line">
-          {magazines.map((mag) => (
-            <div key={mag.slug} className="py-5">
-              <Link
-                href={`/@${handle}/m/${mag.slug}`}
-                className="link-underline font-serif text-2xl font-medium text-ink transition-colors hover:text-ink"
-              >
-                {mag.title}
-              </Link>
-              {mag.description ? (
-                <p className="mt-1 text-sm text-ink-muted">{mag.description}</p>
-              ) : null}
-              <p className="mt-1 text-xs text-ink-faint">
-                {(mag.items?.length ?? 0) === 1 ? "1 item" : `${mag.items?.length ?? 0} items`}
-              </p>
-              <Link
-                href={`/write/magazines/${mag.slug}`}
-                className="mt-2 inline-block text-sm text-ink-muted transition-colors hover:text-ink"
-              >
-                Edit
-              </Link>
-            </div>
+          {magazines.map((mag, i) => (
+            <Reveal key={mag.slug} delay={Math.min(i * 0.05, 0.3)}>
+              <div className="py-5">
+                <Link
+                  href={`/@${handle}/m/${mag.slug}`}
+                  className="link-underline font-serif text-2xl font-medium text-ink transition-colors hover:text-ink"
+                >
+                  {mag.title}
+                </Link>
+                {mag.description ? (
+                  <p className="mt-1 text-sm text-ink-muted">{mag.description}</p>
+                ) : null}
+                <p className="mt-1 text-xs text-ink-faint">
+                  {(mag.items?.length ?? 0) === 1 ? "1 item" : `${mag.items?.length ?? 0} items`}
+                </p>
+                <Link
+                  href={`/write/magazines/${mag.slug}`}
+                  className="mt-2 inline-block text-sm text-ink-muted transition-colors hover:text-ink"
+                >
+                  Edit
+                </Link>
+              </div>
+            </Reveal>
           ))}
         </div>
       )}

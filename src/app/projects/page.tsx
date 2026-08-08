@@ -3,6 +3,7 @@ import { getReadContentStore } from "@/content";
 import type { Project } from "@/content/types";
 import { ProjectGallery } from "@/components/project-gallery";
 import { getDisplayNameMap } from "@/lib/display-name";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -53,11 +54,16 @@ export default async function ProjectsPage() {
         </p>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2">
-          {items.map(({ handle, project }) => {
+          {items.map(({ handle, project }, i) => {
             const href = project.url || repoUrl(project.repo ?? "") || `/@${handle}`;
             const external = href.startsWith("http");
             return (
-              <article key={`${handle}/${project.slug}`} className="card group lift flex flex-col overflow-hidden">
+              <Reveal
+                key={`${handle}/${project.slug}`}
+                delay={Math.min(i * 0.06, 0.3)}
+                className="flex"
+              >
+                <article className="card group lift flex w-full flex-col overflow-hidden">
                 {project.coverImage || (project.gallery && project.gallery.length > 0) ? (
                   <div className="overflow-hidden border-b border-line">
                     <img
@@ -127,7 +133,8 @@ export default async function ProjectsPage() {
                     </div>
                   ) : null}
                 </div>
-              </article>
+                </article>
+              </Reveal>
             );
           })}
         </div>

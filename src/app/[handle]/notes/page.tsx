@@ -7,6 +7,7 @@ import { Markdown } from "@/components/markdown";
 import { NoteComposer } from "@/components/note-composer";
 import { DeleteNoteButton } from "@/components/delete-note-button";
 import { displayName } from "@/lib/display-name";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -82,9 +83,11 @@ export default async function NotesPage({
         </p>
       ) : (
         <ol className="mt-8 divide-y divide-line border-t border-line">
-          {notes.map((note) => (
-            <li
+          {notes.map((note, i) => (
+            <Reveal
+              as="li"
               key={note.id}
+              delay={Math.min(i * 0.05, 0.3)}
               className="group -mx-4 rounded-xl border-l-2 border-transparent px-4 py-6 transition-[background-color,border-color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:border-seal/60 hover:bg-paper-soft/60"
             >
               <div className="flex items-center gap-2">
@@ -107,7 +110,7 @@ export default async function NotesPage({
                   <DeleteNoteButton id={note.id} />
                 </div>
               ) : null}
-            </li>
+            </Reveal>
           ))}
         </ol>
       )}
