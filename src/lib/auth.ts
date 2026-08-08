@@ -44,6 +44,12 @@ function buildAuth() {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
+    // OAuth callback failures (e.g. a GitHub login rejected by the allowlist)
+    // redirect back to the styled sign-in page with `?error=` instead of
+    // Better Auth's default error page, so the reason is shown in Chinese.
+    onAPIError: {
+      errorURL: `${env.BETTER_AUTH_URL}/sign-in`,
+    },
     // CSRF/origin safety valve: beyond baseURL, only these origins may start
     // OAuth flows or receive auth cookies. `.env` already ships this variable;
     // keep it in sync with any proxy/custom domain you trust.

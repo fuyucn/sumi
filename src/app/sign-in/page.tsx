@@ -1,18 +1,48 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "@/lib/auth-client";
 import { CircleNotch } from "@phosphor-icons/react";
 
+/** Better Auth OAuth error codes → friendly Chinese explanations. */
+const ERROR_HINTS: Record<string, string> = {
+  forbidden: "这个 GitHub 账号不在允许登录的名单里。",
+  FORBIDDEN: "这个 GitHub 账号不在允许登录的名单里。",
+  access_denied: "已在 GitHub 上取消授权，没有完成登录。",
+  "rate_limit_exceeded": "登录尝试过于频繁，请稍后再试。",
+  invalid_state: "登录会话已过期或无效，请重新尝试。",
+};
+
+function hintFor(code: string, description: string | null): string {
+  const hint = ERROR_HINTS[code] ?? ERROR_HINTS[code.toLowerCase()];
+  if (hint) return hint;
+  if (description && description.trim()) return description.trim();
+  return "登录失败，请重试。";
+}
+
 export default function SignInPage() {
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // OAuth callback failures redirect back here with ?error=...; read it once on
+  // mount (client-side only, so no SSR/hydration involvement).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("error");
+    if (code) {
+      setError(hintFor(code, params.get("error_description")));
+    }
+  }, []);
+
   const start = async () => {
     if (pending) return;
     setPending(true);
+    setError(null);
     try {
       await signIn.social({ provider: "github", callbackURL: "/" });
     } catch {
       // OAuth redirects away on success; only a failure lands back here.
       setPending(false);
+      setError("登录失败，请重试。");
     }
   };
   return (
@@ -45,6 +75,14 @@ export default function SignInPage() {
           )}
           {pending ? "Redirecting…" : "Continue with GitHub"}
         </button>
+        {error ? (
+          <p
+            role="alert"
+            className="mt-5 rounded-card border border-line-strong bg-paper/70 px-4 py-3 text-sm leading-relaxed text-ink-muted shadow-card"
+          >
+            {error}
+          </p>
+        ) : null}
         <p className="mt-5 text-xs leading-relaxed text-ink-faint">
           Your posts live in your own space: versioned, portable, and yours.
         </p>
