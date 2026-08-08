@@ -5,7 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
 import { expect, test } from "vitest";
 import { schema } from "@/db/schema";
-import { isAllowedGithubUser } from "./allowlist";
+import { assertAllowedGithubUser, isAllowedGithubUser } from "./allowlist";
 
 function makeAuth(allowlist: string) {
   const client = new PGlite();
@@ -20,10 +20,19 @@ function makeAuth(allowlist: string) {
           before: async (user: Record<string, unknown>) => {
             const raw = user["username"];
             const login = typeof raw === "string" ? raw : "";
-            if (!isAllowedGithubUser(login, allowlist)) {
-              throw new APIError("FORBIDDEN", { message: "not allowed" });
-            }
+            assertAllowedGithubUser(login, allowlist);
             return { data: user };
+          },
+        },
+      },
+      session: {
+        create: {
+          before: async (session: Record<string, unknown>) => {
+            assertAllowedGithubUser(
+              String(session["username"] ?? ""),
+              allowlist,
+            );
+            return { data: session };
           },
         },
       },
@@ -41,4 +50,14 @@ test("auth instance constructs over pglite", () => {
 test("gate predicate admits allowed and rejects others", () => {
   expect(isAllowedGithubUser("alice", "alice,bob")).toBe(true);
   expect(isAllowedGithubUser("mallory", "alice,bob")).toBe(false);
+});
+
+test("session gate admits allowed logins on every sign-in", () => {
+  // Simulates a returning account (row already exists): the session-create
+  // hook re-checks the allowlist instead of trusting the stored account.
+  expect(() => assertAllowedGithubUser("alice", "alice,bob")).not.toThrow();
+  expect(() => assertAllowedGithubUser("alice", "bob")).toThrow(APIError);
+  expect(() => assertAllowedGithubUser("mallory", "alice,bob")).toThrow(
+    APIError,
+  );
 });

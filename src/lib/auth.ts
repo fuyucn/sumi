@@ -1,10 +1,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { APIError } from "better-auth/api";
 import { db } from "./db";
 import { env } from "./env";
 import { schema } from "@/db/schema";
-import { isAllowedGithubUser } from "./allowlist";
+import { getUserHandle } from "./user";
+import { assertAllowedGithubUser } from "./allowlist";
 
 function buildAuth() {
   return betterAuth({
@@ -43,10 +43,6 @@ function buildAuth() {
         }),
       },
     },
-    // NOTE: the allowlist gate fires only at account creation. A user removed
-    // from ALLOWED_GITHUB_USERS after their account row exists can still sign in.
-    // For v0 (small trusted allowlist) this is acceptable; revisit with a sign-in
-    // check if immediate revocation is needed.
     databaseHooks: {
       user: {
         create: {
@@ -54,15 +50,29 @@ function buildAuth() {
             // `username` was set by mapProfileToUser above and carries profile.login.
             const raw = (user as Record<string, unknown>)["username"];
             const login = typeof raw === "string" ? raw : "";
-            if (!isAllowedGithubUser(login, env.ALLOWED_GITHUB_USERS)) {
-              throw new APIError("FORBIDDEN", {
-                message: "This GitHub account is not on the allowlist.",
-              });
-            }
+            assertAllowedGithubUser(login, env.ALLOWED_GITHUB_USERS);
             return { data: user };
           },
         },
       },
+      session: {
+        create: {
+          // Re-check the allowlist on every sign-in so removing a user from
+          // ALLOWED_GITHUB_USERS revokes their access immediately, even when
+          // their account row already exists (previously the gate only fired
+          // at account creation).
+          before: async (session) => {
+            const login = await getUserHandle(session.userId);
+            assertAllowedGithubUser(login ?? "", env.ALLOWED_GITHUB_USERS);
+            return { data: session };
+          },
+        },
+      },
+    },
+    advanced: {
+      // Secure cookies only over HTTPS (production / Cloudflare / VPS behind
+      // TLS); plain HTTP (local Docker) keeps cookies unsecured so sign-in works.
+      useSecureCookies: env.BETTER_AUTH_URL.startsWith("https://"),
     },
   });
 }
