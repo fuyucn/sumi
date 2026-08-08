@@ -349,6 +349,44 @@ body {
   pointer-events: none;
 }
 
+/* Prose surfaces (article read, notes, editor): Tailwind Typography ships
+   hardcoded stone hex colors that go nearly invisible on our ink-on-paper
+   palette — remap every token onto the site's theme variables instead. */
+.prose {
+  --tw-prose-body: var(--color-ink-soft);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-lead: var(--color-ink-muted);
+  --tw-prose-links: var(--color-ink);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-counters: var(--color-ink-muted);
+  --tw-prose-bullets: var(--color-line-strong);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-quotes: var(--color-ink-soft);
+  --tw-prose-quote-borders: var(--color-seal);
+  --tw-prose-captions: var(--color-ink-muted);
+  --tw-prose-kbd: var(--color-ink);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-pre-code: var(--color-ink-soft);
+  --tw-prose-pre-bg: var(--color-paper-deep);
+  --tw-prose-th-borders: var(--color-line-strong);
+  --tw-prose-td-borders: var(--color-line);
+}
+
+/* Inline code as a legible chip: same ink as body text, sunken paper well
+   with a hairline border, so identifiers like `sumi_*` stand out clearly. */
+.prose :where(code):not(:where(pre code)) {
+  background-color: var(--color-paper-deep);
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  padding: 0.15em 0.4em;
+  font-weight: 500;
+}
+
+.prose pre {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
 /* Shared component tokens: fields, buttons, and card surfaces so every form
    and action speaks the same shape language (input 10 / card 14 / pill 999). */
 @layer components {
