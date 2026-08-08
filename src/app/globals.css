@@ -162,7 +162,7 @@ body {
 /* Editorial drop cap: when an article opens with a paragraph of prose, the
    first letter floats like a magazine spread. The class is added server-side
    only when the opening text is not a quote, image, code, or heading. */
-.drop-cap > p:first-child::first-letter {
+.drop-cap > p:first-of-type::first-letter {
   float: left;
   font-family: var(--font-serif);
   font-size: 3.25em;
