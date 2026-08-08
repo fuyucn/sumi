@@ -199,7 +199,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
         <div className="mt-4">
           <p className="text-sm leading-relaxed text-ink-muted">
             AI 总结生成失败
-            {task.error ? (
+            {isAuthor && task.error ? (
               <span className="mt-1 block text-xs text-seal">{friendlyAiError(task.error)}</span>
             ) : null}
             {isAuthor && KEY_RE.test(task.error ?? "") ? (
