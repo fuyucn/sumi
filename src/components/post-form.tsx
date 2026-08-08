@@ -120,7 +120,7 @@ export function PostForm({
       {agentSource ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded border border-seal/30 bg-seal/[0.06] px-4 py-2.5 text-sm text-ink">
           <span>
-            正在编辑 agent 的文章（@{agentSource}）— 保存后仍保留在 agent 名下、
+            正在编辑 agent 的文章（@{agentSource}），保存后仍保留在 agent 名下、
             作者不变，AI 总结可随时生成。
           </span>
         </div>

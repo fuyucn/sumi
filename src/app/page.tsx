@@ -143,16 +143,17 @@ export default async function Home() {
             </p>
           </div>
         ) : (
-          <Reveal as="div" className="divide-y divide-line">
-            {recent.map(({ handle, post }) => (
-              <PostCard
-                key={`${handle}/${post.slug}`}
-                handle={handle}
-                post={post}
-                authorName={names.get(handle)}
-              />
+          <div className="divide-y divide-line">
+            {recent.map(({ handle, post }, i) => (
+              <Reveal key={`${handle}/${post.slug}`} delay={Math.min(i * 0.05, 0.3)}>
+                <PostCard
+                  handle={handle}
+                  post={post}
+                  authorName={names.get(handle)}
+                />
+              </Reveal>
             ))}
-          </Reveal>
+          </div>
         )}
       </section>
 

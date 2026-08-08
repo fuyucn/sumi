@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser, getReadContentStore } from "@/content";
 import { PostRowActions } from "@/components/post-row-actions";
+import { WriteTabs } from "@/components/write-tabs";
 import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
@@ -43,29 +44,6 @@ async function loadAgentPosts(): Promise<ListingPost[]> {
     }
   }
   return out;
-}
-
-function ScopeTab({
-  href,
-  active,
-  label,
-}: {
-  href: string;
-  active: boolean;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`border-b-2 px-3 pb-2.5 text-sm transition-colors ${
-        active
-          ? "border-seal font-medium text-ink"
-          : "border-transparent text-ink-faint hover:text-ink-muted"
-      }`}
-    >
-      {label}
-    </Link>
-  );
 }
 
 function PostRow({ post }: { post: ListingPost }) {
@@ -160,11 +138,13 @@ export default async function WriteDashboard({
         </Link>
       </header>
 
-      <nav className="mb-4 flex items-end gap-1 border-b border-line">
-        <ScopeTab href="/write" active={scope === "all"} label={`All · ${all.length}`} />
-        <ScopeTab href="/write?scope=mine" active={scope === "mine"} label={`Mine · ${mine.length}`} />
-        <ScopeTab href="/write?scope=agent" active={scope === "agent"} label={`Agent · ${agent.length}`} />
-      </nav>
+      <WriteTabs
+        tabs={[
+          { href: "/write", active: scope === "all", label: `All · ${all.length}` },
+          { href: "/write?scope=mine", active: scope === "mine", label: `Mine · ${mine.length}` },
+          { href: "/write?scope=agent", active: scope === "agent", label: `Agent · ${agent.length}` },
+        ]}
+      />
 
       {visible.length === 0 ? (
         <div className="border-t border-line py-24 text-center">

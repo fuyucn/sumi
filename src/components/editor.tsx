@@ -25,6 +25,13 @@ import {
   TextStrikethrough,
 } from "@phosphor-icons/react";
 
+/** ⌘ on macOS, Ctrl elsewhere. BubbleMenu only renders client-side. */
+function modKey(): "⌘" | "Ctrl" {
+  return typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform)
+    ? "⌘"
+    : "Ctrl";
+}
+
 // @tiptap/core v3 types `editor.storage` as the DOM Storage interface, so the
 // markdown extension's storage isn't visible. Narrow it to its real shape.
 function toMarkdown(editor: TiptapEditor): string {
@@ -45,20 +52,23 @@ const HeadingWithAnchors = Heading.extend({
 
 function ToolBtn({
   label,
+  shortcut,
   active,
   onMouseDown,
   children,
 }: {
   label: string;
+  shortcut?: string;
   active?: boolean;
   onMouseDown: () => void;
   children: React.ReactNode;
 }) {
+  const title = shortcut ? `${label} (${shortcut})` : label;
   return (
     <button
       type="button"
-      aria-label={label}
-      title={label}
+      aria-label={title}
+      title={title}
       onMouseDown={(e) => {
         // Prevent the editor from losing focus when clicking a tool button.
         e.preventDefault();
@@ -76,6 +86,7 @@ function ToolBtn({
 }
 
 function Toolbar({ editor }: { editor: TiptapEditor }) {
+  const mod = modKey();
   return (
     <div
       className="flex items-center gap-0.5 rounded-full border border-line-strong bg-paper/95 px-1.5 py-1 shadow-pop backdrop-blur-md"
@@ -83,6 +94,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
     >
       <ToolBtn
         label="Bold"
+        shortcut={`${mod}B`}
         active={editor.isActive("bold")}
         onMouseDown={() => editor.chain().focus().toggleBold().run()}
       >
@@ -90,6 +102,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Italic"
+        shortcut={`${mod}I`}
         active={editor.isActive("italic")}
         onMouseDown={() => editor.chain().focus().toggleItalic().run()}
       >
@@ -97,6 +110,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Strikethrough"
+        shortcut={`${mod}⇧X`}
         active={editor.isActive("strike")}
         onMouseDown={() => editor.chain().focus().toggleStrike().run()}
       >
@@ -104,6 +118,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Inline code"
+        shortcut={`${mod}E`}
         active={editor.isActive("code")}
         onMouseDown={() => editor.chain().focus().toggleCode().run()}
       >
@@ -114,6 +129,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
 
       <ToolBtn
         label="Paragraph"
+        shortcut={`${mod}⌥0`}
         active={editor.isActive("paragraph")}
         onMouseDown={() => editor.chain().focus().setParagraph().run()}
       >
@@ -121,6 +137,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Heading 1"
+        shortcut={`${mod}⌥1`}
         active={editor.isActive("heading", { level: 1 })}
         onMouseDown={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
       >
@@ -128,6 +145,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Heading 2"
+        shortcut={`${mod}⌥2`}
         active={editor.isActive("heading", { level: 2 })}
         onMouseDown={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
       >
@@ -135,6 +153,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Heading 3"
+        shortcut={`${mod}⌥3`}
         active={editor.isActive("heading", { level: 3 })}
         onMouseDown={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
       >
@@ -145,6 +164,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
 
       <ToolBtn
         label="Bullet list"
+        shortcut={`${mod}⇧8`}
         active={editor.isActive("bulletList")}
         onMouseDown={() => editor.chain().focus().toggleBulletList().run()}
       >
@@ -152,6 +172,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Numbered list"
+        shortcut={`${mod}⇧7`}
         active={editor.isActive("orderedList")}
         onMouseDown={() => editor.chain().focus().toggleOrderedList().run()}
       >
@@ -159,6 +180,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
       </ToolBtn>
       <ToolBtn
         label="Blockquote"
+        shortcut={`${mod}⇧B`}
         active={editor.isActive("blockquote")}
         onMouseDown={() => editor.chain().focus().toggleBlockquote().run()}
       >

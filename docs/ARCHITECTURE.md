@@ -425,6 +425,7 @@ sequenceDiagram
     UI->>Q: GET /api/ai/task 读取已存结果
     Q-->>UI: task 状态
     UI-->>UI: done → 展示总结，要点带 #anchor 跳转链接；failed → 回编辑页重试
+    W->>W: 成功时把 tldr 自动回填为文章 excerpt（导读）
 ```
 
 - 作者在 `/settings → AI 总结` 配置 provider（OpenAI 兼容：OpenAI / DeepSeek /
@@ -432,6 +433,9 @@ sequenceDiagram
 - 生成是**手动**的：发布文章不会自动创建任务；作者在编辑页点击按钮才会生成，
   不满意可随时「重新生成」。没有后台任务执行器，`generateSummaryAction` 在
   请求内同步完成生成并落库；文章页短时轮询只为等待该请求完成。
+- **导读（excerpt）自动回填**：生成成功且是作者自己的文章时，把 AI 总结的
+  `tldr`（截断 200 字）写回文章的 `excerpt` 字段——列表卡片、SEO description
+  与全文搜索都会自动获得一句话导读，无需手动维护；agent 文章保留原 excerpt。
 - 总结要点返回 `anchor`（文章小标题 slug），正文标题由 `Markdown` 渲染为带
   `id` 的锚点，要点即可点击跳转到对应章节；锚点不在正文中时降级为纯文本。
 - 失败不会破坏编辑流程：`generateSummaryAction` 内部 try/catch，失败时任务
@@ -464,11 +468,19 @@ sequenceDiagram
    `CloudflareContentStore` 两个实现共享同一接口，按
    `CF_ENABLED` / `DB_MIRROR` 环境开关选择（工厂见 `src/content/index.ts`）。
 3. **slug 派生自标题** —— 改标题会产生新路径（旧文件被孤儿化），代码注释明确提示;这是 v0 的取舍。
-4. **Allowlist 门禁只在建号时执行** —— 用户被移出 allowlist 后仍可登录（注释注明权衡，撤销需改 `sign-in` 检查）。
+4. **登录安全阀（fail-closed + 双重门禁）** —— `ALLOWED_GITHUB_USERS`
+   为空时拒绝所有人；每次登录（user-create / session-create hook）与每个请求
+   （`getCurrentUser` 内 `isSessionUserAllowed`）都重新校验 allowlist，移除用户
+   即立即吊销会话；`POST /api/auth/*` 另有按 IP 的 30 次/分钟限流，防止 OAuth
+   流程被滥用。
 5. **一切读写走存储层/HTTP** —— 无本地 FS 写入，图片以 base64 入库（或 R2
    对象），天然 serverless 可移植。
 6. **惰性单例 (Proxy)** —— `env / db / auth` 均在首次访问才初始化，避免测试与构建期触发副作用。
 7. **正则校验前置** —— `env.ts` 用 zod 在启动期暴露配置错误（如 `DATABASE_URL`、GitHub 凭据）。
+8. **单体优于前后端分离** —— 保持 Next.js 全栈单体（App Router RSC + Server
+   Actions + Postgres），不拆 React SPA：认证/授权全部在服务端执行，无 CORS、
+   CSRF 面与客户端密钥泄露面；RSC 让公开页零 JS 首屏、按需流式加载，性能与
+   安全优于 SPA + API 的拆分形态，且单容器部署、运维面最小。
 
 ---
 

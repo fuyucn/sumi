@@ -18,6 +18,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useDisplayName } from "@/components/use-display-name";
+import { useMotionValueEvent, useScroll } from "motion/react";
 
 const linkClass = (active: boolean) =>
   [
@@ -146,6 +147,10 @@ export function Nav() {
   const pathname = usePathname();
   const [unread, setUnread] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const { scrollY } = useScroll();
+
+  useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 8));
 
   useEffect(() => {
     // Close the mobile drawer after navigation (also covers browser back/forward).
@@ -173,7 +178,13 @@ export function Nav() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/80 backdrop-blur-md">
+    <header
+      className={`sticky top-0 z-40 border-b border-line backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300 ${
+        scrolled
+          ? "bg-paper/95 shadow-[0_12px_32px_-24px_rgb(30_27_22/0.25)]"
+          : "bg-paper/70"
+      }`}
+    >
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
         <Link
           href="/"

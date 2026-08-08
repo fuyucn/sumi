@@ -19,6 +19,8 @@ export const AGENT_API_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
 export const MCP_LIMIT: RateLimit = { limit: 300, windowMs: 60_000 };
 /** Public polling endpoint (`/api/ai/task`) — readers may poll while generating. */
 export const AI_TASK_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
+/** Auth endpoints (POST /api/auth/*): sign-in, sign-out, session refresh. */
+export const AUTH_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
 
 export function rateLimit(
   key: string,

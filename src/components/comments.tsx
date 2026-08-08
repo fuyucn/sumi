@@ -129,7 +129,7 @@ export async function Comments({ handle, slug }: { handle: string; slug: string 
         <div className="mt-6 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
           <p className="font-serif text-lg text-ink-soft">No comments yet.</p>
           <p className="mt-1 text-sm text-ink-faint">
-            Start the conversation — leave the first mark.
+            Start the conversation and leave the first mark.
           </p>
         </div>
       )}

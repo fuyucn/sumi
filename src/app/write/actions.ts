@@ -113,6 +113,27 @@ export async function generateSummaryAction(
       },
       now,
     );
+    // Backfill the post's excerpt (导读) from the AI TL;DR so list cards and
+    // metadata stay fresh without manual writing. Only for the author's own
+    // posts — agent posts keep whatever excerpt their author set.
+    if (!sourceHandle && result.tldr) {
+      try {
+        await store.savePost(handle, {
+          slug,
+          title: post.title,
+          body: post.body,
+          tags: post.tags,
+          excerpt: result.tldr.slice(0, 200),
+          status: post.status,
+          ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
+          ...(post.coverImage ? { coverImage: post.coverImage } : {}),
+          ...(post.agent ? { agent: true } : {}),
+        });
+      } catch {
+        // Excerpt backfill is best-effort; the summary task itself already
+        // succeeded and was persisted above.
+      }
+    }
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     await aiStore.finishTask(task.id, { status: "failed", error: message.slice(0, 500), now });
