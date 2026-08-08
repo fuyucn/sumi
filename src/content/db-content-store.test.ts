@@ -3,7 +3,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import { expect, test } from "vitest";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import { schema, sumiImages } from "@/db/schema";
+import { schema, sumiAiTasks, sumiImages } from "@/db/schema";
 import { DbContentStore } from "./db-content-store";
 
 // The Postgres mirror tables as DDL (mirrors drizzle/0001_grey_aqueduct.sql).
@@ -126,6 +126,20 @@ CREATE TABLE "sumi_notifications" (
   "read" boolean DEFAULT false NOT NULL,
   "created_at" text NOT NULL
 );
+CREATE TABLE "sumi_ai_tasks" (
+  "id" text PRIMARY KEY NOT NULL,
+  "handle" text NOT NULL,
+  "post_handle" text NOT NULL,
+  "post_slug" text NOT NULL,
+  "kind" text DEFAULT 'summary' NOT NULL,
+  "status" text DEFAULT 'pending' NOT NULL,
+  "result" text,
+  "error" text,
+  "model" text,
+  "created_at" text NOT NULL,
+  "started_at" text,
+  "finished_at" text
+);
 `;
 
 async function makeStore() {
@@ -172,6 +186,34 @@ test("agent flag round-trips through savePost/getPost/listPosts", async () => {
 
   const [meta] = await store.listPosts({ handle: "agent-foo" });
   expect(meta.agent).toBe(true);
+});
+
+test("listPosts flags posts with a finished AI summary task", async () => {
+  const { store, db } = await makeStore();
+  const slug = await store.savePost("alice", {
+    title: "AI Post",
+    body: "mirror notes",
+    tags: ["ai"],
+    status: "published",
+  });
+  await store.savePost("alice", { title: "Plain Post", body: "no summary", tags: [], status: "published" });
+  await db.insert(sumiAiTasks).values({
+    id: "task-1",
+    handle: "alice",
+    postHandle: "alice",
+    postSlug: slug,
+    kind: "summary",
+    status: "done",
+    result: JSON.stringify({ summary: "s", tldr: "t", points: [{ text: "p", anchor: null }] }),
+    createdAt: new Date().toISOString(),
+  });
+
+  const metas = await store.listPosts({ handle: "alice" });
+  expect(metas.find((p) => p.slug === slug)?.aiSummary).toBe(true);
+  expect(metas.find((p) => p.slug === "plain-post")?.aiSummary).toBeUndefined();
+
+  const hits = await store.searchPosts("AI");
+  expect(hits[0].post.aiSummary).toBe(true);
 });
 
 test("searchPosts matches title/body/excerpt/tags, published only, newest first", async () => {

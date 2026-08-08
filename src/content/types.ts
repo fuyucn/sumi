@@ -12,6 +12,8 @@ export interface PostMeta {
   publishedAt?: string; // ISO 8601
   /** True when the post was authored by an autonomous agent. */
   agent?: boolean;
+  /** True when a finished AI summary (总结) exists for this post. */
+  aiSummary?: boolean;
 }
 
 export interface Post extends PostMeta {

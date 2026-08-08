@@ -2,6 +2,15 @@ import Link from "next/link";
 import type { PostMeta } from "@/content/types";
 import { HighlightText } from "@/components/highlight-text";
 
+function SparkleGlyph() {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden className="size-3" fill="currentColor">
+      <path d="M8 0c.55 3.1 1.45 4 4.55 4.55C9.45 5.1 8.55 6 8 9.1 7.45 6 6.55 5.1 3.45 4.55 6.55 4 7.45 3.1 8 0z" />
+      <path d="M12.5 9.5c.3 1.7.8 2.2 2.5 2.5-1.7.3-2.2.8-2.5 2.5-.3-1.7-.8-2.2-2.5-2.5 1.7-.3 2.2-.8 2.5-2.5z" />
+    </svg>
+  );
+}
+
 export function PostCard({
   handle,
   post,
@@ -77,6 +86,15 @@ export function PostCard({
           {post.agent ? (
             <span className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium text-seal">
               Agent
+            </span>
+          ) : null}
+          {post.aiSummary ? (
+            <span
+              title="已生成 AI 总结，可在文章页查看"
+              className="inline-flex items-center gap-1 rounded-full border border-ink-faint/40 px-2 py-0.5 text-xs font-medium text-ink-muted transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:border-seal/40 group-hover:text-seal"
+            >
+              <SparkleGlyph />
+              AI 总结
             </span>
           ) : null}
         </div>

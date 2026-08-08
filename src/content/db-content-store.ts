@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { randomUUID } from "node:crypto";
 import { schema as dbSchema } from "@/db/schema";
@@ -15,6 +15,7 @@ import {
   sumiPosts,
   sumiProfiles,
   sumiProjects,
+  sumiAiTasks,
 } from "@/db/schema";
 import type { ContentStore, ListPostsOptions, SearchResult, TagInfo } from "./store";
 import type { Comment, Friend, Magazine, NewComment, NewFriend, NewMagazine, NewNote, NewNotification, NewPage, NewPost, NewProject, Note, Notification, Page, PageMeta, Post, PostMeta, PostStatus, Profile, Project } from "./types";
@@ -142,7 +143,7 @@ export class DbContentStore implements ContentStore {
       .from(sumiPosts)
       .where(conditions.length ? and(...conditions) : undefined)
       .orderBy(sql`${sumiPosts.createdAt} DESC`);
-    return rows.map((r) => toPostMeta(r));
+    return this.withAiSummary(rows);
   }
 
   async getPost(handle: string, slug: string): Promise<Post | null> {
@@ -700,7 +701,7 @@ export class DbContentStore implements ContentStore {
           OR ${sumiPosts.tags} ILIKE ${like}
         )`,
       );
-    return rankRows(
+    const ranked = rankRows(
       candidates.map((r) => ({
         row: r,
         rank: {
@@ -713,7 +714,28 @@ export class DbContentStore implements ContentStore {
         },
       })),
       needle,
-    ).map(({ row }) => ({ handle: row.handle, post: toPostMeta(row) }));
+    );
+    const metas = await this.withAiSummary(ranked.map(({ row }) => row));
+    return ranked.map(({ row }, i) => ({ handle: row.handle, post: metas[i] }));
+  }
+
+  /** Mark posts that carry a finished AI summary task. */
+  private async withAiSummary(rows: PostRow[]): Promise<PostMeta[]> {
+    if (!rows.length) return [];
+    const done = await this.db
+      .select({ postHandle: sumiAiTasks.postHandle, postSlug: sumiAiTasks.postSlug })
+      .from(sumiAiTasks)
+      .where(
+        and(
+          eq(sumiAiTasks.status, "done"),
+          inArray(sumiAiTasks.postSlug, rows.map((r) => r.slug)),
+        ),
+      );
+    const doneKeys = new Set(done.map((d) => `${d.postHandle}\u0000${d.postSlug}`));
+    return rows.map((r) => {
+      const meta = toPostMeta(r);
+      return doneKeys.has(`${r.handle}\u0000${r.slug}`) ? { ...meta, aiSummary: true } : meta;
+    });
   }
 }
 
