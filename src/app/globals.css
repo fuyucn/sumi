@@ -164,7 +164,37 @@ body {
    layer downward (page > card > sunken well), never pure black or white. */
 :root {
   color-scheme: light;
+  scrollbar-width: thin;
   scrollbar-color: var(--color-line-strong) var(--color-paper-deep);
+}
+
+/* WebKit scrollbars stay native on macOS (overlay style), but on Windows and
+   Linux the default bars clash with the paper theme — recolor them there.
+   The `.mac` class is added by a head script before first paint. */
+:root:not(.mac) ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+:root:not(.mac) ::-webkit-scrollbar-track,
+:root:not(.mac) ::-webkit-scrollbar-corner {
+  background-color: var(--color-paper-deep);
+}
+:root:not(.mac) ::-webkit-scrollbar-thumb {
+  background-color: var(--color-line-strong);
+  border-radius: 999px;
+  border: 2px solid var(--color-paper-deep);
+}
+:root:not(.mac) ::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--color-ink-faint) 55%, var(--color-line-strong));
+}
+
+/* Transparency off: drop every frosted-glass surface to a solid paper fill
+   instead of fighting the user's OS-level preference. */
+@media (prefers-reduced-transparency: reduce) {
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
 }
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-theme="light"]) {
@@ -244,6 +274,29 @@ body {
   outline: 2px solid color-mix(in srgb, var(--color-seal) 60%, transparent);
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+/* The native search clear button borrows the ink-faint circle so it reads as
+   part of the theme instead of an OS widget. */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  background-color: var(--color-ink-faint);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 4.5l7 7m0-7l-7 7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 4.5l7 7m0-7l-7 7' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  transition: background-color var(--dur-short) var(--ease-out);
+}
+input[type="search"]::-webkit-search-cancel-button:hover {
+  background-color: var(--color-ink-soft);
 }
 
 /* The typing caret wears the same cinnabar as the hanko: a small reminder
@@ -664,6 +717,7 @@ textarea,
   font-family: var(--font-serif);
   font-weight: 600;
   letter-spacing: -0.015em;
+  overflow-wrap: anywhere;
 }
 .prose :is(h2, h3) {
   margin-top: 2.2em;
@@ -789,6 +843,34 @@ textarea,
 .prose-article :where(img) {
   border-radius: var(--radius-card);
   border: 1px solid var(--color-line);
+}
+
+/* At night, photographs soften a step so bright imagery doesn't glare off the
+   warm dark paper; the page's own palette still sets the frame. */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) .prose-article :where(img) {
+    filter: brightness(0.94) saturate(0.96);
+  }
+}
+:root.dark .prose-article :where(img),
+:root[data-theme="dark"] .prose-article :where(img) {
+  filter: brightness(0.94) saturate(0.96);
+}
+
+/* Cover and featured imagery drifts in softly instead of popping, so the
+   first paint reads as paper settling, not a file finishing loading. */
+@media (prefers-reduced-motion: no-preference) {
+  .media-fade {
+    animation: media-fade 0.5s var(--ease-out) both;
+  }
+  @keyframes media-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 /* Shiki syntax highlighting: theme colors ship as per-token CSS variables

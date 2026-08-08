@@ -168,10 +168,13 @@ export function ReadingProgress({
 
       <button
         type="button"
-        onClick={() => hasSections && setOpen((v) => !v)}
+        onClick={() => {
+          if (hasSections) setOpen((v) => !v);
+          else window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+        }}
         aria-expanded={hasSections ? open : undefined}
-        aria-label="Reading progress"
-        title="Reading progress"
+        aria-label={hasSections ? "Reading progress and sections" : "Back to top"}
+        title={hasSections ? "Reading progress" : "Back to top"}
         className="group flex items-center gap-2.5 rounded-full border border-line bg-paper-raised/90 py-1.5 pr-4 pl-1.5 shadow-card backdrop-blur-md transition-colors hover:border-line-strong"
       >
         <span className="relative flex h-8 w-8 items-center justify-center" aria-hidden>

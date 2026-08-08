@@ -83,7 +83,7 @@ export default async function Home() {
                 loading="eager"
                 decoding="async"
                 referrerPolicy="no-referrer"
-                className="aspect-[3/2] w-full object-cover transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:scale-[1.03]"
+                className="aspect-[3/2] w-full object-cover media-fade transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:scale-[1.03]"
               />
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3">

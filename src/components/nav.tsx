@@ -32,11 +32,13 @@ function IconLink({
   href,
   label,
   active,
+  kbd,
   children,
 }: {
   href: string;
   label: string;
   active: boolean;
+  kbd?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -52,6 +54,11 @@ function IconLink({
         className="nav-tooltip pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs font-medium text-paper shadow-pop"
       >
         {label}
+        {kbd ? (
+          <kbd className="ml-1.5 rounded bg-paper/20 px-1 font-sans text-[9px] font-semibold text-paper/80">
+            {kbd}
+          </kbd>
+        ) : null}
       </span>
     </Link>
   );
@@ -290,7 +297,7 @@ export function Nav() {
 
         {/* Tool + user cluster. */}
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
-          <IconLink href="/search" label="Index" active={isActive("/search")}>
+          <IconLink href="/search" label="Search" kbd="⌘K" active={isActive("/search")}>
             <MagnifyingGlass size={16} weight="duotone" aria-hidden />
           </IconLink>
           {handle ? (

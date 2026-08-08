@@ -3,6 +3,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { SearchShortcut } from "@/components/search-shortcut";
 import "./globals.css";
 
 const geist = Geist({
@@ -41,6 +42,12 @@ export default async function RootLayout({
             __html: `(function(){try{var t=localStorage.getItem("sumi-theme");var r=document.documentElement;if(t==="light"){r.classList.add("light");r.setAttribute("data-theme","light")}else if(t==="dark"){r.classList.add("dark");r.setAttribute("data-theme","dark")}}catch(e){}})();`,
           }}
         />
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(/Mac|iPhone|iPad/.test(navigator.platform))document.documentElement.classList.add("mac")}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="paper-grain font-sans bg-paper text-ink min-h-[100dvh] flex flex-col antialiased">
         <a
@@ -49,6 +56,7 @@ export default async function RootLayout({
         >
           Skip to content
         </a>
+        <SearchShortcut />
         <Nav />
         <div id="main" tabIndex={-1} className="flex-1 outline-none">
           {children}
