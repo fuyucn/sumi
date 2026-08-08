@@ -56,7 +56,10 @@ export default async function NotesPage({
         {authorName}
       </Link>
       <header className="mt-6 mb-8">
-        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+          Fleeting
+        </p>
+        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
           Notes
         </h1>
         <p className="mt-2 text-sm text-ink-muted tabular-nums">

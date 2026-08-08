@@ -33,7 +33,10 @@ export default async function PostsPage() {
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-12">
-        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+          Shelf
+        </p>
+        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
           Posts
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
