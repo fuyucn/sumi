@@ -91,7 +91,7 @@ export function PostCard({
           {post.aiSummary ? (
             <span
               title="已生成 AI 总结，可在文章页查看"
-              className="inline-flex items-center gap-1 rounded-full border border-ink-faint/40 px-2 py-0.5 text-xs font-medium text-ink-muted transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:border-seal/40 group-hover:text-seal"
+              className="inline-flex items-center gap-1 rounded-full border border-seal/40 bg-seal/10 px-2 py-0.5 text-xs font-medium text-seal transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:border-seal/60 group-hover:bg-seal/15"
             >
               <SparkleGlyph />
               AI 总结
