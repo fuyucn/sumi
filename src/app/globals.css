@@ -604,6 +604,14 @@ body {
   border-radius: var(--radius-card);
 }
 
+/* Wide tables get their own scroll lane instead of pushing past the paper
+   edge on narrow screens (body clips horizontal overflow). */
+.prose :where(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 /* Book-style opening: the first paragraph of a published article gets a
    quiet drop cap — ink, not seal, so it reads as typography rather than
    decoration. Scoped to .prose-article so the editor stays plain. */
