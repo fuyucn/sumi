@@ -5,6 +5,7 @@ import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
+import { getCurrentUser } from "@/lib/current-user";
 import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -12,6 +13,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const feed = await listFeed();
   const store = await getReadContentStore();
+  const user = await getCurrentUser();
   const names = await getDisplayNameMap(feed.map(({ handle }) => handle));
   const tags = (await store?.listTags()) ?? [];
   const creators = new Set(feed.map(({ handle }) => handle)).size;
@@ -52,10 +54,10 @@ export default async function Home() {
             space. Write, note, and share at your own pace.
           </p>
           <Link
-            href="/write"
+            href={user ? "/write" : "/posts"}
             className="btn-primary group mt-8 px-6 py-3"
           >
-            Start writing
+            {user ? "Start writing" : "Read the latest"}
             <ArrowRight
               size={16}
               weight="duotone"
