@@ -25,7 +25,6 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   const pages = (await store.listPages(handle)).filter((p) => p.showInNav);
   const profile = await store.getProfile(handle);
   const authorName = displayName(handle, profile);
-  const hasProfile = !!(profile && (profile.displayName || profile.bio));
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
   const followers = await store.listFollowers(handle);
@@ -36,13 +35,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-10">
-        {hasProfile ? (
-          <CreatorProfile handle={handle} />
-        ) : (
-          <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
-            {authorName}
-          </h1>
-        )}
+        <CreatorProfile handle={handle} />
         <div className="mt-3 flex flex-wrap items-center gap-4">
           <p className="text-sm text-ink-faint tabular-nums">
             {posts.length} {posts.length === 1 ? "post" : "posts"} · {followers.length}{" "}
