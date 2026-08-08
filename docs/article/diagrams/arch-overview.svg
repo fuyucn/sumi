@@ -73,7 +73,7 @@
     <text x="650" y="580" font-size="11" fill="#6b655c" text-anchor="middle">CF_ENABLED=1 · OpenNext Worker</text>
     <rect x="860" y="544" width="340" height="44" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
     <text x="1030" y="563" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle">AiStore（Postgres 镜像专属）</text>
-    <text x="1030" y="580" font-size="11" fill="#6b655c" text-anchor="middle">AI 导读任务与 provider 配置</text>
+    <text x="1030" y="580" font-size="11" fill="#6b655c" text-anchor="middle">AI 总结任务与 provider 配置</text>
   </g>
 
   <!-- Storage -->

@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import { parseSummaryResponse, summaryPrompt } from "./summarize";
 
 describe("parseSummaryResponse", () => {
-  const json = `{"tldr":"一句话导读","points":[{"text":"要点一","anchor":"安装"},{"text":"要点二"}]}`;
+  const json = `{"tldr":"一句话总结","points":[{"text":"要点一","anchor":"安装"},{"text":"要点二"}]}`;
 
   test("parses plain JSON with anchored points", () => {
     expect(parseSummaryResponse(json)).toEqual({
-      tldr: "一句话导读",
+      tldr: "一句话总结",
       points: [
         { text: "要点一", anchor: "安装" },
         { text: "要点二" },
@@ -16,7 +16,7 @@ describe("parseSummaryResponse", () => {
 
   test("parses JSON inside a code fence", () => {
     expect(parseSummaryResponse(`\`\`\`json\n${json}\n\`\`\``)).toEqual({
-      tldr: "一句话导读",
+      tldr: "一句话总结",
       points: [
         { text: "要点一", anchor: "安装" },
         { text: "要点二" },
@@ -25,9 +25,9 @@ describe("parseSummaryResponse", () => {
   });
 
   test("parses JSON embedded in prose", () => {
-    const withProse = `好的，这是导读：\n${json}\n以上内容仅供参考。`;
+    const withProse = `好的，这是 AI 总结：\n${json}\n以上内容仅供参考。`;
     expect(parseSummaryResponse(withProse)).toEqual({
-      tldr: "一句话导读",
+      tldr: "一句话总结",
       points: [
         { text: "要点一", anchor: "安装" },
         { text: "要点二" },
@@ -36,7 +36,7 @@ describe("parseSummaryResponse", () => {
   });
 
   test("normalizes legacy string points to object form", () => {
-    const result = parseSummaryResponse(`{"tldr":"导读","points":["要点一","要点二"]}`);
+    const result = parseSummaryResponse(`{"tldr":"总结","points":["要点一","要点二"]}`);
     expect(result.points).toEqual([{ text: "要点一" }, { text: "要点二" }]);
     expect(result.summary).toBeUndefined();
   });
@@ -54,18 +54,18 @@ describe("parseSummaryResponse", () => {
   });
 
   test("rejects empty points", () => {
-    expect(() => parseSummaryResponse(`{"tldr":"导读","points":[]}`)).toThrow(/missing points/);
+    expect(() => parseSummaryResponse(`{"tldr":"总结","points":[]}`)).toThrow(/missing points/);
   });
 
   test("filters unusable points and keeps anchors", () => {
     const result = parseSummaryResponse(
-      `{"tldr":"导读","points":["a", 42, null, {"text":"b","anchor":"部署"}, {"anchor":"x"}]}`,
+      `{"tldr":"总结","points":["a", 42, null, {"text":"b","anchor":"部署"}, {"anchor":"x"}]}`,
     );
     expect(result.points).toEqual([{ text: "a" }, { text: "b", anchor: "部署" }]);
   });
 
   test("rejects non-JSON reply", () => {
-    expect(() => parseSummaryResponse("抱歉，我无法生成导读")).toThrow();
+    expect(() => parseSummaryResponse("抱歉，我无法生成 AI 总结")).toThrow();
   });
 });
 

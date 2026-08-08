@@ -100,13 +100,13 @@ test("finishTask stores done result and model", async () => {
   await store.claimPending(5, NOW);
   await store.finishTask(task!.id, {
     status: "done",
-    result: { tldr: "导读", points: [{ text: "要点", anchor: "安装" }] },
+    result: { tldr: "总结", points: [{ text: "要点", anchor: "安装" }] },
     model: "mock-llm",
     now: NOW,
   });
   const done = await store.getTask("alice", "hello-world");
   expect(done!.status).toBe("done");
-  expect(done!.result).toEqual({ tldr: "导读", points: [{ text: "要点", anchor: "安装" }] });
+  expect(done!.result).toEqual({ tldr: "总结", points: [{ text: "要点", anchor: "安装" }] });
   expect(done!.model).toBe("mock-llm");
   expect(done!.finishedAt).toBe(NOW.toISOString());
 });
@@ -119,11 +119,11 @@ test("legacy string-point results are normalized on read", async () => {
   await store.finishTask(task!.id, {
     status: "done",
     // Legacy rows stored `points` as string[] before the object shape existed.
-    result: { tldr: "导读", points: ["要点一", "要点二"] } as unknown as AiSummaryResult,
+    result: { tldr: "总结", points: ["要点一", "要点二"] } as unknown as AiSummaryResult,
     now: NOW,
   });
   const done = await store.getTask("alice", "hello-world");
-  expect(done!.result).toEqual({ tldr: "导读", points: [{ text: "要点一" }, { text: "要点二" }] });
+  expect(done!.result).toEqual({ tldr: "总结", points: [{ text: "要点一" }, { text: "要点二" }] });
 });
 
 test("malformed stored result parses as null", async () => {
