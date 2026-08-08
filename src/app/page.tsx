@@ -180,10 +180,13 @@ export default async function Home() {
               <Link
                 key={tag.name}
                 href={`/tag/${encodeURIComponent(tag.name)}`}
-                className={`${tagSize(tag.count)} press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal`}
+                className={`${tagSize(tag.count)} group press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal`}
               >
                 <span className="text-seal">#</span>
                 {tag.name}
+                <span className="ml-1.5 font-sans text-[0.6875rem] font-normal text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/70">
+                  {tag.count}
+                </span>
               </Link>
             ))}
           </div>

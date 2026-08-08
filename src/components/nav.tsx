@@ -18,13 +18,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useDisplayName } from "@/components/use-display-name";
-import { useMotionValueEvent, useScroll } from "motion/react";
-
-const linkClass = (active: boolean) =>
-  [
-    "press flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
-    active ? "bg-seal-wash text-seal" : "text-ink-faint hover:text-ink",
-  ].join(" ");
+import { motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
 
 const iconClass = (active: boolean) =>
   [
@@ -59,6 +53,47 @@ function IconLink({
       >
         {label}
       </span>
+    </Link>
+  );
+}
+
+/** Desktop nav item: the active pill slides between links with a spring
+ * settle (layout animation), then sits as a wash behind the current item. */
+function NavLink({
+  href,
+  label,
+  active,
+  icon,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+  icon: React.ReactNode;
+}) {
+  const reduce = useReducedMotion();
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={[
+        "press isolate relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+        active ? "text-seal" : "text-ink-faint hover:text-ink",
+      ].join(" ")}
+    >
+      {active ? (
+        <motion.span
+          aria-hidden
+          layoutId={reduce ? undefined : "nav-active-pill"}
+          className="absolute inset-0 -z-10 rounded-full bg-seal-wash"
+          transition={
+            reduce
+              ? { duration: 0 }
+              : { type: "spring", stiffness: 420, damping: 34, mass: 0.9 }
+          }
+        />
+      ) : null}
+      {icon}
+      {label}
     </Link>
   );
 }
@@ -226,32 +261,24 @@ export function Nav() {
 
         {/* Site navigation: Home → Posts → Tags (Tags always last). */}
         <nav className="hidden min-w-0 flex-1 items-center justify-center gap-1 text-sm md:flex">
-          <Link
+          <NavLink
             href="/"
-            className={linkClass(isActive("/"))}
-            aria-current={isActive("/") ? "page" : undefined}
-          >
-            <House size={15} weight="duotone" aria-hidden />
-            Home
-          </Link>
-          <Link
+            label="Home"
+            active={isActive("/")}
+            icon={<House size={15} weight="duotone" aria-hidden />}
+          />
+          <NavLink
             href="/posts"
-            className={linkClass(isActive("/posts"))}
-            aria-current={isActive("/posts") ? "page" : undefined}
-          >
-            <Article size={15} weight="duotone" aria-hidden />
-            Posts
-          </Link>
-          <Link
+            label="Posts"
+            active={isActive("/posts")}
+            icon={<Article size={15} weight="duotone" aria-hidden />}
+          />
+          <NavLink
             href="/tags"
-            className={linkClass(isActive("/tags") || isActive("/tag/", true))}
-            aria-current={
-              isActive("/tags") || isActive("/tag/", true) ? "page" : undefined
-            }
-          >
-            <Tag size={15} weight="duotone" aria-hidden />
-            Tags
-          </Link>
+            label="Tags"
+            active={isActive("/tags") || isActive("/tag/", true)}
+            icon={<Tag size={15} weight="duotone" aria-hidden />}
+          />
         </nav>
 
         {/* Tool + user cluster. */}

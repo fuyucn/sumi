@@ -24,6 +24,12 @@ export function PostCard({
 
   return (
     <article className="group relative grid gap-2 py-7 sm:grid-cols-[7rem_1fr] sm:gap-8 sm:py-8">
+      {/* Editorial bookmark: a cinnabar hairline draws down the row edge on
+          hover, marking the entry you are about to open. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-6 left-0 hidden w-[2px] origin-center scale-y-0 rounded-full bg-seal/60 transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:scale-y-100 md:block"
+      />
       <Link
         href={`/@${handle}/${post.slug}`}
         className="absolute inset-0 z-0"
