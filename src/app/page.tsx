@@ -20,6 +20,13 @@ export default async function Home() {
   const featured = feed[0];
   const cover = featured?.post.coverImage;
   const coverSrc = cover?.startsWith("http") ? cover : undefined;
+  const featuredDate = featured?.post.publishedAt
+    ? new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : null;
   // The featured card already shows feed[0]; don't repeat it in the list.
   const recent = featured ? feed.slice(1, 7) : feed.slice(0, 6);
 
@@ -71,26 +78,22 @@ export default async function Home() {
                 height={800}
                 loading="eager"
                 decoding="async"
+                referrerPolicy="no-referrer"
                 className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
               />
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
-                      Latest ink
+                      Featured
                     </p>
                     <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors duration-300 group-hover:text-seal">
                       {featured.post.title}
                     </h2>
                     <p className="mt-1.5 text-sm text-ink-faint">
-                      {names.get(featured.handle)}
-                      {featured.post.publishedAt
-                        ? ` · ${new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}`
-                        : ""}
+                      {[names.get(featured.handle), featuredDate]
+                        .filter(Boolean)
+                        .join(" · ")}
                     </p>
                   </div>
                   <span
