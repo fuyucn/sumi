@@ -71,7 +71,7 @@ export default async function NotesPage({
       ) : (
         <ol className="mt-10 divide-y divide-line border-t border-line">
           {notes.map((note) => (
-            <li key={note.id} className="py-6">
+            <li key={note.id} className="-mx-4 rounded-xl px-4 py-6 transition-colors hover:bg-paper-soft/60">
               <time
                 dateTime={note.date}
                 className="text-xs text-ink-faint tabular-nums"

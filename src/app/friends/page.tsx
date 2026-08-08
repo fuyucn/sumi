@@ -40,7 +40,7 @@ export default async function FriendsPage() {
           {friends.map((friend) => (
             <li
               key={friend.id}
-              className="card group flex items-start gap-3 p-4 transition-shadow hover:shadow-card-hover"
+              className="card group lift flex items-start gap-3 p-4"
             >
               {friend.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element

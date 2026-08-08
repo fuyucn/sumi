@@ -36,7 +36,11 @@ function NotificationRow({ n, actorName }: { n: Notification; actorName: string 
   const postHref = n.postHandle && n.postSlug ? `/@${n.postHandle}/${n.postSlug}` : null;
   const isAi = n.type === "ai";
   return (
-    <li className="flex gap-3 py-4">
+    <li
+      className={`-mx-3 flex gap-3 rounded-lg px-3 py-4 transition-colors ${
+        n.read ? "hover:bg-paper-soft/70" : "bg-seal-wash/25 hover:bg-seal-wash/45"
+      }`}
+    >
       <span
         aria-hidden
         className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${

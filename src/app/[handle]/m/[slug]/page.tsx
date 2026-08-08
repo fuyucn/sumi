@@ -49,11 +49,11 @@ export default async function MagazinePage({
       ) : (
         <ol className="mt-10 divide-y divide-line border-t border-line">
           {posts.map((post, i) => (
-            <li key={post.slug} className="py-5">
+            <li key={post.slug} className="group -mx-3 rounded-lg px-3 py-5 transition-colors hover:bg-paper-soft/60">
               <span className="mr-3 text-sm text-ink-faint tabular-nums">{i + 1}.</span>
               <Link
                 href={`/@${handle}/${post.slug}`}
-                className="link-underline font-serif text-xl font-medium text-ink transition-colors hover:text-ink"
+                className="link-underline font-serif text-xl font-medium text-ink transition-colors group-hover:text-seal"
               >
                 {post.title}
               </Link>

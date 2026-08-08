@@ -5,7 +5,11 @@ export default function SignInPage() {
   return (
     <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-5 py-20 rise">
       <div className="w-full max-w-sm text-center">
-        <p className="font-serif text-3xl leading-none text-seal" aria-hidden>墨</p>
+        <p className="group inline-flex" aria-hidden>
+          <span className="seal-stamp flex h-14 w-14 items-center justify-center rounded-2xl bg-seal font-serif text-3xl font-semibold leading-none text-paper shadow-sm transition-colors group-hover:bg-seal-soft">
+            墨
+          </span>
+        </p>
         <h1 className="mt-5 font-serif text-3xl font-semibold tracking-tight text-ink">
           Sign in to Sumi
         </h1>

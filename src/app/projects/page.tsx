@@ -54,7 +54,7 @@ export default async function ProjectsPage() {
             const href = project.url || repoUrl(project.repo ?? "") || `/@${handle}`;
             const external = href.startsWith("http");
             return (
-              <article key={`${handle}/${project.slug}`} className="card flex flex-col overflow-hidden">
+              <article key={`${handle}/${project.slug}`} className="card group lift flex flex-col overflow-hidden">
                 {project.coverImage || (project.gallery && project.gallery.length > 0) ? (
                   <div className="overflow-hidden border-b border-line">
                     <img
@@ -63,7 +63,7 @@ export default async function ProjectsPage() {
                       width={1600}
                       height={900}
                       loading="lazy"
-                      className="aspect-[16/9] w-full object-cover"
+                      className="aspect-[16/9] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
                     />
                   </div>
                 ) : null}
@@ -91,8 +91,12 @@ export default async function ProjectsPage() {
                     </p>
                   ) : null}
                   {project.tech && project.tech.length > 0 ? (
-                    <p className="mt-3 text-xs text-ink-faint">
-                      {project.tech.map((t) => `#${t}`).join(" ")}
+                    <p className="mt-3 flex flex-wrap gap-1.5">
+                      {project.tech.map((t) => (
+                        <span key={t} className="rounded-full bg-paper-soft px-2 py-0.5 text-xs text-ink-faint">
+                          #{t}
+                        </span>
+                      ))}
                     </p>
                   ) : null}
                   <div className="mt-auto flex items-center gap-3 pt-4 text-sm">
