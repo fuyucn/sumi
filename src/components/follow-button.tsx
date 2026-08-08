@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { toggleFollowAction } from "@/app/community/actions";
 
 export function FollowButton({
@@ -15,6 +16,7 @@ export function FollowButton({
   const [count, setCount] = useState(initialCount);
   const [following, setFollowing] = useState(initialFollowing);
   const [busy, setBusy] = useState(false);
+  const reduce = useReducedMotion();
 
   async function onClick() {
     if (busy) return;
@@ -45,7 +47,20 @@ export function FollowButton({
           : "border-seal bg-seal text-paper hover:bg-seal/90"
       }`}
     >
-      {following ? "Following" : "Follow"}
+      <span className="relative inline-flex overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.span
+            key={following ? "following" : "follow"}
+            className="inline-flex"
+            initial={reduce ? false : { y: 8, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={reduce ? undefined : { y: -8, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {following ? "Following" : "Follow"}
+          </motion.span>
+        </AnimatePresence>
+      </span>
       <span className="text-xs opacity-80">{count}</span>
     </button>
   );

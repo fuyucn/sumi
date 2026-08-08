@@ -8,6 +8,8 @@ import { ReplyComposer } from "@/components/reply-composer";
 import { DeleteCommentButton } from "@/components/delete-comment-button";
 import { replyAllowed } from "@/lib/comment-depth";
 import { AuthorName } from "@/components/author-name";
+import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { Reveal } from "@/components/reveal";
 import type { Comment } from "@/content/types";
 
 function indexByParent(comments: Comment[]): Map<string | null, Comment[]> {
@@ -21,24 +23,26 @@ function indexByParent(comments: Comment[]): Map<string | null, Comment[]> {
   return map;
 }
 
-function CommentNode({
-  comment,
-  replies,
-  allComments,
-  postHandle,
-  slug,
-  signedInHandle,
-}: {
+type CommentNodeProps = {
   comment: Comment;
   replies: Comment[];
   allComments: Comment[];
   postHandle: string;
   slug: string;
   signedInHandle: string | null;
-}) {
+};
+
+function CommentContent({
+  comment,
+  replies,
+  allComments,
+  postHandle,
+  slug,
+  signedInHandle,
+}: CommentNodeProps) {
   return (
-    <li>
-      <div className="group py-5 first:pt-0 last:pb-0">
+    <>
+      <div className="group">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Link
             href={`/@${comment.handle}`}
@@ -92,6 +96,14 @@ function CommentNode({
           ))}
         </ul>
       ) : null}
+    </>
+  );
+}
+
+function CommentNode(props: CommentNodeProps) {
+  return (
+    <li className="py-5 first:pt-0 last:pb-0">
+      <CommentContent {...props} />
     </li>
   );
 }
@@ -116,22 +128,34 @@ export async function Comments({ handle, slug }: { handle: string; slug: string 
       </h2>
       {comments.length > 0 ? (
         <ul className="mt-6 divide-y divide-line">
-          {roots.map((root) => (
-            <CommentNode
+          {roots.map((root, i) => (
+            <Reveal
               key={root.id}
-              comment={root}
-              replies={byParent.get(root.id) ?? []}
-              allComments={comments}
-              postHandle={handle}
-              slug={slug}
-              signedInHandle={signedInHandle}
-            />
+              as="li"
+              className="py-5 first:pt-0 last:pb-0"
+              delay={Math.min(i * 0.05, 0.3)}
+            >
+              <CommentContent
+                comment={root}
+                replies={byParent.get(root.id) ?? []}
+                allComments={comments}
+                postHandle={handle}
+                slug={slug}
+                signedInHandle={signedInHandle}
+              />
+            </Reveal>
           ))}
         </ul>
       ) : (
         <div className="mt-6 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
+          <span
+            aria-hidden
+            className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
+          >
+            <ChatCircle size={20} weight="duotone" />
+          </span>
           <p className="font-serif text-lg text-ink-soft">No comments yet.</p>
-          <p className="mt-1 text-sm text-ink-faint">
+          <p className="mt-1.5 text-sm text-ink-faint">
             Start the conversation and leave the first mark.
           </p>
         </div>
