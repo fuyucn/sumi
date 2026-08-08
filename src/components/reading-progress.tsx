@@ -142,6 +142,20 @@ export function ReadingProgress({
               </button>
             </div>
             <ul className="max-h-64 overflow-y-auto p-2">
+              <li>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+                  }}
+                  className="press flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-soft transition-colors hover:bg-paper-deep hover:text-ink"
+                >
+                  <CaretUp size={14} weight="bold" aria-hidden className="text-seal" />
+                  Back to top
+                </button>
+              </li>
+              <li aria-hidden className="my-1 border-t border-line" />
               {sections.map((s, i) => {
                 const active = i === current;
                 return (
