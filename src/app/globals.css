@@ -10,6 +10,7 @@
   --color-paper: #f7f4ec;
   --color-paper-raised: #fffdf8;
   --color-paper-deep: #efe9dc;
+  --color-paper-soft: #f1ecdf;
   --color-ink: #1e1b16;
   --color-ink-soft: #4a453d;
   --color-ink-muted: #7d7669;
@@ -140,6 +141,7 @@ body {
     --color-paper: #161310;
     --color-paper-raised: #1f1b15;
     --color-paper-deep: #100d0a;
+    --color-paper-soft: #1d1914;
     --color-ink: #ece5d8;
     --color-ink-soft: #c9c1b2;
     --color-ink-muted: #a09787;
@@ -160,6 +162,7 @@ body {
   --color-paper: #161310;
   --color-paper-raised: #1f1b15;
   --color-paper-deep: #100d0a;
+  --color-paper-soft: #1d1914;
   --color-ink: #ece5d8;
   --color-ink-soft: #c9c1b2;
   --color-ink-muted: #a09787;
