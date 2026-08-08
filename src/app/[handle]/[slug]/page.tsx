@@ -138,7 +138,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
             <a
               key={t}
               href={`/tag/${encodeURIComponent(t)}`}
-              className="press rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:text-seal"
+              className="press rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:bg-seal-wash/60 hover:text-seal"
             >
               #{t}
             </a>

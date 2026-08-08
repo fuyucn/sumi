@@ -8,6 +8,7 @@ import { FollowButton } from "@/components/follow-button";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { displayName } from "@/lib/display-name";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -79,8 +80,10 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         </p>
       ) : (
         <div className="divide-y divide-line border-t border-line">
-          {posts.map((post) => (
-            <PostCard key={post.slug} handle={handle} post={post} authorName={authorName} />
+          {posts.map((post, i) => (
+            <Reveal key={post.slug} delay={Math.min(i * 0.05, 0.3)}>
+              <PostCard handle={handle} post={post} authorName={authorName} />
+            </Reveal>
           ))}
         </div>
       )}

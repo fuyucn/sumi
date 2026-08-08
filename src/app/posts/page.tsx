@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listFeed, type FeedItem } from "@/content/feed";
 import { getDisplayNameMap } from "@/lib/display-name";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -62,44 +63,46 @@ export default async function PostsPage() {
                 </span>
               </h2>
               <div className="mt-6 divide-y divide-line border-t border-line">
-                {posts.map(({ handle, post }) => (
-                  <div
+                {posts.map(({ handle, post }, i) => (
+                  <Reveal
                     key={`${handle}/${post.slug}`}
-                    className="group relative grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-8"
+                    delay={Math.min(i * 0.05, 0.3)}
                   >
-                    {post.publishedAt ? (
-                      <time
-                        dateTime={post.publishedAt}
-                        className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
+                    <div className="group relative grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-8">
+                      {post.publishedAt ? (
+                        <time
+                          dateTime={post.publishedAt}
+                          className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
+                        >
+                          {formatDay(post.publishedAt)}
+                        </time>
+                      ) : (
+                        <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal/80">
+                          Undated
+                        </span>
+                      )}
+                      <div>
+                        <Link
+                          href={`/@${handle}/${post.slug}`}
+                          className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 hover:text-seal"
+                        >
+                          {post.title}
+                        </Link>
+                        <p className="mt-1 text-sm text-ink-faint">
+                          {names.get(handle)}
+                          {post.tags.length > 0
+                            ? ` · ${post.tags.map((t) => `#${t}`).join(" ")}`
+                            : ""}
+                        </p>
+                      </div>
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100 md:block"
                       >
-                        {formatDay(post.publishedAt)}
-                      </time>
-                    ) : (
-                      <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal/80">
-                        Undated
+                        →
                       </span>
-                    )}
-                    <div>
-                      <Link
-                        href={`/@${handle}/${post.slug}`}
-                        className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 hover:text-seal"
-                      >
-                        {post.title}
-                      </Link>
-                      <p className="mt-1 text-sm text-ink-faint">
-                        {names.get(handle)}
-                        {post.tags.length > 0
-                          ? ` · ${post.tags.map((t) => `#${t}`).join(" ")}`
-                          : ""}
-                      </p>
                     </div>
-                    <span
-                      aria-hidden
-                      className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100 md:block"
-                    >
-                      →
-                    </span>
-                  </div>
+                  </Reveal>
                 ))}
               </div>
             </section>

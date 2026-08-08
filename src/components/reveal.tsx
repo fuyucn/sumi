@@ -11,7 +11,7 @@ export function Reveal({
   children: ReactNode;
   className?: string;
   delay?: number;
-  as?: "div" | "section" | "ol" | "ul";
+  as?: "div" | "section" | "ol" | "ul" | "li";
 }) {
   const reduce = useReducedMotion();
   const Comp =
@@ -21,7 +21,9 @@ export function Reveal({
         ? motion.ol
         : as === "ul"
           ? motion.ul
-          : motion.div;
+          : as === "li"
+            ? motion.li
+            : motion.div;
 
   return (
     <Comp

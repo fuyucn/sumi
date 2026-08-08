@@ -4,6 +4,7 @@ import { getReadContentStore } from "@/content";
 import { getCurrentUser } from "@/lib/current-user";
 import { FriendForm } from "@/components/friend-form";
 import { DeleteFriendButton } from "@/components/delete-friend-button";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -40,9 +41,11 @@ export default async function FriendsPage() {
         </p>
       ) : (
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
-          {friends.map((friend) => (
-            <li
+          {friends.map((friend, i) => (
+            <Reveal
+              as="li"
               key={friend.id}
+              delay={Math.min(i * 0.06, 0.3)}
               className="card group lift flex items-start gap-3 p-4"
             >
               {friend.avatar ? (
@@ -81,7 +84,7 @@ export default async function FriendsPage() {
                   </p>
                 ) : null}
               </div>
-            </li>
+            </Reveal>
           ))}
         </ul>
       )}

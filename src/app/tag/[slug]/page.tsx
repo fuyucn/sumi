@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { getDisplayNameMap } from "@/lib/display-name";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -73,13 +74,17 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
         </p>
       ) : (
         <div className="divide-y divide-line border-t border-line">
-          {matches.map(({ handle, post }) => (
-            <PostCard
+          {matches.map(({ handle, post }, i) => (
+            <Reveal
               key={`${handle}/${post.slug}`}
-              handle={handle}
-              post={post}
-              authorName={names.get(handle)}
-            />
+              delay={Math.min(i * 0.05, 0.3)}
+            >
+              <PostCard
+                handle={handle}
+                post={post}
+                authorName={names.get(handle)}
+              />
+            </Reveal>
           ))}
         </div>
       )}

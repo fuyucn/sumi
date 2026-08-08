@@ -4,6 +4,7 @@ import { HighlightText } from "@/components/highlight-text";
 import { getDisplayNameMap } from "@/lib/display-name";
 import Link from "next/link";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { Reveal } from "@/components/reveal";
 
 export const dynamic = "force-dynamic";
 
@@ -77,14 +78,18 @@ export default async function SearchPage({
           </p>
           {results && results.length > 0 ? (
             <div className="mt-4 divide-y divide-line border-t border-line">
-              {results.map(({ handle, post }) => (
-                <PostCard
+              {results.map(({ handle, post }, i) => (
+                <Reveal
                   key={`${handle}/${post.slug}`}
-                  handle={handle}
-                  post={post}
-                  authorName={names.get(handle)}
-                  highlight={query}
-                />
+                  delay={Math.min(i * 0.05, 0.3)}
+                >
+                  <PostCard
+                    handle={handle}
+                    post={post}
+                    authorName={names.get(handle)}
+                    highlight={query}
+                  />
+                </Reveal>
               ))}
             </div>
           ) : (
