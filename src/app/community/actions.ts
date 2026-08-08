@@ -83,4 +83,5 @@ export async function toggleFollowAction(form: unknown) {
 export async function markNotificationsReadAction() {
   const res = await runMarkNotificationsRead(await resolveDeps());
   if (res.ok) revalidatePath("/notifications");
+  return res.ok;
 }
