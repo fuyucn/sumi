@@ -26,7 +26,16 @@ const schema = z.object({
 export type Env = z.infer<typeof schema>;
 
 export function loadEnv(source: Record<string, string | undefined> = process.env): Env {
-  return schema.parse(source);
+  const parsed = schema.parse(source);
+  // Fail fast instead of silently locking the owner out: an empty allowlist
+  // denies every GitHub login, which is only ever a misconfiguration in prod.
+  if (source.NODE_ENV === "production" && !parsed.ALLOWED_GITHUB_USERS.trim()) {
+    throw new Error(
+      "ALLOWED_GITHUB_USERS is empty in production: no GitHub account would be able to sign in. " +
+        "Set it to a comma-separated list of allowed GitHub logins (e.g. 'fuyucn') and redeploy.",
+    );
+  }
+  return parsed;
 }
 
 // Lazy singleton: importing this module must NOT eagerly parse process.env

@@ -32,6 +32,17 @@ test("requires GITHUB_CLIENT_ID and SECRET", () => {
   expect(() => loadEnv(rest)).toThrow();
 });
 
+test("fails fast when the allowlist is empty in production", () => {
+  expect(() =>
+    loadEnv({ ...base, ALLOWED_GITHUB_USERS: "", NODE_ENV: "production" }),
+  ).toThrow(/ALLOWED_GITHUB_USERS/);
+});
+
+test("allows an empty allowlist outside production (deny-all dev default)", () => {
+  const env = loadEnv({ ...base, ALLOWED_GITHUB_USERS: "", NODE_ENV: "development" });
+  expect(env.ALLOWED_GITHUB_USERS).toBe("");
+});
+
 test("treats an empty CF_ENABLED as unset (optional)", () => {
   const env = loadEnv({ ...base, CF_ENABLED: "" });
   expect(env.CF_ENABLED).toBeUndefined();

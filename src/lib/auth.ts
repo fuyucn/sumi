@@ -5,6 +5,32 @@ import { env } from "./env";
 import { schema } from "@/db/schema";
 import { getUserHandle } from "./user";
 import { assertAllowedGithubUser } from "./allowlist";
+import { clientIpFromRequest, logSecurityEvent } from "./security-log";
+
+/** Client IP headers trusted in order of preference (Cloudflare → proxy → Docker). */
+const IP_HEADERS = ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"];
+
+/**
+ * Run the allowlist gate and emit an audit line when it rejects. Context is
+ * `null` outside real requests (tests), so the IP/path fields are optional.
+ */
+function gateLogin(
+  login: string,
+  allowlist: string,
+  ctx: { request?: Request | null; path?: string | null } | null,
+): void {
+  try {
+    assertAllowedGithubUser(login, allowlist);
+  } catch (e) {
+    logSecurityEvent({
+      event: "login-denied",
+      login,
+      ip: clientIpFromRequest(ctx?.request ?? null),
+      path: ctx?.path ?? null,
+    });
+    throw e;
+  }
+}
 
 function buildAuth() {
   return betterAuth({
@@ -43,14 +69,29 @@ function buildAuth() {
         }),
       },
     },
+    // Built-in per-IP rate limiting (in-memory is fine for the single-instance
+    // Docker/VPS deploy; Cloudflare adds its own edge limits on top). Better
+    // Auth already gives /sign-in* a strict 3 req / 10 s rule; we add tighter
+    // caps on the OAuth callback and sign-out so the login surface can't be
+    // hammered. Keep `enabled: true` so local Docker gets the same protection.
+    rateLimit: {
+      enabled: true,
+      window: 60,
+      max: 60,
+      storage: "memory",
+      customRules: {
+        "/callback/github": { window: 60, max: 10 },
+        "/sign-out": { window: 60, max: 30 },
+      },
+    },
     databaseHooks: {
       user: {
         create: {
-          before: async (user) => {
+          before: async (user, ctx) => {
             // `username` was set by mapProfileToUser above and carries profile.login.
             const raw = (user as Record<string, unknown>)["username"];
             const login = typeof raw === "string" ? raw : "";
-            assertAllowedGithubUser(login, env.ALLOWED_GITHUB_USERS);
+            gateLogin(login, env.ALLOWED_GITHUB_USERS, ctx);
             return { data: user };
           },
         },
@@ -61,15 +102,20 @@ function buildAuth() {
           // ALLOWED_GITHUB_USERS revokes their access immediately, even when
           // their account row already exists (previously the gate only fired
           // at account creation).
-          before: async (session) => {
+          before: async (session, ctx) => {
             const login = await getUserHandle(session.userId);
-            assertAllowedGithubUser(login ?? "", env.ALLOWED_GITHUB_USERS);
+            gateLogin(login ?? "", env.ALLOWED_GITHUB_USERS, ctx);
             return { data: session };
           },
         },
       },
     },
     advanced: {
+      // Trusted proxy chain: Cloudflare first, then common reverse proxies.
+      // In plain Docker (no proxy) better-auth falls back to the socket IP.
+      ipAddress: {
+        ipAddressHeaders: IP_HEADERS,
+      },
       // Secure cookies only over HTTPS (production / Cloudflare / VPS behind
       // TLS); plain HTTP (local Docker) keeps cookies unsecured so sign-in works.
       useSecureCookies: env.BETTER_AUTH_URL.startsWith("https://"),

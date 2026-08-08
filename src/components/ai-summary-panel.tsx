@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { AiTask } from "@/content/ai-store";
+import { generateSummaryAction } from "@/app/write/actions";
 
 interface Props {
   handle: string;
@@ -8,6 +9,8 @@ interface Props {
   initialTask: AiTask | null;
   /** Heading anchor slugs present in the rendered article body. */
   headings?: string[];
+  /** Signed-in author viewing their own post: allow regenerate from the page. */
+  isAuthor?: boolean;
 }
 
 /** Max polling attempts before showing a timeout hint (generation is manual). */
@@ -22,8 +25,9 @@ function Spinner() {
   );
 }
 
-export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Props) {
+export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAuthor = false }: Props) {
   const [task, setTask] = useState<AiTask | null>(initialTask);
+  const [generating, setGenerating] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -53,7 +57,46 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
     };
   }, [task, handle, slug]);
 
-  if (!task) return null;
+  async function regenerate() {
+    if (generating || busy) return;
+    setGenerating(true);
+    // isAuthor means the signed-in user owns this post: no sourceHandle, so the
+    // action runs under the user's own handle and backfills the excerpt (导读).
+    const result = await generateSummaryAction(slug);
+    setGenerating(false);
+    if (result.ok) {
+      setTask(result.task);
+    } else {
+      setTask((t) => (t ? { ...t, status: "failed", error: result.error, result: null } : t));
+    }
+  }
+
+  if (!task) {
+    if (!isAuthor) return null;
+    return (
+      <section
+        aria-label="AI 总结"
+        className="mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
+            AI 总结
+          </span>
+          <button
+            type="button"
+            onClick={regenerate}
+            disabled={generating}
+            className="press ml-auto rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted transition-colors hover:border-seal hover:text-seal disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {generating ? "生成中…" : "生成 AI 总结"}
+          </button>
+        </div>
+        <p className="mt-3 text-sm text-ink-faint">
+          还没有 AI 总结，点击「生成 AI 总结」用当前正文生成。
+        </p>
+      </section>
+    );
+  }
 
   const busy = task.status === "pending" || task.status === "running";
 
@@ -62,7 +105,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
       aria-label="AI 总结"
       className="mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
           AI 总结
         </span>
@@ -73,6 +116,16 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
           </span>
         ) : task.model ? (
           <span className="text-xs text-ink-faint">{task.model}</span>
+        ) : null}
+        {isAuthor ? (
+          <button
+            type="button"
+            onClick={regenerate}
+            disabled={generating || busy}
+            className="press ml-auto rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted transition-colors hover:border-seal hover:text-seal disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {generating ? "生成中…" : task ? "重新生成" : "生成 AI 总结"}
+          </button>
         ) : null}
       </div>
 

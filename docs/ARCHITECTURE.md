@@ -102,7 +102,7 @@ flowchart TB
 - 每个 action 都先经过 `resolveDeps()`（`src/lib/session.ts`）解析「当前用户 id / handle / content store」，再由 `guard()` 校验登录态与配置。
 
 ### 4.3 服务层（核心库）
-- `src/lib/auth.ts` — Better Auth 单例（惰性 Proxy），GitHub OAuth + 自定义 `username` 字段 + allowlist 门禁 hook。
+- `src/lib/auth.ts` — Better Auth 单例（惰性 Proxy），GitHub OAuth + 自定义 `username` 字段 + allowlist 门禁 hook + 内置按 IP 限流 + 登录审计日志。
 - `src/lib/env.ts` — zod 校验环境变量，惰性加载单例。
 - `src/lib/db.ts` — Drizzle + postgres-js 惰性单例。
 - `src/lib/current-user.ts` / `session.ts` / `user.ts` — 会话与 handle 解析。
@@ -237,12 +237,29 @@ sequenceDiagram
     BA->>GH: 换取用户资料 (login)
     BA->>BA: mapProfileToUser → username = login
     alt 不在 ALLOWED_GITHUB_USERS
+        BA->>BA: 审计日志 [security] login-denied (login + IP)
         BA-->>U: 403 FORBIDDEN (账号未开通)
     else 允许
         BA->>DB: 写入/更新 user + account(accessToken) + session
         BA-->>U: Set-Cookie 会话 → 跳转首页
     end
 ```
+
+登录安全阀（全部默认开启）：
+- **fail-closed allowlist**：`ALLOWED_GITHUB_USERS` 为空时拒绝所有登录；生产环境
+  为空会在启动时直接报错（防误配置锁死自己），本地开发保持「拒绝所有人」。
+- **双重门禁**：每次登录（user-create / session-create hook）与每个请求
+  （`getCurrentUser` 内 `isSessionUserAllowed`）都重新校验 allowlist，把某账号
+  从列表移除即立即吊销其会话。
+- **内置限流**：Better Auth `rateLimit`（内存桶，单实例足够）默认 60 次/分/IP，
+  `/sign-in*` 收紧为 3 次/10 秒，OAuth 回调 `/callback/github` 10 次/分，
+  `/sign-out` 30 次/分；`POST /api/auth/*` 另有路由层 30 次/分按 IP 限流兜底。
+- **审计日志**：被 allowlist 拒绝的登录尝试与路由层限流触发都会输出一行
+  `[security]` 结构化日志（event / login / ip / path），Docker/Cloudflare 日志
+  可直接 grep。
+- **代理链 IP**：`advanced.ipAddress.ipAddressHeaders` 依次信任
+  `cf-connecting-ip` / `x-real-ip` / `x-forwarded-for`，Cloudflare 与反向代理
+  部署都能拿到真实客户端 IP。
 
 ### 6.2 阅读 / 首页 Feed（匿名只读）
 
@@ -417,7 +434,7 @@ sequenceDiagram
     participant LLM as 作者配置的 LLM
     participant UI as 文章页 AI 总结卡片
 
-    A->>W: 点击「一键生成 AI 总结」（或「重新生成」）
+    A->>W: 编辑页点击「一键生成 AI 总结」（或「重新生成」）；文章页作者也可直接点「重新生成」
     W->>Q: enqueueSummary — 去重/重置为 pending
     W->>LLM: generateSummary — chat/completions（总结 prompt，附章节锚点列表）
     LLM-->>W: { summary, tldr, points[{text, anchor}] }
@@ -431,11 +448,15 @@ sequenceDiagram
 - 作者在 `/settings → AI 总结` 配置 provider（OpenAI 兼容：OpenAI / DeepSeek /
   Moonshot / Ollama / OpenCode Zen 等），`testProvider` 提供「测试连接」。
 - 生成是**手动**的：发布文章不会自动创建任务；作者在编辑页点击按钮才会生成，
-  不满意可随时「重新生成」。没有后台任务执行器，`generateSummaryAction` 在
-  请求内同步完成生成并落库；文章页短时轮询只为等待该请求完成。
+  不满意可随时「重新生成」。登录作者在文章页的 AI 总结卡片上也能直接重新生成
+  （复用同一个 `generateSummaryAction`），不必回编辑器。没有后台任务执行器，
+  `generateSummaryAction` 在请求内同步完成生成并落库；文章页短时轮询只为等待
+  该请求完成。
 - **导读（excerpt）自动回填**：生成成功且是作者自己的文章时，把 AI 总结的
   `tldr`（截断 200 字）写回文章的 `excerpt` 字段——列表卡片、SEO description
   与全文搜索都会自动获得一句话导读，无需手动维护；agent 文章保留原 excerpt。
+  「导读」因此保留为 AI 总结的自动派生物（卡片/SEO/RSS 用一句话摘要），与文章
+  页的完整「AI 总结」卡片职责不同、互不重复。
 - 总结要点返回 `anchor`（文章小标题 slug），正文标题由 `Markdown` 渲染为带
   `id` 的锚点，要点即可点击跳转到对应章节；锚点不在正文中时降级为纯文本。
 - 失败不会破坏编辑流程：`generateSummaryAction` 内部 try/catch，失败时任务
@@ -468,11 +489,11 @@ sequenceDiagram
    `CloudflareContentStore` 两个实现共享同一接口，按
    `CF_ENABLED` / `DB_MIRROR` 环境开关选择（工厂见 `src/content/index.ts`）。
 3. **slug 派生自标题** —— 改标题会产生新路径（旧文件被孤儿化），代码注释明确提示;这是 v0 的取舍。
-4. **登录安全阀（fail-closed + 双重门禁）** —— `ALLOWED_GITHUB_USERS`
-   为空时拒绝所有人；每次登录（user-create / session-create hook）与每个请求
-   （`getCurrentUser` 内 `isSessionUserAllowed`）都重新校验 allowlist，移除用户
-   即立即吊销会话；`POST /api/auth/*` 另有按 IP 的 30 次/分钟限流，防止 OAuth
-   流程被滥用。
+4. **登录安全阀（fail-closed + 双重门禁 + 限流 + 审计）** —— `ALLOWED_GITHUB_USERS`
+   为空时拒绝所有人（生产环境启动即报错，防误配置锁死）；每次登录与每个请求都
+   重新校验 allowlist，移除用户即立即吊销会话；Better Auth 内置按 IP 限流
+   （sign-in 3 次/10 秒、OAuth 回调 10 次/分）+ 路由层 30 次/分兜底，被拒绝的
+   登录尝试输出 `[security]` 审计日志。详见 6.1。
 5. **一切读写走存储层/HTTP** —— 无本地 FS 写入，图片以 base64 入库（或 R2
    对象），天然 serverless 可移植。
 6. **惰性单例 (Proxy)** —— `env / db / auth` 均在首次访问才初始化，避免测试与构建期触发副作用。
@@ -486,7 +507,7 @@ sequenceDiagram
 
 ## 9. 测试与验证
 
-- **单元测试**: Vitest 27 个文件 / 161 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、搜索相关性、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub/Cloudflare store 集成（mock）、auth 门禁（PGlite 内存库）、评论深度与删除。
+- **单元测试**: Vitest 28 个文件 / 199 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、搜索相关性、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub/Cloudflare store 集成（mock）、auth 门禁（PGlite 内存库）、评论深度与删除、登录审计日志与生产配置守卫。
 - **质量门禁**: `pnpm typecheck`、`pnpm test`、`pnpm lint`、`pnpm build`、以及 Docker 冒烟（`docker compose up -d` + `curl :3005` = 200）。
 
 ---

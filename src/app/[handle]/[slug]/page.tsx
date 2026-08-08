@@ -120,6 +120,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         slug={decodedSlug}
         initialTask={aiTask}
         headings={headings}
+        isAuthor={signedInHandle === data.handle}
       />
       <hr className="mt-8 mb-10 border-line" />
       <article className="prose prose-stone prose-article max-w-none font-serif prose-headings:font-serif">
