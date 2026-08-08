@@ -57,9 +57,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
       <header>
         <Link
           href="/posts"
-          className="link-underline text-sm text-ink-faint transition-colors hover:text-ink"
+          className="group/back link-underline text-sm text-ink-faint transition-colors hover:text-ink"
         >
-          ← Back to posts
+          <span
+            aria-hidden
+            className="inline-block transition-transform duration-200 ease-out group-hover/back:-translate-x-0.5"
+          >
+            ←
+          </span>{" "}
+          Back to posts
         </Link>
         <h1 className="mt-4 font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {post.title}
@@ -125,7 +131,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
             <a
               key={t}
               href={`/tag/${encodeURIComponent(t)}`}
-              className="rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:text-seal"
+              className="press rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:text-seal"
             >
               #{t}
             </a>

@@ -60,7 +60,12 @@ export function ThemeToggle() {
         apply(next);
       }}
     >
-      <Icon size={16} weight="duotone" aria-hidden />
+      <span
+        key={theme}
+        className="inline-flex [animation:fade-in_0.22s_var(--ease-out)]"
+      >
+        <Icon size={16} weight="duotone" aria-hidden />
+      </span>
     </button>
   );
 }

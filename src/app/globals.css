@@ -324,6 +324,25 @@ body {
   transform: translateY(1px) scale(0.98);
 }
 
+/* Like heart pops once when it flips state — a tactile confirmation that the
+   seal was pressed, not just a color swap. */
+@media (prefers-reduced-motion: no-preference) {
+  .heart-pop {
+    animation: heart-pop 0.35s var(--ease-out);
+  }
+  @keyframes heart-pop {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.35);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
 /* The 墨 hanko stamps down once on hover — a seal imprint instead of a flat
    color swap. Runs only when motion is allowed; reduced-motion keeps the
    color change only. */

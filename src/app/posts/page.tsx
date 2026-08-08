@@ -62,7 +62,7 @@ export default async function PostsPage() {
                 {posts.map(({ handle, post }) => (
                   <div
                     key={`${handle}/${post.slug}`}
-                    className="grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-8"
+                    className="group relative grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-8"
                   >
                     {post.publishedAt ? (
                       <time
@@ -88,6 +88,12 @@ export default async function PostsPage() {
                           : ""}
                       </p>
                     </div>
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 md:block"
+                    >
+                      →
+                    </span>
                   </div>
                 ))}
               </div>

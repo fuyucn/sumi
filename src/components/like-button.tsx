@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toggleLikeAction } from "@/app/community/actions";
 
 export function LikeButton({
@@ -17,9 +17,16 @@ export function LikeButton({
   const [count, setCount] = useState(initialCount);
   const [liked, setLiked] = useState(initialLiked);
   const [busy, setBusy] = useState(false);
+  const [pulse, setPulse] = useState(false);
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   async function onClick() {
     if (busy) return;
+    if (pulseTimer.current) clearTimeout(pulseTimer.current);
+    setPulse(false);
+    // Re-trigger the pop even when clicking again mid-animation.
+    requestAnimationFrame(() => setPulse(true));
+    pulseTimer.current = setTimeout(() => setPulse(false), 400);
     const prevLiked = liked;
     const prevCount = count;
     setLiked(!prevLiked);
@@ -48,7 +55,9 @@ export function LikeButton({
           : "border-line-strong text-ink-muted hover:border-seal hover:text-seal"
       }`}
     >
-      <span aria-hidden>{liked ? "♥" : "♡"}</span>
+      <span aria-hidden className={pulse ? "heart-pop inline-block" : "inline-block"}>
+        {liked ? "♥" : "♡"}
+      </span>
       <span>{count}</span>
     </button>
   );
