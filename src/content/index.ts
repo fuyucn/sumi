@@ -44,7 +44,7 @@ export async function getCloudflareContentStore(): Promise<ContentStore | null> 
 }
 
 /** Build the content store for a signed-in user. Null if no backend is configured. */
-export async function getContentStoreForUser(userId: string): Promise<ContentStore | null> {
+export async function getContentStoreForUser(_userId: string): Promise<ContentStore | null> {
   const cf = await getCloudflareContentStore();
   if (cf) return cf;
   return getDbContentStore();
