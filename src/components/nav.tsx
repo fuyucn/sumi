@@ -302,12 +302,12 @@ export function Nav() {
         ? createPortal(
             <div className="md:hidden">
               <div
-                className="fixed inset-0 z-[45] bg-ink/20 animate-fade-in"
+                className="fixed inset-0 z-[45] bg-ink/20 backdrop-blur-[2px] animate-fade-in"
                 aria-hidden
                 onClick={closeMenu}
               />
-              <div className="fixed inset-x-0 top-16 z-50 border-b border-line bg-paper px-5 py-4 shadow-pop animate-drawer-in">
-            <nav className="flex flex-col gap-0.5" aria-label="Mobile">
+              <div className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-pop animate-drawer-in">
+            <nav className="drawer-stagger flex flex-col gap-0.5" aria-label="Mobile">
               <DrawerLink href="/" active={isActive("/")} onClick={closeMenu}>
                 <House size={17} weight="duotone" aria-hidden />
                 Home
@@ -333,7 +333,7 @@ export function Nav() {
             <div className="my-3 h-px bg-line" aria-hidden />
 
             {handle ? (
-              <div className="flex flex-col gap-1">
+              <div className="drawer-stagger flex flex-col gap-1">
                 <DrawerUserRow handle={handle} onClick={closeMenu} />
                 <Link
                   href="/write"

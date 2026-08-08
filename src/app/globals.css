@@ -343,6 +343,91 @@ body {
   }
 }
 
+/* Skeleton shimmer: a soft light sweep over loading bars, used by the
+   AI 总结 panel while a generation task is still running. */
+@media (prefers-reduced-motion: no-preference) {
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--color-paper-raised) 70%, transparent),
+      transparent
+    );
+    animation: shimmer 1.6s var(--ease-in-out) infinite;
+  }
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
+    }
+  }
+}
+
+/* Soft rise for content that appears after async state flips (e.g. the AI
+   总结 result replacing the skeleton). Distinct from the one-shot `.rise`
+   so it can retrigger via a React key. */
+@media (prefers-reduced-motion: no-preference) {
+  .panel-enter {
+    animation: panel-enter 0.4s var(--ease-out) both;
+  }
+  @keyframes panel-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Mobile drawer: sibling rows drift in one after another, slightly slower
+   than the panel drop so the stagger reads as intentional. */
+@media (prefers-reduced-motion: no-preference) {
+  .drawer-stagger > * {
+    animation: drawer-item 0.28s var(--ease-out) both;
+  }
+  .drawer-stagger > *:nth-child(1) {
+    animation-delay: 0.02s;
+  }
+  .drawer-stagger > *:nth-child(2) {
+    animation-delay: 0.05s;
+  }
+  .drawer-stagger > *:nth-child(3) {
+    animation-delay: 0.08s;
+  }
+  .drawer-stagger > *:nth-child(4) {
+    animation-delay: 0.11s;
+  }
+  .drawer-stagger > *:nth-child(5) {
+    animation-delay: 0.14s;
+  }
+  .drawer-stagger > *:nth-child(6) {
+    animation-delay: 0.17s;
+  }
+  .drawer-stagger > *:nth-child(7) {
+    animation-delay: 0.2s;
+  }
+  @keyframes drawer-item {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
 /* The 墨 hanko stamps down once on hover — a seal imprint instead of a flat
    color swap. Runs only when motion is allowed; reduced-motion keeps the
    color change only. */

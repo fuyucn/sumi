@@ -77,7 +77,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
       </div>
 
       {task.status === "done" && task.result ? (
-        <div className="mt-4">
+        <div key={task.finishedAt ?? "done"} className="panel-enter mt-4">
           {task.result.summary ? (
             <p className="font-serif text-[1.05rem] leading-relaxed text-ink">{task.result.summary}</p>
           ) : null}
@@ -111,10 +111,10 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
         </div>
       ) : busy ? (
         <div className="mt-4 space-y-3" aria-hidden>
-          <div className="h-4 w-11/12 animate-pulse rounded bg-line-strong/50" />
-          <div className="h-4 w-4/6 animate-pulse rounded bg-line-strong/50" />
-          <div className="h-3 w-5/6 animate-pulse rounded bg-line-strong/40" />
-          <div className="h-3 w-3/5 animate-pulse rounded bg-line-strong/40" />
+          <div className="shimmer h-4 w-11/12 rounded bg-line-strong/40" />
+          <div className="shimmer h-4 w-4/6 rounded bg-line-strong/40" />
+          <div className="shimmer h-3 w-5/6 rounded bg-line-strong/30" />
+          <div className="shimmer h-3 w-3/5 rounded bg-line-strong/30" />
         </div>
       ) : null}
     </section>
