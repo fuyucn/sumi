@@ -4,6 +4,7 @@ import { getReadContentStore } from "@/content";
 import type { Post } from "@/content/types";
 import { displayName } from "@/lib/display-name";
 import { EmptyState } from "@/components/empty-state";
+import { Reveal } from "@/components/reveal";
 import { BookOpen } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -66,8 +67,10 @@ export default async function MagazinePage({
       ) : (
         <ol className="mt-8 divide-y divide-line border-t border-line">
           {posts.map((post, i) => (
-            <li
+            <Reveal
+              as="li"
               key={post.slug}
+              delay={Math.min(i * 0.05, 0.3)}
               className="group relative -mx-3 rounded-lg px-3 py-5 transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-soft/60"
             >
               <span
@@ -105,7 +108,7 @@ export default async function MagazinePage({
                   →
                 </span>
               </div>
-            </li>
+            </Reveal>
           ))}
         </ol>
       )}
