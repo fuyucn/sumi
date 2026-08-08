@@ -66,7 +66,7 @@ export default async function SettingsPage() {
           <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
             配置一个 OpenAI 兼容的 chat/completions 服务（OpenAI、DeepSeek、Moonshot、Ollama 等）。
             在文章编辑页点「一键生成 AI 总结」手动生成，不满意可随时重新生成；
-            导读留空时 TL;DR 会自动回填为文章导读（列表预览与 SEO 描述），手写导读优先，不会被覆盖。未启用或未配置时该功能自动隐藏。
+            TL;DR 会自动同步为文章导读（列表预览与 SEO 描述），未配置 AI 时自动取正文首句。未启用或未配置时该功能自动隐藏。
           </p>
           <div className="mt-5">
             {provider ? (
@@ -93,6 +93,7 @@ export default async function SettingsPage() {
           <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
             只允许出现在 `ALLOWED_GITHUB_USERS` 白名单里的 GitHub 账号登录；
             每次登录和每个请求都会重新校验，移除账号后会话立即失效。
+            设置 `LOGIN_PASSPHRASE` 后可再启用第二道口令阀。
           </p>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">
@@ -120,6 +121,18 @@ export default async function SettingsPage() {
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
                     不在白名单（将被拒绝）
                   </span>
+                )}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">
+              <dt className="text-ink-faint">口令第二道阀</dt>
+              <dd>
+                {env.LOGIN_PASSPHRASE ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-seal/30 bg-seal/[0.06] px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
+                    已启用
+                  </span>
+                ) : (
+                  <span className="text-ink-faint">未启用</span>
                 )}
               </dd>
             </div>

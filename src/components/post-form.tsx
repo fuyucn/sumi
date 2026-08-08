@@ -38,6 +38,8 @@ export function PostForm({
       ? initial.tags.split(",").map((t) => t.trim()).filter(Boolean)
       : [],
   );
+  // 导读不再手填：保存时自动取正文首句，AI 总结的 TL;DR 会再替换它。这里保留
+  // 状态只是为了编辑 agent 帖子时不丢失其 API 设置的 excerpt。
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [initialBody, setInitialBody] = useState(initial?.body ?? "");
@@ -74,11 +76,6 @@ export function PostForm({
     setBody(md);
     setDirty(true);
   }
-  function handleExcerpt(v: string) {
-    setExcerpt(v);
-    setDirty(true);
-  }
-
   async function handleUploadImage(file: File): Promise<string | null> {
     const buffer = await file.arrayBuffer();
     const base64 = Buffer.from(buffer).toString("base64");
@@ -161,20 +158,6 @@ export function PostForm({
         className="w-full bg-transparent font-serif text-[2.25rem] font-semibold leading-tight tracking-tight text-ink placeholder:text-ink-faint/60 focus:outline-none"
       />
       <TagPicker value={tags} onChange={handleTags} />
-      <div className="mt-4">
-        <input
-          value={excerpt}
-          onChange={(e) => handleExcerpt(e.target.value)}
-          maxLength={300}
-          placeholder="导读（可选）：一句话摘要，显示在列表卡片与搜索描述中；留空时 AI 总结的 TL;DR 会自动回填"
-          className="w-full border-b border-line bg-transparent py-2 text-sm leading-relaxed text-ink placeholder:text-ink-faint/50 focus:border-seal focus:outline-none transition-colors duration-[var(--dur-short)]"
-        />
-        {excerpt ? (
-          <p className="mt-1.5 text-xs text-ink-faint">
-            手动导读优先，AI 总结不会再覆盖它
-          </p>
-        ) : null}
-      </div>
       <Editor key={editorKey} initialMarkdown={initialBody} onChange={handleBody} uploadImage={handleUploadImage} />
 
       {postSlug ? (

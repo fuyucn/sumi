@@ -40,10 +40,15 @@ test("save-as-draft preserves an existing publishedAt", () => {
   expect(p.publishedAt).toBe("2026-01-01T00:00:00.000Z");
 });
 
-test("excerpt is trimmed and omitted when blank", () => {
+test("excerpt is trimmed; blank falls back to the body's first sentence", () => {
   const withExcerpt = buildNewPost({ title: "Hi", body: "x", excerpt: "  一句导读  ", publish: false }, now);
   expect(withExcerpt.excerpt).toBe("一句导读");
-  const blank = buildNewPost({ title: "Hi", body: "x", excerpt: "   ", publish: false }, now);
+  const blank = buildNewPost({ title: "Hi", body: "正文首句。继续。", excerpt: "   ", publish: false }, now);
+  expect(blank.excerpt).toBe("正文首句。");
+});
+
+test("excerpt is omitted when body has no extractable text", () => {
+  const blank = buildNewPost({ title: "Hi", body: "", excerpt: "   ", publish: false }, now);
   expect(blank.excerpt).toBeUndefined();
 });
 

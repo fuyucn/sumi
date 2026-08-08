@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { firstSentence } from "@/lib/first-sentence";
 import type { NewPost } from "./types";
 
 export const writeFormSchema = z.object({
@@ -20,10 +21,12 @@ export function buildNewPost(form: unknown, now: Date): NewPost {
   const tags = f.tags.split(",").map((t) => t.trim()).filter(Boolean);
   const existing = f.publishedAt;
   const publishedAt = f.publish ? (existing ?? now.toISOString()) : existing;
+  // 导读优先用手写值；留空时先用正文首句兜底，之后 AI 总结的 TL;DR 会替换它。
+  const excerpt = f.excerpt.trim() ? f.excerpt.trim() : firstSentence(f.body);
   return {
     title: f.title,
     body: f.body,
-    ...(f.excerpt.trim() ? { excerpt: f.excerpt.trim() } : {}),
+    ...(excerpt ? { excerpt } : {}),
     tags,
     status: f.publish ? "published" : "draft",
     ...(f.agent ? { agent: true } : {}),

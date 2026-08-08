@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import { getAiStore, getContentStoreForUser, getReadContentStore } from "@/content";
 import { runDeletePost, runSavePost, runUploadImage, type WriteDeps } from "./actions-core";
+import { firstSentence } from "@/lib/first-sentence";
 import { generateSummary } from "@/lib/ai/summarize";
 import { AI_GENERATE_LIMIT, rateLimit } from "@/lib/rate-limit";
 import type { AiTask } from "@/content/ai-store";
@@ -123,8 +124,9 @@ export async function generateSummaryAction(
     // Backfill the post's excerpt (导读) from the AI TL;DR so list cards and
     // metadata stay fresh without manual writing. Only for the author's own
     // posts — agent posts keep whatever excerpt their author set — and only
-    // when the author hasn't written a manual 导读 (manual wins over AI).
-    if (!sourceHandle && result.tldr && !post.excerpt?.trim()) {
+    // when there is no manual 导读 and the current value is still the
+    // mechanical first-sentence fallback (manual and AI both win over it).
+    if (!sourceHandle && result.tldr && (!post.excerpt?.trim() || post.excerpt === firstSentence(post.body))) {
       try {
         await store.savePost(handle, {
           slug,
@@ -198,11 +200,15 @@ export async function clearSummaryAction(slug: string, sourceHandle?: string): P
     const post = await store.getPost(handle, slug);
     if (post && post.excerpt === aiBackfilled.slice(0, 200)) {
       try {
+        // Restore the pre-AI state: no excerpt, or the first-sentence fallback
+        // that save-time fill left behind.
+        const fallback = firstSentence(post.body);
         await store.savePost(handle, {
           slug,
           title: post.title,
           body: post.body,
           tags: post.tags,
+          ...(fallback ? { excerpt: fallback } : {}),
           status: post.status,
           ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
           ...(post.coverImage ? { coverImage: post.coverImage } : {}),
