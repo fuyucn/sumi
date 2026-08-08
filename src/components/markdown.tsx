@@ -103,6 +103,11 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
         // wrapper is dropped to avoid nesting.
         pre: ({ children }) => <>{children}</>,
         code: Code,
+        // Body figures load off the critical path; decode async so long
+        // articles with many screenshots don't jank on scroll.
+        img: ({ src, alt }) => (
+          <img src={src} alt={alt ?? ""} loading="lazy" decoding="async" />
+        ),
       }}
       urlTransform={(url, key) => {
         if (key === "src") return resolveUrl(baseUrl, url);

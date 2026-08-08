@@ -36,7 +36,9 @@ export default async function Home() {
         <div className="rise">
           <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
             A quiet place to write
-            <span className="text-seal">.</span>
+            <span aria-hidden className="seal-in text-seal">
+              .
+            </span>
           </h1>
           <p className="mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
             Your words, inked onto warm paper and kept in your own quiet
@@ -67,6 +69,8 @@ export default async function Home() {
                 alt={featured.post.title}
                 width={1200}
                 height={800}
+                loading="eager"
+                decoding="async"
                 className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
               />
               <div className="p-5">

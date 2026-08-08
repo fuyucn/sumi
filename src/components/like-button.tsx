@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { toggleLikeAction } from "@/app/community/actions";
+import { Heart } from "@phosphor-icons/react";
 
 export function LikeButton({
   postHandle,
@@ -56,7 +57,7 @@ export function LikeButton({
       }`}
     >
       <span aria-hidden className={pulse ? "heart-pop inline-block" : "inline-block"}>
-        {liked ? "♥" : "♡"}
+        <Heart size={17} weight={liked ? "fill" : "regular"} aria-hidden />
       </span>
       <span>{count}</span>
     </button>

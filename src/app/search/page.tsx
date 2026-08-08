@@ -2,6 +2,8 @@ import { getReadContentStore } from "@/content";
 import { PostCard } from "@/components/post-card";
 import { HighlightText } from "@/components/highlight-text";
 import { getDisplayNameMap } from "@/lib/display-name";
+import Link from "next/link";
+import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -83,12 +85,25 @@ export default async function SearchPage({
               ))}
             </div>
           ) : (
-            <div className="mt-4 rounded-card border border-dashed border-line-strong px-6 py-14 text-center">
-              <p className="font-serif text-lg text-ink-soft">
+            <div className="mt-4 rounded-card border border-dashed border-line-strong px-6 py-16 text-center">
+              <span
+                aria-hidden
+                className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
+              >
+                <MagnifyingGlass size={20} weight="duotone" />
+              </span>
+              <p className="mt-5 font-serif text-lg text-ink-soft">
                 Nothing on this shelf.
               </p>
               <p className="mt-1 text-sm text-ink-faint">
-                Try a different keyword, or browse all posts.
+                Try a different keyword, or{" "}
+                <Link
+                  href="/posts"
+                  className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+                >
+                  browse all posts
+                </Link>
+                .
               </p>
             </div>
           )}

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { Desktop, Moon, Sun } from "@phosphor-icons/react";
+import { motion, useReducedMotion } from "motion/react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -35,6 +36,7 @@ const LABELS: Record<Theme, string> = {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     const saved = (localStorage.getItem(STORAGE_KEY) as Theme | null) ?? "system";
@@ -60,12 +62,15 @@ export function ThemeToggle() {
         apply(next);
       }}
     >
-      <span
+      <motion.span
         key={theme}
-        className="inline-flex [animation:fade-in_0.22s_var(--ease-out)]"
+        className="inline-flex"
+        initial={reduce ? false : { opacity: 0, rotate: -40, scale: 0.55 }}
+        animate={{ opacity: 1, rotate: 0, scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
         <Icon size={16} weight="duotone" aria-hidden />
-      </span>
+      </motion.span>
     </button>
   );
 }

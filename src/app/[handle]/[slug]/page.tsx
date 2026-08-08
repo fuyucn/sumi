@@ -112,6 +112,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           alt={post.title}
           width={1600}
           height={900}
+          loading="lazy"
+          decoding="async"
           className="mt-8 w-full rounded-card border border-line object-cover shadow-card"
         />
       ) : null}

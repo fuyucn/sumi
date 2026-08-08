@@ -279,6 +279,27 @@ body {
     animation-delay: 0.24s;
   }
 
+  /* The seal-colored period in the home headline stamps in a beat after the
+     words rise — a tiny hanko press instead of a flat fade. */
+  .seal-in {
+    display: inline-block;
+    animation: seal-in 0.5s var(--ease-out) 0.7s both;
+  }
+  @keyframes seal-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.4) rotate(-10deg);
+    }
+    62% {
+      opacity: 1;
+      transform: scale(1.18) rotate(2deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+
   .lift {
     transition:
       transform var(--dur-short) var(--ease-out),
