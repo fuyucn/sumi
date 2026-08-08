@@ -17,7 +17,7 @@ export function EmptyState({
     >
       <span
         aria-hidden
-        className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
+        className="empty-float mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
       >
         {icon}
       </span>

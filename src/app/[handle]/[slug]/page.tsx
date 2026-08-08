@@ -145,7 +145,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         <Markdown>{post.body}</Markdown>
       </article>
       {post.tags.length > 0 ? (
-        <footer className="mt-16 flex flex-wrap items-center gap-3 border-t border-line pt-8 text-sm text-ink-faint">
+        <footer className="tag-stagger mt-16 flex flex-wrap items-center gap-3 border-t border-line pt-8 text-sm text-ink-faint">
           {post.tags.map((t) => (
             <Link
               key={t}

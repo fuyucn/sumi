@@ -65,9 +65,15 @@ export default async function RootLayout({
         </div>
         <footer className="mt-24 border-t border-line">
           <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between text-xs text-ink-faint">
-            <div className="flex items-baseline gap-3">
-              <span className="font-serif text-base font-medium text-ink">
-                Sumi <span className="text-seal">墨</span>
+            <div className="group flex items-baseline gap-3">
+              <span className="font-serif text-base font-medium text-ink transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:text-seal">
+                Sumi{" "}
+                <span
+                  aria-hidden
+                  className="inline-block text-seal transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:scale-110"
+                >
+                  墨
+                </span>
               </span>
               <span className="hidden sm:inline" aria-hidden>
                 /

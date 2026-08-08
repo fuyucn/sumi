@@ -700,6 +700,71 @@ textarea,
   }
 }
 
+/* Empty states: the seal-wash icon circle idles with a slow drift so an
+   empty page still feels alive instead of frozen. */
+@media (prefers-reduced-motion: no-preference) {
+  .empty-float {
+    animation: empty-float 3.8s var(--ease-in-out) infinite;
+  }
+  @keyframes empty-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+}
+
+/* Article tag pills: each stamps in a beat after the last, echoing the
+   seal-mark motif instead of appearing all at once. */
+@media (prefers-reduced-motion: no-preference) {
+  .tag-stagger > * {
+    animation: tag-in 0.3s var(--ease-out) both;
+  }
+  .tag-stagger > *:nth-child(1) {
+    animation-delay: 0.02s;
+  }
+  .tag-stagger > *:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+  .tag-stagger > *:nth-child(3) {
+    animation-delay: 0.1s;
+  }
+  .tag-stagger > *:nth-child(4) {
+    animation-delay: 0.14s;
+  }
+  .tag-stagger > *:nth-child(5) {
+    animation-delay: 0.18s;
+  }
+  .tag-stagger > *:nth-child(6) {
+    animation-delay: 0.22s;
+  }
+  .tag-stagger > *:nth-child(7) {
+    animation-delay: 0.26s;
+  }
+  .tag-stagger > *:nth-child(8) {
+    animation-delay: 0.3s;
+  }
+  .tag-stagger > *:nth-child(9) {
+    animation-delay: 0.34s;
+  }
+  .tag-stagger > *:nth-child(n + 10) {
+    animation-delay: 0.38s;
+  }
+  @keyframes tag-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
 /* The 墨 hanko stamps down once on hover — a seal imprint instead of a flat
    color swap. Runs only when motion is allowed; reduced-motion keeps the
    color change only. */
