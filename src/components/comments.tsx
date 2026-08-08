@@ -42,7 +42,7 @@ function CommentNode({
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Link
             href={`/@${comment.handle}`}
-            className="link-underline font-medium text-ink-muted transition-colors duration-300 group-hover:text-seal"
+            className="link-underline font-medium text-ink-muted transition-colors duration-[var(--dur-short)] group-hover:text-seal"
           >
             <AuthorName handle={comment.handle} />
           </Link>
@@ -51,7 +51,7 @@ function CommentNode({
           </span>
           <time
             dateTime={comment.date}
-            className="text-ink-faint transition-colors duration-300 group-hover:text-seal/80"
+            className="text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
           >
             {new Date(comment.date).toLocaleDateString("en-US", {
               year: "numeric",

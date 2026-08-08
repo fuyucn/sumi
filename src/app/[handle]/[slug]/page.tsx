@@ -62,7 +62,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         >
           <span
             aria-hidden
-            className="inline-block transition-transform duration-200 ease-out group-hover/back:-translate-x-0.5"
+            className="inline-block transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/back:-translate-x-0.5"
           >
             ←
           </span>{" "}

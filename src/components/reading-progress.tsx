@@ -226,7 +226,7 @@ export function ReadingProgress({
             size={14}
             weight="bold"
             className={[
-              "text-ink-faint transition-transform duration-200",
+              "text-ink-faint transition-transform duration-[var(--dur-short)]",
               open ? "" : "rotate-180",
             ].join(" ")}
             aria-hidden

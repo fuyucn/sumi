@@ -34,7 +34,7 @@ export default async function MagazinePage({
       >
         <span
           aria-hidden
-          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
         >
           ←
         </span>
@@ -91,7 +91,7 @@ export default async function MagazinePage({
                 </div>
                 <span
                   aria-hidden
-                  className="pointer-events-none mt-1 shrink-0 translate-x-1 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                  className="pointer-events-none mt-1 shrink-0 translate-x-1 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100"
                 >
                   →
                 </span>

@@ -10,7 +10,7 @@ export function EditorBackLink({ href, label }: { href: string; label: string })
     >
       <span
         aria-hidden
-        className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+        className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
       >
         ←
       </span>

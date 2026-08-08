@@ -179,7 +179,7 @@ export function Nav() {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b border-line backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-300 ${
+      className={`sticky top-0 z-40 border-b border-line backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-[var(--dur-short)] ${
         scrolled
           ? "bg-paper/95 shadow-[0_12px_32px_-24px_rgb(30_27_22/0.25)]"
           : "bg-paper/70"
@@ -292,7 +292,7 @@ export function Nav() {
                 size={18}
                 weight="duotone"
                 aria-hidden
-                className={`absolute inset-0 transition-all duration-200 ${
+                className={`absolute inset-0 transition-all duration-[var(--dur-short)] ${
                   menuOpen ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-50 opacity-0"
                 }`}
               />
@@ -300,7 +300,7 @@ export function Nav() {
                 size={18}
                 weight="duotone"
                 aria-hidden
-                className={`absolute inset-0 transition-all duration-200 ${
+                className={`absolute inset-0 transition-all duration-[var(--dur-short)] ${
                   menuOpen ? "rotate-90 scale-50 opacity-0" : "rotate-0 scale-100 opacity-100"
                 }`}
               />

@@ -105,7 +105,7 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
                         {point.anchor && section ? (
                           <a
                             href={`#${point.anchor}`}
-                            className="ml-2 inline-block max-w-full truncate rounded-full border border-seal/30 bg-seal/[0.06] px-2 py-0.5 align-middle text-[10px] font-medium tracking-wide text-seal transition-[background-color,border-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:border-seal hover:bg-seal/10 hover:text-seal"
+                            className="ml-2 inline-block max-w-full truncate rounded-full border border-seal/30 bg-seal/[0.06] px-2 py-0.5 align-middle text-[10px] font-medium tracking-wide text-seal transition-[background-color,border-color,color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-px hover:border-seal hover:bg-seal/10 hover:text-seal"
                           >
                             → {section}
                           </a>

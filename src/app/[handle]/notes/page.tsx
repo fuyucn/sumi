@@ -49,7 +49,7 @@ export default async function NotesPage({
       >
         <span
           aria-hidden
-          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
         >
           ←
         </span>
@@ -85,12 +85,12 @@ export default async function NotesPage({
           {notes.map((note) => (
             <li
               key={note.id}
-              className="group -mx-4 rounded-xl border-l-2 border-transparent px-4 py-6 transition-[background-color,border-color] duration-300 ease-out hover:border-seal/60 hover:bg-paper-soft/60"
+              className="group -mx-4 rounded-xl border-l-2 border-transparent px-4 py-6 transition-[background-color,border-color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:border-seal/60 hover:bg-paper-soft/60"
             >
               <div className="flex items-center gap-2">
                 <span
                   aria-hidden
-                  className="h-1.5 w-1.5 rounded-full bg-seal/60 transition-colors duration-300 group-hover:bg-seal"
+                  className="h-1.5 w-1.5 rounded-full bg-seal/60 transition-colors duration-[var(--dur-short)] group-hover:bg-seal"
                 />
                 <time
                   dateTime={note.date}

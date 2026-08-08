@@ -51,7 +51,7 @@ export function ProjectGallery({
               width={800}
               height={600}
               loading="lazy"
-              className="aspect-[4/3] w-full object-cover transition-transform duration-300 motion-reduce:transition-none group-hover:scale-[1.02]"
+              className="aspect-[4/3] w-full object-cover transition-transform duration-[var(--dur-short)] motion-reduce:transition-none group-hover:scale-[1.02]"
             />
           </button>
         ))}

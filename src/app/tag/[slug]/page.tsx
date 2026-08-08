@@ -28,7 +28,7 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
       >
         <span
           aria-hidden
-          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
         >
           ←
         </span>

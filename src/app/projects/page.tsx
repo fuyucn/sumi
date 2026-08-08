@@ -67,7 +67,7 @@ export default async function ProjectsPage() {
                       height={900}
                       loading="lazy"
                       referrerPolicy="no-referrer"
-                      className="aspect-[16/9] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      className="aspect-[16/9] w-full object-cover transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:scale-[1.03]"
                     />
                   </div>
                 ) : null}

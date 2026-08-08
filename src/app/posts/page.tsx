@@ -70,19 +70,19 @@ export default async function PostsPage() {
                     {post.publishedAt ? (
                       <time
                         dateTime={post.publishedAt}
-                        className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-300 group-hover:text-seal/80"
+                        className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
                       >
                         {formatDay(post.publishedAt)}
                       </time>
                     ) : (
-                      <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-300 group-hover:text-seal/80">
+                      <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal/80">
                         Undated
                       </span>
                     )}
                     <div>
                       <Link
                         href={`/@${handle}/${post.slug}`}
-                        className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-300 ease-out group-hover:translate-x-0.5 hover:text-seal"
+                        className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 hover:text-seal"
                       >
                         {post.title}
                       </Link>
@@ -95,7 +95,7 @@ export default async function PostsPage() {
                     </div>
                     <span
                       aria-hidden
-                      className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 md:block"
+                      className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100 md:block"
                     >
                       →
                     </span>

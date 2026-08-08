@@ -62,7 +62,7 @@ export default async function Home() {
               size={16}
               weight="duotone"
               aria-hidden
-              className="transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+              className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5"
             />
           </Link>
         </div>
@@ -81,7 +81,7 @@ export default async function Home() {
                 loading="eager"
                 decoding="async"
                 referrerPolicy="no-referrer"
-                className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                className="aspect-[3/2] w-full object-cover transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:scale-[1.03]"
               />
               <div className="p-5">
                 <div className="flex items-start justify-between gap-3">
@@ -89,7 +89,7 @@ export default async function Home() {
                     <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
                       Featured
                     </p>
-                    <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors duration-300 group-hover:text-seal">
+                    <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors duration-[var(--dur-short)] group-hover:text-seal">
                       {featured.post.title}
                     </h2>
                     <p className="mt-1.5 text-sm text-ink-faint">
@@ -100,7 +100,7 @@ export default async function Home() {
                   </div>
                   <span
                     aria-hidden
-                    className="pointer-events-none shrink-0 translate-x-1 font-serif text-2xl text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                    className="pointer-events-none shrink-0 translate-x-1 font-serif text-2xl text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100"
                   >
                     →
                   </span>
@@ -180,7 +180,7 @@ export default async function Home() {
               <Link
                 key={tag.name}
                 href={`/tag/${encodeURIComponent(tag.name)}`}
-                className={`${tagSize(tag.count)} press inline-block font-serif font-medium text-ink transition-[transform,color] duration-200 ease-out hover:-translate-y-0.5 hover:text-seal`}
+                className={`${tagSize(tag.count)} press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal`}
               >
                 <span className="text-seal">#</span>
                 {tag.name}

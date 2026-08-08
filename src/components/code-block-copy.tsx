@@ -36,7 +36,7 @@ export function CodeBlockCopy({ code }: { code: string }) {
       onClick={onCopy}
       aria-label={copied ? "Copied code" : "Copy code"}
       title={copied ? "Copied" : "Copy code"}
-      className={`press absolute right-3 top-2.5 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors duration-200 ${
+      className={`press absolute right-3 top-2.5 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs font-medium transition-colors duration-[var(--dur-short)] ${
         copied
           ? "border-seal/50 bg-seal/10 text-seal"
           : "border-line-strong bg-paper/85 text-ink-faint backdrop-blur-sm hover:border-seal hover:text-seal"
