@@ -1,5 +1,6 @@
 import { getReadContentStore } from "@/content";
 import { PostCard } from "@/components/post-card";
+import { HighlightText } from "@/components/highlight-text";
 import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -47,8 +48,27 @@ export default async function SearchPage({
         <div className="mt-10">
           <p className="text-sm text-ink-muted">
             {results && results.length > 0
-              ? `${results.length} ${results.length === 1 ? "result" : "results"} for “${query}”`
-              : `No results for “${query}”.`}
+              ? (
+                  <>
+                    {results.length} {results.length === 1 ? "result" : "results"} for{" "}
+                    <HighlightText
+                      text={query}
+                      query={query}
+                      className="rounded-[3px] bg-seal-wash px-1 text-ink"
+                    />
+                  </>
+                )
+              : (
+                  <>
+                    No results for{" "}
+                    <HighlightText
+                      text={query}
+                      query={query}
+                      className="rounded-[3px] bg-seal-wash px-1 text-ink"
+                    />
+                    .
+                  </>
+                )}
           </p>
           {results && results.length > 0 ? (
             <div className="mt-4 divide-y divide-line border-t border-line">
@@ -58,6 +78,7 @@ export default async function SearchPage({
                   handle={handle}
                   post={post}
                   authorName={names.get(handle)}
+                  highlight={query}
                 />
               ))}
             </div>

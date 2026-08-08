@@ -1,8 +1,9 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addCommentAction } from "@/app/community/actions";
 import { AuthorName } from "@/components/author-name";
+import { Check } from "@phosphor-icons/react";
 
 export function CommentForm({
   postHandle,
@@ -20,7 +21,15 @@ export function CommentForm({
   const router = useRouter();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [posted, setPosted] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const postedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (postedTimer.current) clearTimeout(postedTimer.current);
+    };
+  }, []);
 
   return (
     <form
@@ -38,6 +47,9 @@ export function CommentForm({
             setBody("");
             onDone?.();
             router.refresh();
+            setPosted(true);
+            if (postedTimer.current) clearTimeout(postedTimer.current);
+            postedTimer.current = setTimeout(() => setPosted(false), 2200);
           } else {
             setError(result.error);
           }
@@ -60,10 +72,28 @@ export function CommentForm({
       <div className="mt-3 flex items-center gap-3">
         <button
           type="submit"
-          disabled={isPending || body.trim().length === 0}
-          className="btn-primary"
+          disabled={isPending || posted || body.trim().length === 0}
+          className={
+            posted
+              ? "btn-primary border-seal/50 bg-seal/10 text-seal"
+              : "btn-primary"
+          }
         >
-          {isPending ? "Posting…" : "Comment"}
+          {isPending ? (
+            "Posting…"
+          ) : posted ? (
+            <span
+              className="inline-flex items-center gap-1.5"
+              style={{ animation: "fade-in 0.22s var(--ease-out)" }}
+            >
+              <Check size={14} weight="bold" aria-hidden />
+              Posted
+            </span>
+          ) : parentId ? (
+            "Post reply"
+          ) : (
+            "Comment"
+          )}
         </button>
         {parentId ? (
           <button

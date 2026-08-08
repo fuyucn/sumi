@@ -1,14 +1,18 @@
 import Link from "next/link";
 import type { PostMeta } from "@/content/types";
+import { HighlightText } from "@/components/highlight-text";
 
 export function PostCard({
   handle,
   post,
   authorName,
+  highlight,
 }: {
   handle: string;
   post: PostMeta;
   authorName?: string;
+  /** Search query; when set, matching terms are highlighted in title/excerpt. */
+  highlight?: string;
 }) {
   const date = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("en-US", {
@@ -38,12 +42,20 @@ export function PostCard({
           aria-label={post.title}
         >
           <h2 className="font-serif text-2xl font-medium leading-snug tracking-tight text-ink transition-all duration-300 group-hover:translate-x-1 group-hover:text-seal">
-            {post.title}
+            {highlight ? (
+              <HighlightText text={post.title} query={highlight} />
+            ) : (
+              post.title
+            )}
           </h2>
         </Link>
         {post.excerpt ? (
           <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted line-clamp-2">
-            {post.excerpt}
+            {highlight ? (
+              <HighlightText text={post.excerpt} query={highlight} />
+            ) : (
+              post.excerpt
+            )}
           </p>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
@@ -67,7 +79,15 @@ export function PostCard({
                 href={`/tag/${encodeURIComponent(t)}`}
                 className="pointer-events-auto transition-colors hover:text-seal"
               >
-                #{t}
+                {highlight ? (
+                  <HighlightText
+                    text={`#${t}`}
+                    query={highlight}
+                    className="rounded-[3px] bg-seal-wash px-0.5 text-inherit"
+                  />
+                ) : (
+                  `#${t}`
+                )}
               </Link>
             ))}
           </div>
