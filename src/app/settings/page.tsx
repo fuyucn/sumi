@@ -33,38 +33,44 @@ export default async function SettingsPage() {
           {authorName}
         </Link>
       </p>
-      <div className="mt-10">
-        <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-          Profile
-        </h2>
-        <div className="mt-5">
-          <ProfileForm initial={profile} handle={handle} />
-        </div>
-      </div>
-      <div className="mt-12">
-        <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
-          AI 总结
-        </h2>
-        <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
-          配置一个 OpenAI 兼容的 chat/completions 服务（OpenAI、DeepSeek、Moonshot、Ollama 等）。
-          在文章编辑页点「一键生成 AI 总结」手动生成，不满意可随时重新生成；未启用或未配置时该功能自动隐藏。
-        </p>
-        <div className="mt-5">
-          {provider ? (
-            <AiProviderForm
-              initial={{
-                baseUrl: provider.baseUrl,
-                model: provider.model,
-                enabled: provider.enabled,
-                hasKey: provider.apiKey.length > 0,
-              }}
-            />
-          ) : (
-            <AiProviderForm
-              initial={{ baseUrl: "https://opencode.ai/zen/go/v1", model: "glm-5.1", enabled: true, hasKey: false }}
-            />
-          )}
-        </div>
+      <div className="mt-10 space-y-6">
+        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+            Profile
+          </h2>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
+            对外显示的名称与一句简介；名称留空时显示为 @{handle}。
+          </p>
+          <div className="mt-5">
+            <ProfileForm initial={profile} handle={handle} />
+          </div>
+        </section>
+
+        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+            AI 总结
+          </h2>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
+            配置一个 OpenAI 兼容的 chat/completions 服务（OpenAI、DeepSeek、Moonshot、Ollama 等）。
+            在文章编辑页点「一键生成 AI 总结」手动生成，不满意可随时重新生成；未启用或未配置时该功能自动隐藏。
+          </p>
+          <div className="mt-5">
+            {provider ? (
+              <AiProviderForm
+                initial={{
+                  baseUrl: provider.baseUrl,
+                  model: provider.model,
+                  enabled: provider.enabled,
+                  hasKey: provider.apiKey.length > 0,
+                }}
+              />
+            ) : (
+              <AiProviderForm
+                initial={{ baseUrl: "https://opencode.ai/zen/go/v1", model: "glm-5.1", enabled: true, hasKey: false }}
+              />
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );

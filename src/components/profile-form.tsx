@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfileAction } from "@/app/community/actions";
+import { Check } from "@phosphor-icons/react";
 
 export function ProfileForm({
   initial,
@@ -76,7 +77,17 @@ export function ProfileForm({
         />
       </div>
       {error ? <p className="text-sm text-seal">{error}</p> : null}
-      {saved ? <p className="text-sm text-ink-faint">Saved</p> : null}
+      {saved ? (
+        <p
+          className="text-sm text-ink-muted"
+          style={{ animation: "fade-in 0.22s var(--ease-out)" }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Check size={14} weight="bold" aria-hidden className="text-seal" />
+            Saved
+          </span>
+        </p>
+      ) : null}
       <div className="pt-1">
         <button
           type="submit"

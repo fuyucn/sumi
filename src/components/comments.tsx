@@ -38,15 +38,18 @@ function CommentNode({
 }) {
   return (
     <li>
-      <div className="py-5 first:pt-0 last:pb-0">
+      <div className="group py-5 first:pt-0 last:pb-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span className="link-underline font-medium text-ink-muted transition-colors hover:text-ink">
+          <span className="link-underline font-medium text-ink-muted transition-colors duration-300 group-hover:text-seal">
             <AuthorName handle={comment.handle} />
           </span>
           <span aria-hidden className="text-line-strong">
             ·
           </span>
-          <time dateTime={comment.date} className="text-ink-faint">
+          <time
+            dateTime={comment.date}
+            className="text-ink-faint transition-colors duration-300 group-hover:text-seal/80"
+          >
             {new Date(comment.date).toLocaleDateString("en-US", {
               year: "numeric",
               month: "long",

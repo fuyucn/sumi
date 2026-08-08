@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveAiProviderAction, testAiProviderAction } from "@/app/settings/actions";
+import { Check } from "@phosphor-icons/react";
 
 export interface AiProviderInitial {
   baseUrl: string;
@@ -159,7 +160,17 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
       {testResult ? (
         <p className={`text-sm ${testResult.startsWith("✓") ? "text-ink-muted" : "text-seal"}`}>{testResult}</p>
       ) : null}
-      {saved ? <p className="text-sm text-ink-faint">已保存</p> : null}
+      {saved ? (
+        <p
+          className="text-sm text-ink-muted"
+          style={{ animation: "fade-in 0.22s var(--ease-out)" }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Check size={14} weight="bold" aria-hidden className="text-seal" />
+            已保存
+          </span>
+        </p>
+      ) : null}
 
       <div className="flex items-center gap-3 pt-1">
         <button
