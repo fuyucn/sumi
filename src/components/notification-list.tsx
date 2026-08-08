@@ -128,6 +128,8 @@ export function NotificationList({
           for (const id of ids) next.delete(id);
           return next;
         });
+      } else {
+        window.dispatchEvent(new Event("sumi:notifications-read"));
       }
     });
   }

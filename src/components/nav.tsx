@@ -197,14 +197,21 @@ export function Nav() {
   useEffect(() => {
     if (!handle) return;
     let cancelled = false;
-    fetch("/api/notifications/unread")
-      .then((r) => r.json())
-      .then((j) => {
-        if (!cancelled && typeof j?.unread === "number") setUnread(j.unread);
-      })
-      .catch(() => {});
+    const refresh = () => {
+      fetch("/api/notifications/unread")
+        .then((r) => r.json())
+        .then((j) => {
+          if (!cancelled && typeof j?.unread === "number") setUnread(j.unread);
+        })
+        .catch(() => {});
+    };
+    refresh();
+    // The notifications page marks everything read in place; sync the badge
+    // immediately instead of waiting for the next navigation.
+    window.addEventListener("sumi:notifications-read", refresh);
     return () => {
       cancelled = true;
+      window.removeEventListener("sumi:notifications-read", refresh);
     };
   }, [handle, pathname]);
 
