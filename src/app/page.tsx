@@ -138,9 +138,15 @@ export default async function Home() {
           </h2>
           <Link
             href="/posts"
-            className="link-underline text-sm text-ink-faint transition-colors hover:text-ink-muted"
+            className="group/link link-underline inline-flex items-center gap-1 text-sm text-ink-faint transition-colors hover:text-ink-muted"
           >
             Explore all
+            <ArrowRight
+              size={13}
+              weight="duotone"
+              aria-hidden
+              className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/link:translate-x-0.5"
+            />
           </Link>
         </div>
 

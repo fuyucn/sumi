@@ -42,7 +42,7 @@ function CommentContent({
 }: CommentNodeProps) {
   return (
     <>
-      <div className="group">
+      <div className="group -mx-3 rounded-lg px-3 py-1 transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-deep/30">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Link
             href={`/@${comment.handle}`}

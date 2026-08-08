@@ -61,7 +61,9 @@ export function FollowButton({
           </motion.span>
         </AnimatePresence>
       </span>
-      <span className="text-xs opacity-80">{count}</span>
+      <span key={count} className="count-pop text-xs opacity-80 tabular-nums">
+        {count}
+      </span>
     </button>
   );
 }

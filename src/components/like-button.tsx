@@ -59,7 +59,7 @@ export function LikeButton({
       <span aria-hidden className={pulse ? "heart-pop inline-block" : "inline-block"}>
         <Heart size={17} weight={liked ? "fill" : "regular"} aria-hidden />
       </span>
-      <span>{count}</span>
+      <span key={count} className="count-pop tabular-nums">{count}</span>
     </button>
   );
 }

@@ -455,6 +455,26 @@ textarea,
   }
 }
 
+/* Counts (likes / follows) tick once when the number changes — a small
+   tactile echo of the heart/stamp press, guarded like every other motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .count-pop {
+    display: inline-block;
+    animation: count-pop 0.3s var(--ease-out);
+  }
+  @keyframes count-pop {
+    0% {
+      transform: scale(1);
+    }
+    35% {
+      transform: scale(1.28);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
 /* Notification badge pops in when unread count appears or changes. */
 @media (prefers-reduced-motion: no-preference) {
   .badge-pop {

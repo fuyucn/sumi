@@ -56,6 +56,14 @@ export default async function SearchPage({
         >
           Search
         </button>
+        {query ? (
+          <Link
+            href="/search"
+            className="btn-ghost shrink-0 px-4"
+          >
+            Clear
+          </Link>
+        ) : null}
       </form>
 
       {!query ? (
