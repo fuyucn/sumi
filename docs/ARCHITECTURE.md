@@ -478,6 +478,10 @@ sequenceDiagram
   `id` 的锚点，要点即可点击跳转到对应章节；锚点不在正文中时降级为纯文本。
 - 失败不会破坏编辑流程：`generateSummaryAction` 内部 try/catch，失败时任务
   标记为 failed 并返回错误提示，作者可配置后重试。
+- **401 / AuthError 处理**：provider 密钥过期或撤销时，`chatCompletion` 会抛
+  `LLM 401: ...`，测试连接与编辑页失败态会给出「API Key 无效或已过期，请到
+  Settings → AI 总结 更新」的明确指引（`src/lib/ai/error-hint.ts`），同时保留
+  原始错误细节便于排查。
 
 ---
 
@@ -520,7 +524,16 @@ sequenceDiagram
 8. **单体优于前后端分离** —— 保持 Next.js 全栈单体（App Router RSC + Server
    Actions + Postgres），不拆 React SPA：认证/授权全部在服务端执行，无 CORS、
    CSRF 面与客户端密钥泄露面；RSC 让公开页零 JS 首屏、按需流式加载，性能与
-   安全优于 SPA + API 的拆分形态，且单容器部署、运维面最小。
+   安全优于 SPA + API 的拆分形态，且单容器部署、运维面最小。具体到「安全 +
+   性能」两个目标：
+   - **安全**：OAuth 交换、会话校验、allowlist 门禁与 AI 密钥全部只在服务端
+     触达，浏览器永不接触 `GITHUB_CLIENT_SECRET` / provider key；Server Actions
+     天然带 CSRF 防护，页面与 API 同源，无跨源 CORS 面。
+   - **性能**：公开页（首页 / 文章 / 搜索）SSR 直出可缓存的 HTML，首屏不加载
+     客户端 JS，交互部分（编辑器、表单）按需水合；数据在同一进程内的存储层
+     读取，省去一层 HTTP 往返。
+   - **运维**：单一 Next.js 容器即可对外服务，Docker / VPS / Cloudflare
+     Workers 都可直接运行，无需另维护 API 网关。
 
 ---
 

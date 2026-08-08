@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveAiProviderAction, testAiProviderAction } from "@/app/settings/actions";
 import { Check } from "@phosphor-icons/react";
+import { friendlyAiError } from "@/lib/ai/error-hint";
 
 export interface AiProviderInitial {
   baseUrl: string;
@@ -179,7 +180,7 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
             setTestResult(null);
             startTransition(async () => {
               const result = await testAiProviderAction(payload());
-              setTestResult(result.ok ? "✓ 连接成功" : `✗ ${result.error}`);
+              setTestResult(result.ok ? "✓ 连接成功" : `✗ ${friendlyAiError(result.error)}`);
             });
           }}
           className="btn-ghost text-xs"

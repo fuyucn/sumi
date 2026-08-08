@@ -2,9 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
+import { env } from "@/lib/env";
 import { getAiStore, getContentStoreForUser } from "@/content";
 import { ProfileForm } from "@/components/profile-form";
 import { AiProviderForm } from "@/components/ai-provider-form";
+import { SignOutButton } from "@/components/sign-out-button";
 import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +21,11 @@ export default async function SettingsPage() {
   const authorName = displayName(handle, profile);
   const aiStore = await getAiStore();
   const provider = aiStore ? await aiStore.getProvider(handle) : null;
+  const allowlist = env.ALLOWED_GITHUB_USERS
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const isAllowed = allowlist.includes(handle.toLowerCase());
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
@@ -72,6 +79,50 @@ export default async function SettingsPage() {
                 initial={{ baseUrl: "https://opencode.ai/zen/go/v1", model: "glm-5.1", enabled: true, hasKey: false }}
               />
             )}
+          </div>
+        </section>
+
+        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+            登录与安全
+          </h2>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
+            只允许出现在 `ALLOWED_GITHUB_USERS` 白名单里的 GitHub 账号登录；
+            每次登录和每个请求都会重新校验，移除账号后会话立即失效。
+          </p>
+          <dl className="mt-5 space-y-3 text-sm">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">
+              <dt className="text-ink-faint">当前账号</dt>
+              <dd className="font-medium text-ink">@{handle}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">
+              <dt className="text-ink-faint">登录白名单</dt>
+              <dd className="font-medium text-ink">
+                {allowlist.length > 0 ? (
+                  allowlist.map((u) => `@${u}`).join("、")
+                ) : (
+                  <span className="text-seal">未配置（拒绝所有人）</span>
+                )}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">
+              <dt className="text-ink-faint">当前账号状态</dt>
+              <dd>
+                {isAllowed ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-seal/30 bg-seal/[0.06] px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
+                    在白名单内
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
+                    不在白名单（将被拒绝）
+                  </span>
+                )}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
+            <SignOutButton />
+            <p className="text-xs text-ink-faint">GitHub 登录仅用于身份验证，内容全部存在自己的数据库里。</p>
           </div>
         </section>
       </div>

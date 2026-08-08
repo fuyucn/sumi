@@ -4,6 +4,7 @@ import type { AiTask } from "@/content/ai-store";
 import type { HeadingInfo } from "@/lib/heading-slug";
 import { extractHeadings } from "@/lib/heading-slug";
 import { generateSummaryAction } from "@/app/write/actions";
+import { friendlyAiError } from "@/lib/ai/error-hint";
 
 interface Props {
   slug: string;
@@ -39,7 +40,7 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
     if (result.ok) {
       setTask(result.task);
     } else {
-      setError(result.error);
+      setError(friendlyAiError(result.error));
       setTask((t) => (t ? { ...t, status: "failed", error: result.error, result: null } : t));
     }
   }
@@ -128,10 +129,16 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
         <div className="mt-4 border-t border-line pt-4">
           <p className="text-sm leading-relaxed text-ink-muted">
             生成失败
-            {task?.error ? (
-              <span className="mt-1 block font-mono text-xs break-all text-ink-faint">{task.error}</span>
+            {error ? (
+              <span className="mt-1 block text-xs text-seal">{error}</span>
+            ) : task?.error ? (
+              <span className="mt-1 block text-xs text-seal">{friendlyAiError(task.error)}</span>
             ) : null}
-            {error ? <span className="mt-1 block text-xs text-seal">{error}</span> : null}
+            {task?.error ? (
+              <span className="mt-1 block font-mono text-xs break-all text-ink-faint">
+                {task.error}
+              </span>
+            ) : null}
           </p>
         </div>
       ) : null}
