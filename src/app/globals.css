@@ -551,7 +551,9 @@ textarea,
   background-position: 0 100%;
   background-repeat: no-repeat;
   background-size: 100% 1px;
-  transition: background-size 0.25s ease, color 0.2s ease;
+  transition:
+    background-size var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
 }
 .prose a:hover {
   color: var(--color-seal);
@@ -714,7 +716,10 @@ textarea,
     background-color: var(--color-paper);
     padding: 0.5rem 0.75rem;
     color: var(--color-ink);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition:
+      border-color var(--dur-short) var(--ease-out),
+      box-shadow var(--dur-short) var(--ease-out),
+      background-color var(--dur-short) var(--ease-out);
   }
   .field::placeholder {
     color: var(--color-ink-faint);
