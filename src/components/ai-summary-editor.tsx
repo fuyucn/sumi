@@ -57,7 +57,7 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
         <div>
           <p className="text-sm font-medium text-ink">AI 总结</p>
           <p className="mt-0.5 text-xs text-ink-faint">
-            基于当前正文一键生成总结；生成的要点会自动带上文章小标题的跳转锚点
+            基于当前正文一键生成总结；TL;DR 会自动同步为文章导读，展示在列表卡片与搜索描述中
           </p>
         </div>
         {task?.model ? (

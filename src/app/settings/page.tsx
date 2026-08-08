@@ -55,7 +55,7 @@ export default async function SettingsPage() {
           </h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
             配置一个 OpenAI 兼容的 chat/completions 服务（OpenAI、DeepSeek、Moonshot、Ollama 等）。
-            在文章编辑页点「一键生成 AI 总结」手动生成，不满意可随时重新生成；未启用或未配置时该功能自动隐藏。
+            在文章编辑页点「一键生成 AI 总结」手动生成，不满意可随时重新生成；生成的 TL;DR 会自动作为文章导读（列表预览与 SEO 描述），无需手写。未启用或未配置时该功能自动隐藏。
           </p>
           <div className="mt-5">
             {provider ? (
