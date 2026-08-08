@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import type { AiTask } from "@/content/ai-store";
-import { generateSummaryAction } from "@/app/write/actions";
+import { clearSummaryAction, generateSummaryAction } from "@/app/write/actions";
 
 interface Props {
   handle: string;
@@ -71,6 +71,16 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
     }
   }
 
+  async function clear() {
+    if (generating || busy) return;
+    setGenerating(true);
+    const result = await clearSummaryAction(slug);
+    setGenerating(false);
+    if (result.ok) {
+      setTask(null);
+    }
+  }
+
   if (!task) {
     if (!isAuthor) return null;
     return (
@@ -118,14 +128,26 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
           <span className="text-xs text-ink-faint">{task.model}</span>
         ) : null}
         {isAuthor ? (
-          <button
-            type="button"
-            onClick={regenerate}
-            disabled={generating || busy}
-            className="press ml-auto rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted transition-colors hover:border-seal hover:text-seal disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {generating ? "生成中…" : task ? "重新生成" : "生成 AI 总结"}
-          </button>
+          <span className="ml-auto flex items-center gap-2">
+            {task.status === "done" || task.status === "failed" ? (
+              <button
+                type="button"
+                onClick={clear}
+                disabled={generating || busy}
+                className="press rounded-full border border-line px-3 py-1 text-xs font-medium text-ink-faint transition-colors hover:border-seal hover:text-seal disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                清除
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={regenerate}
+              disabled={generating || busy}
+              className="press rounded-full border border-line-strong px-3 py-1 text-xs font-medium text-ink-muted transition-colors hover:border-seal hover:text-seal disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generating ? "生成中…" : task ? "重新生成" : "生成 AI 总结"}
+            </button>
+          </span>
         ) : null}
       </div>
 

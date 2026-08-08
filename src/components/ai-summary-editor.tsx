@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import type { AiTask } from "@/content/ai-store";
 import type { HeadingInfo } from "@/lib/heading-slug";
 import { extractHeadings } from "@/lib/heading-slug";
-import { generateSummaryAction } from "@/app/write/actions";
+import { clearSummaryAction, generateSummaryAction } from "@/app/write/actions";
 import { friendlyAiError } from "@/lib/ai/error-hint";
 
 interface Props {
@@ -42,6 +42,19 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
     } else {
       setError(friendlyAiError(result.error));
       setTask((t) => (t ? { ...t, status: "failed", error: result.error, result: null } : t));
+    }
+  }
+
+  async function clear() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const result = await clearSummaryAction(slug, sourceHandle);
+    setBusy(false);
+    if (result.ok) {
+      setTask(null);
+    } else {
+      setError(result.error);
     }
   }
 
@@ -147,6 +160,16 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
         <button type="button" onClick={generate} disabled={busyNow} className="btn-primary px-5 text-sm">
           {busyNow ? "生成中…" : done ? "重新生成" : "一键生成 AI 总结"}
         </button>
+        {done ? (
+          <button
+            type="button"
+            onClick={clear}
+            disabled={busyNow}
+            className="btn-ghost px-3 text-sm"
+          >
+            清除
+          </button>
+        ) : null}
         {!done && !busyNow && !failed ? (
           <p className="text-xs text-ink-faint">需要先保存过一次草稿/文章</p>
         ) : null}

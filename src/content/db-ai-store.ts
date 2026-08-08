@@ -188,4 +188,10 @@ export class DbAiStore implements AiStore {
       .set({ status: "pending", error: null, result: null, finishedAt: null, startedAt: null, createdAt: now.toISOString() })
       .where(and(eq(sumiAiTasks.handle, handle), eq(sumiAiTasks.postSlug, postSlug)));
   }
+
+  async deleteTask(handle: string, postSlug: string): Promise<void> {
+    await this.db
+      .delete(sumiAiTasks)
+      .where(and(eq(sumiAiTasks.handle, handle), eq(sumiAiTasks.postSlug, postSlug)));
+  }
 }

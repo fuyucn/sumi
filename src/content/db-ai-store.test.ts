@@ -178,3 +178,14 @@ test("resetTask requeues a failed task", async () => {
   expect(reset!.startedAt).toBeNull();
   expect(reset!.finishedAt).toBeNull();
 });
+
+test("deleteTask removes the task row", async () => {
+  const { store } = await makeStore();
+  await store.enqueueSummary("alice", "hello-world", NOW);
+  expect(await store.getTask("alice", "hello-world")).not.toBeNull();
+  await store.deleteTask("alice", "hello-world");
+  expect(await store.getTask("alice", "hello-world")).toBeNull();
+  // Deleting another author's task is a no-op, not an error.
+  await store.deleteTask("bob", "hello-world");
+  expect(await store.getTask("alice", "hello-world")).toBeNull();
+});

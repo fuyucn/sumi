@@ -60,4 +60,6 @@ export interface AiStore {
   ): Promise<void>;
   /** Reset a task so the author can regenerate (failed/pending -> pending). */
   resetTask(handle: string, postSlug: string, now: Date): Promise<void>;
+  /** Delete a task (and its stored result) for a post. */
+  deleteTask(handle: string, postSlug: string): Promise<void>;
 }

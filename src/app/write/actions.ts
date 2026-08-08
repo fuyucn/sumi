@@ -46,6 +46,8 @@ export async function getTagsLibraryAction(): Promise<TagInfo[]> {
 
 export type GenerateSummaryResult = { ok: true; task: AiTask } | { ok: false; error: string };
 
+export type ClearSummaryResult = { ok: true } | { ok: false; error: string };
+
 /**
  * Author-only, synchronous one-click AI 总结 generation from the editor.
  * Runs the LLM call inline so the button returns the finished result directly
@@ -153,4 +155,64 @@ export async function generateSummaryAction(
 
   const done = await aiStore.getTask(taskHandle, slug);
   return done ? { ok: true, task: done } : { ok: false, error: "生成结果读取失败，请重试" };
+}
+
+/**
+ * Author-only removal of an AI 总结: deletes the stored task row and clears the
+ * excerpt (导读) backfill so the article and lists return to their pre-AI state.
+ */
+export async function clearSummaryAction(slug: string, sourceHandle?: string): Promise<ClearSummaryResult> {
+  "use server";
+  const user = await getCurrentUser();
+  if (!user) return { ok: false, error: "请先登录" };
+  const [handle, store] = await Promise.all([getUserHandle(user.id), getContentStoreForUser(user.id)]);
+  if (!handle || !store) return { ok: false, error: "账号没有可用的内容后端" };
+  if (sourceHandle && sourceHandle !== handle) {
+    const rows = await db
+      .select({ handle: agentKeys.agentHandle })
+      .from(agentKeys)
+      .where(eq(agentKeys.agentHandle, sourceHandle))
+      .limit(1);
+    if (!rows.length) return { ok: false, error: `@${sourceHandle} 不是 agent handle` };
+  }
+  const taskHandle = sourceHandle ?? handle;
+  const aiStore = await getAiStore();
+  if (!aiStore) return { ok: false, error: "AI 后端未配置（需要 Postgres 存储）" };
+
+  await aiStore.deleteTask(taskHandle, slug);
+
+  // Only clear the excerpt backfill for the author's own posts; agent posts keep
+  // whatever excerpt their author set.
+  if (!sourceHandle) {
+    const post = await store.getPost(handle, slug);
+    if (post) {
+      try {
+        await store.savePost(handle, {
+          slug,
+          title: post.title,
+          body: post.body,
+          tags: post.tags,
+          status: post.status,
+          ...(post.publishedAt ? { publishedAt: post.publishedAt } : {}),
+          ...(post.coverImage ? { coverImage: post.coverImage } : {}),
+          ...(post.agent ? { agent: true } : {}),
+        });
+      } catch {
+        // Excerpt clearing is best-effort; the task removal already succeeded.
+      }
+    }
+  }
+
+  await store.addNotification(
+    handle,
+    {
+      type: "ai",
+      actor: handle,
+      postHandle: handle,
+      postSlug: slug,
+      body: "AI 总结已清除",
+    },
+    new Date(),
+  );
+  return { ok: true };
 }
