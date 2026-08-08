@@ -1,14 +1,23 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addNoteAction } from "@/app/community/actions";
 import { AuthorName } from "@/components/author-name";
+import { Check } from "@phosphor-icons/react";
 
 export function NoteComposer({ handle }: { handle: string }) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [posted, setPosted] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const postedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (postedTimer.current) clearTimeout(postedTimer.current);
+    };
+  }, []);
 
   return (
     <form
@@ -20,6 +29,9 @@ export function NoteComposer({ handle }: { handle: string }) {
           if (result.ok) {
             setBody("");
             router.refresh();
+            setPosted(true);
+            if (postedTimer.current) clearTimeout(postedTimer.current);
+            postedTimer.current = setTimeout(() => setPosted(false), 2200);
           } else {
             setError(result.error);
           }
@@ -43,10 +55,22 @@ export function NoteComposer({ handle }: { handle: string }) {
         <span className="text-xs text-ink-faint tabular-nums">{body.length}/2000</span>
         <button
           type="submit"
-          disabled={isPending || body.trim().length === 0}
-          className="btn-primary"
+          disabled={isPending || posted || body.trim().length === 0}
+          className={posted ? "btn-primary border-seal/50 bg-seal/10 text-seal" : "btn-primary"}
         >
-          {isPending ? "Pinning…" : "Post note"}
+          {isPending ? (
+            "Pinning…"
+          ) : posted ? (
+            <span
+              className="inline-flex items-center gap-1.5"
+              style={{ animation: "fade-in 0.22s var(--ease-out)" }}
+            >
+              <Check size={14} weight="bold" aria-hidden />
+              Posted
+            </span>
+          ) : (
+            "Post note"
+          )}
         </button>
       </div>
     </form>

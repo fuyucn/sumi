@@ -1,7 +1,8 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { addFriendAction } from "@/app/community/actions";
+import { Check } from "@phosphor-icons/react";
 
 export function FriendForm() {
   const router = useRouter();
@@ -10,7 +11,15 @@ export function FriendForm() {
   const [avatar, setAvatar] = useState("");
   const [bio, setBio] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const addedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (addedTimer.current) clearTimeout(addedTimer.current);
+    };
+  }, []);
 
   return (
     <form
@@ -30,6 +39,9 @@ export function FriendForm() {
             setAvatar("");
             setBio("");
             router.refresh();
+            setAdded(true);
+            if (addedTimer.current) clearTimeout(addedTimer.current);
+            addedTimer.current = setTimeout(() => setAdded(false), 2200);
           } else {
             setError(result.error);
           }
@@ -89,10 +101,22 @@ export function FriendForm() {
       <div className="sm:col-span-2">
         <button
           type="submit"
-          disabled={isPending || name.trim().length === 0 || url.trim().length === 0}
-          className="btn-primary"
+          disabled={isPending || added || name.trim().length === 0 || url.trim().length === 0}
+          className={added ? "btn-primary border-seal/50 bg-seal/10 text-seal" : "btn-primary"}
         >
-          {isPending ? "Adding…" : "Add friend"}
+          {isPending ? (
+            "Adding…"
+          ) : added ? (
+            <span
+              className="inline-flex items-center gap-1.5"
+              style={{ animation: "fade-in 0.22s var(--ease-out)" }}
+            >
+              <Check size={14} weight="bold" aria-hidden />
+              Added
+            </span>
+          ) : (
+            "Add friend"
+          )}
         </button>
       </div>
     </form>
