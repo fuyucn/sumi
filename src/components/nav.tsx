@@ -79,7 +79,7 @@ function DrawerLink({
       href={href}
       onClick={onClick}
       className={`press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
-        active ? "bg-seal-wash text-seal" : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+        active ? "bg-seal-wash text-seal" : "text-ink-soft hover:bg-seal-wash/40 hover:text-ink"
       }`}
       aria-current={active ? "page" : undefined}
     >
@@ -127,7 +127,7 @@ function DrawerUserRow({
     <Link
       href={`/@${handle}`}
       onClick={onClick}
-      className="press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-ink/5"
+      className="press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-seal-wash/40"
     >
       <span
         aria-hidden
