@@ -1,10 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import type { AiTask } from "@/content/ai-store";
 import type { HeadingInfo } from "@/lib/heading-slug";
 import { extractHeadings } from "@/lib/heading-slug";
 import { clearSummaryAction, generateSummaryAction } from "@/app/write/actions";
 import { friendlyAiError } from "@/lib/ai/error-hint";
+import { KEY_RE } from "@/lib/ai/error-hint";
 
 interface Props {
   slug: string;
@@ -143,14 +145,17 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
           <p className="text-sm leading-relaxed text-ink-muted">
             生成失败
             {error ? (
-              <span className="mt-1 block text-xs text-seal">{error}</span>
+              <span className="mt-1 block text-xs text-seal">{friendlyAiError(error)}</span>
             ) : task?.error ? (
               <span className="mt-1 block text-xs text-seal">{friendlyAiError(task.error)}</span>
             ) : null}
-            {task?.error ? (
-              <span className="mt-1 block font-mono text-xs break-all text-ink-faint">
-                {task.error}
-              </span>
+            {KEY_RE.test(error ?? task?.error ?? "") ? (
+              <Link
+                href="/settings"
+                className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-seal underline-offset-4 transition-colors hover:text-seal-soft hover:underline"
+              >
+                去 Settings 更新 API Key →
+              </Link>
             ) : null}
           </p>
         </div>

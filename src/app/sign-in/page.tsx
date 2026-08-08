@@ -85,6 +85,8 @@ export default function SignInPage() {
         ) : null}
         <p className="mt-5 text-xs leading-relaxed text-ink-faint">
           Your posts live in your own space: versioned, portable, and yours.
+          <br />
+          仅允许白名单内的 GitHub 账号登录，站点不对外开放注册。
         </p>
       </div>
     </main>
