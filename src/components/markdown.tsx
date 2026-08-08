@@ -113,6 +113,7 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
             loading="lazy"
             decoding="async"
             referrerPolicy="no-referrer"
+            className="media-fade my-2 rounded-card border border-line shadow-card transition-[transform,box-shadow] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:scale-[1.01] hover:shadow-card-hover"
           />
         ),
       }}
