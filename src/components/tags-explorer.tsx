@@ -1,6 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { TagInfo } from "@/content/store";
+import { EmptyState } from "@/components/empty-state";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 
 export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
   const [query, setQuery] = useState("");
@@ -40,9 +42,11 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
       </form>
 
       {filtered.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No tags match “{query}”.
-        </p>
+        <EmptyState
+          icon={<MagnifyingGlass size={20} weight="duotone" />}
+          title={`No tags match “${query}”.`}
+          hint="Try a broader keyword."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {filtered.map((tag) => (

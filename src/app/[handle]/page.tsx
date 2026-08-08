@@ -9,6 +9,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { displayName } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { Article } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -75,9 +77,11 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         </div>
       </header>
       {posts.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          Nothing published yet.
-        </p>
+        <EmptyState
+          icon={<Article size={20} weight="duotone" />}
+          title="Nothing published yet."
+          hint="The first post will land here when it's ready."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {posts.map((post, i) => (

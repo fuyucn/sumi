@@ -8,6 +8,8 @@ import { NoteComposer } from "@/components/note-composer";
 import { DeleteNoteButton } from "@/components/delete-note-button";
 import { displayName } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { PushPin } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -76,11 +78,12 @@ export default async function NotesPage({
       ) : null}
 
       {notes.length === 0 ? (
-        <p className="mt-10 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          {isOwner
-            ? "No notes yet. Pin your first thought above."
-            : "No notes yet."}
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<PushPin size={20} weight="duotone" />}
+          title="No notes yet."
+          hint={isOwner ? "Pin your first thought above." : undefined}
+        />
       ) : (
         <ol className="mt-8 divide-y divide-line border-t border-line">
           {notes.map((note, i) => (

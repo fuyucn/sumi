@@ -7,6 +7,8 @@ import type { Notification, NotificationType } from "@/content/types";
 import { NotificationIcon } from "@/components/notification-icon";
 import { markNotificationsReadAction } from "@/app/community/actions";
 import { getDisplayNameMap } from "@/lib/display-name";
+import { EmptyState } from "@/components/empty-state";
+import { BellSimple } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -130,9 +132,12 @@ export default async function NotificationsPage() {
       </div>
 
       {notifications.length === 0 ? (
-        <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          Nothing yet. Comments, likes and follows will show up here.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<BellSimple size={20} weight="duotone" />}
+          title="Nothing yet."
+          hint="Comments, likes and follows will show up here."
+        />
       ) : (
         <>
           <ul className="drawer-stagger mt-10 divide-y divide-line border-y border-line">

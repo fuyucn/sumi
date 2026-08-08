@@ -4,6 +4,8 @@ import type { Project } from "@/content/types";
 import { ProjectGallery } from "@/components/project-gallery";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { Stack } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +51,11 @@ export default async function ProjectsPage() {
         </p>
       </header>
       {items.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          Nothing on the shelves yet.
-        </p>
+        <EmptyState
+          icon={<Stack size={20} weight="duotone" />}
+          title="Nothing on the shelves yet."
+          hint="Projects appear here once published."
+        />
       ) : (
         <div className="grid gap-5 sm:grid-cols-2">
           {items.map(({ handle, project }, i) => {

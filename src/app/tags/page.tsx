@@ -1,5 +1,7 @@
 import { getReadContentStore } from "@/content";
 import { TagsExplorer } from "@/components/tags-explorer";
+import { EmptyState } from "@/components/empty-state";
+import { Tag } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +23,11 @@ export default async function TagsPage() {
         </p>
       </header>
       {tags.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No tags yet.
-        </p>
+        <EmptyState
+          icon={<Tag size={20} weight="duotone" />}
+          title="No tags yet."
+          hint="Tags appear here as posts are published."
+        />
       ) : (
         <TagsExplorer tags={tags} />
       )}

@@ -5,6 +5,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { FriendForm } from "@/components/friend-form";
 import { DeleteFriendButton } from "@/components/delete-friend-button";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { UsersThree } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -34,11 +36,12 @@ export default async function FriendsPage() {
       ) : null}
 
       {friends.length === 0 ? (
-        <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          {signedIn
-            ? "No friends yet. Add your first link above."
-            : "No friends yet."}
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<UsersThree size={20} weight="duotone" />}
+          title="No friends yet."
+          hint={signedIn ? "Add your first link above." : undefined}
+        />
       ) : (
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
           {friends.map((friend, i) => (
