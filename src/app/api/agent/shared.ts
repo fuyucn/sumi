@@ -70,7 +70,7 @@ export async function agentRequest(
   });
   if (auth.ok && !rateLimit(`agent:${auth.agentHandle}`, AGENT_API_LIMIT).allowed) {
     return {
-      auth: { ok: false, error: "Rate limit exceeded — try again shortly", status: 429 },
+      auth: { ok: false, error: "Rate limit exceeded, try again shortly", status: 429 },
       body,
     };
   }

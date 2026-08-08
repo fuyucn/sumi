@@ -65,7 +65,7 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
     const existing = registry.get(sessionId) as RuntimeSession | undefined;
     if (existing) {
       if (!rateLimit(`agent:${existing.agentHandle}`, MCP_LIMIT).allowed) {
-        return jsonError(429, "Rate limit exceeded — try again shortly");
+        return jsonError(429, "Rate limit exceeded, try again shortly");
       }
       touch(sessionId);
       return existing.transport.handleRequest(req);
@@ -76,7 +76,7 @@ async function handleMCPRequest(req: NextRequest): Promise<Response> {
     const auth = await authenticateBearer(req.headers.get("authorization"));
     if (!auth.ok) return jsonError(401, auth.error);
     if (!rateLimit(`agent:${auth.agentHandle}`, MCP_LIMIT).allowed) {
-      return jsonError(429, "Rate limit exceeded — try again shortly");
+      return jsonError(429, "Rate limit exceeded, try again shortly");
     }
     makeCapacity();
     const session = createSession(auth);
