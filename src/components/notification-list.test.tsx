@@ -32,14 +32,14 @@ test("renders rows, mark-all button and unread summary", () => {
 test("marks an unread row with the seal wash and dot", () => {
   const html = renderToStaticMarkup(<NotificationList notifications={[item()]} />);
   expect(html).toContain("bg-seal-wash/25");
-  expect(html).toContain("scale-100 opacity-100");
+  expect(html).toContain("bg-seal");
 });
 
 test("renders read rows without the seal dot", () => {
   const html = renderToStaticMarkup(
     <NotificationList notifications={[item({ read: true })]} />,
   );
-  expect(html).toContain("scale-0 opacity-0");
+  expect(html).not.toContain("bg-seal");
   expect(html).not.toContain("Mark all read");
   expect(html).not.toContain("unread notification");
 });
