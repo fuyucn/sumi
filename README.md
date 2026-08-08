@@ -34,6 +34,24 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Better Auth** — GitHub OAuth with an allowlist gate
 - **Deployment** — Docker compose (one-click), custom VPS script, or Cloudflare Workers (OpenNext); Vercel also supported
 
+## Security model
+
+- **Fail-closed login**: only the GitHub logins listed in `ALLOWED_GITHUB_USERS`
+  can sign in — empty list denies everyone (and refuses to boot in production).
+  Sessions are re-checked on every request, so removing a login revokes access
+  immediately.
+- **Origin allowlist**: `BETTER_AUTH_TRUSTED_ORIGINS` (comma-separated) is wired
+  into Better Auth's `trustedOrigins` as a CSRF safety valve — only
+  `BETTER_AUTH_URL` plus these origins may start OAuth or receive session cookies.
+- **Per-request CSP nonce**: `src/proxy.ts` mints a fresh nonce per page render
+  (`script-src 'nonce-*' 'strict-dynamic'`), stamped onto Next's scripts and the
+  inline theme script in the layout; no `'unsafe-inline'` scripts anywhere.
+- **Transport hardening**: HSTS is emitted only for HTTPS requests
+  (`x-forwarded-proto`), alongside `nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy`, and `Permissions-Policy` headers.
+- **Server-side only secrets**: GitHub OAuth and AI provider keys live in env
+  vars on the server; the client never sees a token.
+
 ## Local development
 
 1. Clone the repo and install dependencies:

@@ -10,6 +10,14 @@ import { clientIpFromRequest, logSecurityEvent } from "./security-log";
 /** Client IP headers trusted in order of preference (Cloudflare → proxy → Docker). */
 const IP_HEADERS = ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"];
 
+/** Comma-separated env → array of origins; empty entries are dropped. */
+function parseTrustedOrigins(raw: string): string[] {
+  return raw
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
 /**
  * Run the allowlist gate and emit an audit line when it rejects. Context is
  * `null` outside real requests (tests), so the IP/path fields are optional.
@@ -36,6 +44,10 @@ function buildAuth() {
   return betterAuth({
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
+    // CSRF/origin safety valve: beyond baseURL, only these origins may start
+    // OAuth flows or receive auth cookies. `.env` already ships this variable;
+    // keep it in sync with any proxy/custom domain you trust.
+    trustedOrigins: parseTrustedOrigins(env.BETTER_AUTH_TRUSTED_ORIGINS),
     // `username` (the GitHub login, set via mapProfileToUser) is a custom field;
     // it must be declared here or Better Auth won't persist it to the column.
     // input:false → it's set server-side from the OAuth profile, not user input.

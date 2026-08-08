@@ -7,6 +7,10 @@ const securityHeaders = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
+const hstsHeaders = [
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+];
+
 const nextConfig: NextConfig = {
   // Standalone output lets the Docker image run from a minimal node runtime
   // (only what the server needs is copied into .next/standalone).
@@ -18,6 +22,13 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+      // Only claim HSTS when the request actually arrived over HTTPS
+      // (Cloudflare / VPS behind TLS); plain local Docker stays on HTTP.
+      {
+        source: "/(.*)",
+        has: [{ type: "header", key: "x-forwarded-proto", value: "https" }],
+        headers: hstsHeaders,
       },
     ];
   },

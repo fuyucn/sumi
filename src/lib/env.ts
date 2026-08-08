@@ -12,6 +12,9 @@ const schema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1),
   // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
   ALLOWED_GITHUB_USERS: z.string().default(""),
+  // comma-separated extra origins trusted for auth callbacks/cookies (e.g.
+  // local proxy or custom domain). Wired into better-auth `trustedOrigins`.
+  BETTER_AUTH_TRUSTED_ORIGINS: z.string().default(""),
   // Optional Cloudflare runtime flag. OpenNext injects CF bindings (D1/R2) via
   // the worker env at runtime, NOT as process.env vars, so this is purely a
   // hint for the ContentStore factory to select the Cloudflare backend over the

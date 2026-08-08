@@ -52,3 +52,13 @@ test("keeps CF_ENABLED when set", () => {
   const env = loadEnv({ ...base, CF_ENABLED: "1" });
   expect(env.CF_ENABLED).toBe("1");
 });
+
+test("parses trusted origins as a comma-separated optional string", () => {
+  const env = loadEnv({ ...base, BETTER_AUTH_TRUSTED_ORIGINS: "https://a.example, https://b.example," });
+  expect(env.BETTER_AUTH_TRUSTED_ORIGINS).toBe("https://a.example, https://b.example,");
+});
+
+test("defaults trusted origins to empty", () => {
+  const env = loadEnv(base);
+  expect(env.BETTER_AUTH_TRUSTED_ORIGINS).toBe("");
+});

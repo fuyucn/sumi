@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
 import "./globals.css";
@@ -24,15 +25,18 @@ export const metadata: Metadata = {
   description: "A quiet place to write. Ink on paper, kept in your own space.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // CSP nonce minted in src/proxy.ts; Next also auto-stamps its own scripts.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang="en" className={`${geist.variable} ${newsreader.variable}`} suppressHydrationWarning>
       <head>
         <script
+          nonce={nonce}
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("sumi-theme");var r=document.documentElement;if(t==="light"){r.classList.add("light");r.setAttribute("data-theme","light")}else if(t==="dark"){r.classList.add("dark");r.setAttribute("data-theme","dark")}}catch(e){}})();`,
           }}
