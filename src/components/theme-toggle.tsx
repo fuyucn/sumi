@@ -52,9 +52,8 @@ export function ThemeToggle() {
   return (
     <button
       type="button"
-      className="press flex h-9 w-9 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink"
+      className="press group relative flex h-9 w-9 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink"
       aria-label={LABELS[theme]}
-      title={LABELS[theme]}
       onClick={() => {
         const next = CYCLE[(CYCLE.indexOf(theme) + 1) % CYCLE.length];
         setTheme(next);
@@ -71,6 +70,12 @@ export function ThemeToggle() {
       >
         <Icon size={16} weight="duotone" aria-hidden />
       </motion.span>
+      <span
+        role="tooltip"
+        className="nav-tooltip pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-ink px-2 py-1 text-xs font-medium text-paper shadow-pop"
+      >
+        {LABELS[theme]}
+      </span>
     </button>
   );
 }
