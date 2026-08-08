@@ -108,6 +108,36 @@ body {
   background-attachment: fixed;
 }
 
+/* Print: a published article should come off the printer clean and quiet.
+   Chrome, navigation, motion and fixed chrome drop away; ink stays ink. */
+@media print {
+  header,
+  footer,
+  .skip-link,
+  .fixed,
+  .paper-grain::after {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+  .prose {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
+  .prose a {
+    color: inherit;
+  }
+  .prose :where(img, pre, table) {
+    break-inside: avoid;
+  }
+}
+
 /* Theme switches crossfade the ground instead of snapping. First paint is
    unaffected: the head script applies the saved theme before body renders. */
 @media (prefers-reduced-motion: no-preference) {

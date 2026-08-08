@@ -128,7 +128,17 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         headings={headings}
         isAuthor={signedInHandle === data.handle}
       />
-      <hr className="mt-8 mb-10 border-line" />
+      {/* Section ornament: a small rotated seal diamond between the summary
+          and the body, echoing the hanko mark instead of a plain rule. */}
+      <div
+        aria-hidden
+        role="presentation"
+        className="mt-9 mb-11 flex items-center gap-3"
+      >
+        <span className="h-px flex-1 bg-line" />
+        <span className="h-1.5 w-1.5 rotate-45 rounded-[2px] bg-seal/60" />
+        <span className="h-px flex-1 bg-line" />
+      </div>
       <article className="prose prose-stone prose-article max-w-none font-serif prose-headings:font-serif">
         <Markdown>{post.body}</Markdown>
       </article>
