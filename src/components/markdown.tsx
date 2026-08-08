@@ -2,6 +2,7 @@ import { createElement, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { headingSlug } from "@/lib/heading-slug";
+import { highlightCode } from "@/lib/shiki-highlight";
 
 /**
  * Resolve a URL against a base. If `src` is already absolute (starts with
@@ -41,12 +42,34 @@ const headingComponents = {
   h6: makeHeading("h6"),
 };
 
+/** Fenced code block rendered as a Shiki-highlighted `<pre>` (server side). */
+async function HighlightedCode({ lang, code }: { lang: string; code: string }) {
+  const html = await highlightCode(code, lang);
+  return <div className="my-4" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function Code({ className, children }: { className?: string; children?: ReactNode }) {
+  const match = /language-([\w-]+)/.exec(className ?? "");
+  const lang = match?.[1];
+  const code = String(children ?? "").replace(/\n$/, "");
+  if (lang && code.includes("\n")) {
+    return <HighlightedCode lang={lang} code={code} />;
+  }
+  return <code className={className}>{children}</code>;
+}
+
 /** Renders a Markdown string to sanitized HTML (no raw HTML passthrough). */
 export function Markdown({ children, baseUrl }: { children: string; baseUrl?: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
-      components={headingComponents}
+      components={{
+        ...headingComponents,
+        // Fenced blocks are replaced by Shiki's own <pre>; the default
+        // wrapper is dropped to avoid nesting.
+        pre: ({ children }) => <>{children}</>,
+        code: Code,
+      }}
       urlTransform={(url, key) => {
         if (key === "src") return resolveUrl(baseUrl, url);
         return url;

@@ -387,6 +387,43 @@ body {
   border-radius: var(--radius-card);
 }
 
+/* Shiki syntax highlighting: theme colors ship as per-token CSS variables
+   (`--shiki-light` / `--shiki-dark`); the page theme picks the set, so code
+   blocks follow light/dark like everything else. */
+.prose .shiki {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  overflow-x: auto;
+}
+
+.prose .shiki span {
+  color: var(--shiki-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) .prose .shiki {
+    color: var(--shiki-dark);
+    background-color: var(--shiki-dark-bg);
+  }
+
+  :root:not(.light):not([data-theme="light"]) .prose .shiki span {
+    color: var(--shiki-dark);
+  }
+}
+
+:root.dark .prose .shiki,
+:root[data-theme="dark"] .prose .shiki {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+:root.dark .prose .shiki span,
+:root[data-theme="dark"] .prose .shiki span {
+  color: var(--shiki-dark);
+}
+
 /* Shared component tokens: fields, buttons, and card surfaces so every form
    and action speaks the same shape language (input 10 / card 14 / pill 999). */
 @layer components {
