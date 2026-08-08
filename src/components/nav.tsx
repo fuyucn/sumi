@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Article,
@@ -148,6 +148,7 @@ export function Nav() {
   const [unread, setUnread] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 8));
@@ -171,6 +172,30 @@ export function Nav() {
       cancelled = true;
     };
   }, [handle, pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const menuButton = menuButtonRef.current;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const firstLink = document.querySelector<HTMLElement>(
+      'nav[aria-label="Mobile"] a',
+    );
+    firstLink?.focus();
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      menuButton?.focus();
+    };
+  }, [menuOpen]);
 
   const isActive = (href: string, prefix = false) =>
     prefix ? pathname.startsWith(href) : pathname === href;
@@ -282,6 +307,7 @@ export function Nav() {
           <ThemeToggle />
           <button
             type="button"
+            ref={menuButtonRef}
             className="press flex h-9 w-9 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink md:hidden"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
@@ -317,7 +343,12 @@ export function Nav() {
                 aria-hidden
                 onClick={closeMenu}
               />
-              <div className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-pop animate-drawer-in">
+              <div
+                className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-pop animate-drawer-in"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu"
+              >
             <nav className="drawer-stagger flex flex-col gap-0.5" aria-label="Mobile">
               <DrawerLink href="/" active={isActive("/")} onClick={closeMenu}>
                 <House size={17} weight="duotone" aria-hidden />
