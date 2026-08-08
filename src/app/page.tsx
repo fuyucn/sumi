@@ -5,8 +5,10 @@ import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDisplayNameMap } from "@/lib/display-name";
+import { Feather } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -143,14 +145,12 @@ export default async function Home() {
         </div>
 
         {feed.length === 0 ? (
-          <div className="py-24 text-center">
-            <p className="font-serif text-lg text-ink-muted">
-              Nothing published yet.
-            </p>
-            <p className="mt-1 text-sm text-ink-faint">
-              The first page is always blank. Be the one to fill it.
-            </p>
-          </div>
+          <EmptyState
+            className="mt-10"
+            icon={<Feather size={20} weight="duotone" />}
+            title="Nothing published yet."
+            hint="The first page is always blank. Be the one to fill it."
+          />
         ) : (
           <div className="divide-y divide-line">
             {recent.map(({ handle, post }, i) => (
