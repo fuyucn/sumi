@@ -89,7 +89,7 @@ function Toolbar({ editor }: { editor: TiptapEditor }) {
   const mod = modKey();
   return (
     <div
-      className="flex items-center gap-0.5 rounded-full border border-line-strong bg-paper/95 px-1.5 py-1 shadow-pop backdrop-blur-md"
+      className="no-scrollbar flex max-w-[calc(100vw-1.5rem)] items-center gap-0.5 overflow-x-auto overscroll-x-contain rounded-full border border-line-strong bg-paper/95 px-1.5 py-1 shadow-pop backdrop-blur-md"
       style={{ animation: "bubble-pop 0.22s var(--ease-out)" }}
     >
       <ToolBtn
