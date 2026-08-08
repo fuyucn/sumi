@@ -13,6 +13,13 @@ export type SecurityEvent =
       path: string | null;
     }
   | {
+      event: "login-denied-passphrase";
+      /** GitHub login that was rejected because the owner cookie was missing. */
+      login: string;
+      ip: string | null;
+      path: string | null;
+    }
+  | {
       event: "auth-rate-limited";
       ip: string | null;
       path: string | null;
@@ -31,7 +38,9 @@ export function clientIpFromRequest(req: Request | null | undefined): string | n
 
 export function logSecurityEvent(ev: SecurityEvent): void {
   const parts = [`[security]`, `event=${ev.event}`];
-  if (ev.event === "login-denied") parts.push(`login=${JSON.stringify(ev.login)}`);
+  if (ev.event === "login-denied" || ev.event === "login-denied-passphrase") {
+    parts.push(`login=${JSON.stringify(ev.login)}`);
+  }
   if (ev.ip) parts.push(`ip=${JSON.stringify(ev.ip)}`);
   if (ev.path) parts.push(`path=${JSON.stringify(ev.path)}`);
   console.warn(parts.join(" "));

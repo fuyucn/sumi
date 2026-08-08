@@ -1,10 +1,12 @@
 import { betterAuth } from "better-auth";
+import { APIError } from "better-auth/api";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "./db";
 import { env } from "./env";
 import { schema } from "@/db/schema";
 import { getUserHandle } from "./user";
 import { assertAllowedGithubUser } from "./allowlist";
+import { hasValidPassphraseCookie } from "./passphrase";
 import { clientIpFromRequest, logSecurityEvent } from "./security-log";
 
 /** Client IP headers trusted in order of preference (Cloudflare → proxy → Docker). */
@@ -122,6 +124,23 @@ function buildAuth() {
           before: async (session, ctx) => {
             const login = await getUserHandle(session.userId);
             gateLogin(login ?? "", env.ALLOWED_GITHUB_USERS, ctx);
+            // Optional second-factor valve: when LOGIN_PASSPHRASE is set, the
+            // sign-in page must have issued a valid owner cookie first. The
+            // cookie is signed with the app secret, so it can't be forged.
+            if (env.LOGIN_PASSPHRASE) {
+              const cookies = ctx?.request?.headers.get("cookie") ?? null;
+              if (!hasValidPassphraseCookie(cookies, env.LOGIN_PASSPHRASE, env.BETTER_AUTH_SECRET)) {
+                logSecurityEvent({
+                  event: "login-denied-passphrase",
+                  login: login ?? "",
+                  ip: clientIpFromRequest(ctx?.request ?? null),
+                  path: ctx?.path ?? null,
+                });
+                throw new APIError("FORBIDDEN", {
+                  message: "Login passphrase required.",
+                });
+              }
+            }
             return { data: session };
           },
         },

@@ -12,6 +12,10 @@ const schema = z.object({
   GITHUB_CLIENT_SECRET: z.string().min(1),
   // comma-separated GitHub logins; empty => deny all (enforced in allowlist.ts)
   ALLOWED_GITHUB_USERS: z.string().default(""),
+  // Optional second-factor login gate: when set, the owner must unlock the
+  // sign-in page with this passphrase (issued as a signed, httpOnly cookie
+  // for 30 days) before GitHub OAuth is accepted. Empty string disables it.
+  LOGIN_PASSPHRASE: z.preprocess(emptyToUndefined, z.string().optional()),
   // comma-separated extra origins trusted for auth callbacks/cookies (e.g.
   // local proxy or custom domain). Wired into better-auth `trustedOrigins`.
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().default(""),

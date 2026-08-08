@@ -41,9 +41,19 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
   can sign in — empty list denies everyone (and refuses to boot in production).
   Sessions are re-checked on every request, so removing a login revokes access
   immediately.
+- **Optional passphrase valve**: set `LOGIN_PASSPHRASE` to require a second
+  factor on the sign-in page. The passphrase is never stored; the owner unlocks
+  once per browser and gets a signed, httpOnly, 30-day cookie (HMAC-derived
+  from `BETTER_AUTH_SECRET`), and the Better Auth session-create hook re-checks
+  it on every OAuth sign-in. Combined with the allowlist, even someone who
+  discovers the GitHub OAuth app still cannot log in without the passphrase.
 - **Origin allowlist**: `BETTER_AUTH_TRUSTED_ORIGINS` (comma-separated) is wired
   into Better Auth's `trustedOrigins` as a CSRF safety valve — only
   `BETTER_AUTH_URL` plus these origins may start OAuth or receive session cookies.
+- **Login surface rate limits**: Better Auth's built-in per-IP limits plus
+  tighter caps on the OAuth callback, sign-out, and the passphrase unlock
+  endpoint; the AI 总结 generation action is also capped (12 runs per 30
+  minutes per owner) so a leaked session cannot burn provider quota.
 - **Per-request CSP nonce**: `src/proxy.ts` mints a fresh nonce per page render
   (`script-src 'nonce-*' 'strict-dynamic'`), stamped onto Next's scripts and the
   inline theme script in the layout; no `'unsafe-inline'` scripts anywhere.
@@ -106,6 +116,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
    - `BETTER_AUTH_URL` — your production domain, e.g. `https://sumi.example.com`
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — create a separate **production** GitHub OAuth app whose callback URL is `https://YOUR_DOMAIN/api/auth/callback/github`
    - `ALLOWED_GITHUB_USERS` — comma-separated GitHub usernames
+   - `LOGIN_PASSPHRASE` — optional second-factor login gate (see Security model)
    - `DB_MIRROR=1` — store content in Postgres (default recommendation)
 4. After the first successful deploy, run the migration once against the production database:
    ```bash
@@ -130,6 +141,7 @@ Run the whole stack (Postgres + migrations + app) with a single `docker compose`
    - `BETTER_AUTH_SECRET` — generate with `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
    - `BETTER_AUTH_URL` — `http://localhost:3000` for local runs, your domain for production
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` + `ALLOWED_GITHUB_USERS`
+   - `LOGIN_PASSPHRASE` — optional, enables the second-factor login gate
    - `DB_MIRROR=1` — store content in the bundled Postgres (default)
 
    The default `DATABASE_URL` (`postgresql://sumi:sumi@db:5432/sumi`) points at the bundled Postgres container, so you don't need Neon. To use a remote/Neon database instead, just override `DATABASE_URL` in `.env`.

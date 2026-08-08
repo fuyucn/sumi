@@ -62,3 +62,13 @@ test("defaults trusted origins to empty", () => {
   const env = loadEnv(base);
   expect(env.BETTER_AUTH_TRUSTED_ORIGINS).toBe("");
 });
+
+test("treats an empty LOGIN_PASSPHRASE as unset (optional)", () => {
+  const env = loadEnv({ ...base, LOGIN_PASSPHRASE: "" });
+  expect(env.LOGIN_PASSPHRASE).toBeUndefined();
+});
+
+test("keeps LOGIN_PASSPHRASE when set", () => {
+  const env = loadEnv({ ...base, LOGIN_PASSPHRASE: "s3cret" });
+  expect(env.LOGIN_PASSPHRASE).toBe("s3cret");
+});

@@ -2,9 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
-import { getContentStoreForUser, getReadContentStore } from "@/content";
+import { getAiStore, getContentStoreForUser, getReadContentStore } from "@/content";
 import { PostRowActions } from "@/components/post-row-actions";
 import { WriteTabs } from "@/components/write-tabs";
+import { AiRowAction, type AiRowStatus } from "@/components/ai-row-action";
 import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
@@ -49,7 +50,7 @@ async function loadAgentPosts(): Promise<ListingPost[]> {
   return out;
 }
 
-function PostRow({ post }: { post: ListingPost }) {
+function PostRow({ post, aiStatus }: { post: ListingPost; aiStatus: AiRowStatus | undefined }) {
   const isDraft = post.status === "draft";
   const date = formatDate(isDraft ? post.createdAt : post.publishedAt);
   return (
@@ -71,6 +72,14 @@ function PostRow({ post }: { post: ListingPost }) {
         </span>
       </Link>
       <div className="flex shrink-0 items-center gap-3">
+        {aiStatus !== undefined ? (
+          <AiRowAction
+            handle={post.handle}
+            slug={post.slug}
+            isAgent={post.isAgent}
+            status={aiStatus}
+          />
+        ) : null}
         <span
           className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
             isDraft ? "bg-ink/[0.06] text-ink-soft" : "bg-seal/[0.1] text-seal"
@@ -124,6 +133,27 @@ export default async function WriteDashboard({
   const visible =
     scope === "mine" ? mine : scope === "agent" ? agent : all;
 
+  // AI 总结 availability + per-post status for the dashboard quick action.
+  // Only present when the running backend has the AI store (Postgres mirror).
+  const aiStore = await getAiStore();
+  let aiStatusByPost: Map<string, AiRowStatus> | null = null;
+  if (aiStore) {
+    const rows = await Promise.all(
+      all.map(async (p) => {
+        const task = await aiStore.getTask(p.handle, p.slug);
+        const status: AiRowStatus = task
+          ? task.status === "done"
+            ? "done"
+            : task.status === "failed"
+              ? "failed"
+              : "running"
+          : null;
+        return [`${p.handle}/${p.slug}`, status] as const;
+      }),
+    );
+    aiStatusByPost = new Map(rows);
+  }
+
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-6 flex items-end justify-between gap-4">
@@ -167,7 +197,7 @@ export default async function WriteDashboard({
               delay={Math.min(i * 0.04, 0.28)}
               className="group border-t border-line first:border-t-0"
             >
-              <PostRow post={p} />
+              <PostRow post={p} aiStatus={aiStatusByPost?.get(`${p.handle}/${p.slug}`)} />
             </Reveal>
           ))}
         </ul>

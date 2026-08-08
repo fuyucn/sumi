@@ -7,6 +7,7 @@ import { agentKeys } from "@/db/schema";
 import { getAiStore, getContentStoreForUser, getReadContentStore } from "@/content";
 import { runDeletePost, runSavePost, runUploadImage, type WriteDeps } from "./actions-core";
 import { generateSummary } from "@/lib/ai/summarize";
+import { AI_GENERATE_LIMIT, rateLimit } from "@/lib/rate-limit";
 import type { AiTask } from "@/content/ai-store";
 import type { WriteForm } from "@/content/post-input";
 import type { TagInfo } from "@/content/store";
@@ -63,6 +64,10 @@ export async function generateSummaryAction(
   if (!user) return { ok: false, error: "请先登录" };
   const [handle, store] = await Promise.all([getUserHandle(user.id), getContentStoreForUser(user.id)]);
   if (!handle || !store) return { ok: false, error: "账号没有可用的内容后端" };
+  // Cost valve: LLM generation is capped per owner handle so a leaked session
+  // or a runaway agent can't burn provider quota.
+  const { allowed } = rateLimit(`ai-gen:${handle}`, AI_GENERATE_LIMIT);
+  if (!allowed) return { ok: false, error: "生成过于频繁，请 30 分钟后再试" };
   if (sourceHandle && sourceHandle !== handle) {
     const rows = await db
       .select({ handle: agentKeys.agentHandle })
