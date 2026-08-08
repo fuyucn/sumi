@@ -159,6 +159,19 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
+/* Editorial drop cap: when an article opens with a paragraph of prose, the
+   first letter floats like a magazine spread. The class is added server-side
+   only when the opening text is not a quote, image, code, or heading. */
+.drop-cap > p:first-child::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-size: 3.25em;
+  font-weight: 600;
+  line-height: 0.8;
+  padding: 0.06em 0.12em 0 0;
+  color: var(--color-ink);
+}
+
 /* Dark mode — "ink at night": warm near-black paper with a moonlit atmosphere,
    soft warm ink, and a brighter cinnabar so the seal still reads. Surfaces
    layer downward (page > card > sunken well), never pure black or white. */

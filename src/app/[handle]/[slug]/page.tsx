@@ -52,6 +52,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const headingInfos = extractHeadings(post.body);
   const headings = headingInfos.map((h) => h.slug);
   const sections = headingInfos.map((h) => ({ id: h.slug, label: h.text }));
+  const bodyStart = post.body
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/^#{1,6}.*$/gm, "")
+    .trimStart();
+  // 首字下沉只在正文以文字段落开篇时启用；引号、图片、代码或标题开头不适用。
+  const dropCap = Boolean(bodyStart) && !/^["“”‘’「」『』（(]/.test(bodyStart);
 
   return (
     <PageTransition>
@@ -141,7 +147,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         <span className="seal-diamond-in h-1.5 w-1.5 rotate-45 rounded-[2px] bg-seal/60" />
         <span className="h-px flex-1 bg-line" />
       </div>
-      <article className="prose prose-stone prose-article max-w-none font-serif prose-headings:font-serif">
+      <article
+        className={`prose prose-stone prose-article max-w-none font-serif prose-headings:font-serif${
+          dropCap ? " drop-cap" : ""
+        }`}
+      >
         <Markdown>{post.body}</Markdown>
       </article>
       {post.tags.length > 0 ? (
