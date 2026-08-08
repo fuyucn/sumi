@@ -45,39 +45,57 @@ export default async function NotesPage({
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <Link
         href={`/@${handle}`}
-        className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-seal"
       >
+        <span
+          aria-hidden
+          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+        >
+          ←
+        </span>
         {authorName}
       </Link>
-      <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-ink">
-        Notes
-      </h1>
-      {profile?.displayName ? (
-        <p className="mt-1 text-sm text-ink-muted">{profile.displayName} · 手记</p>
-      ) : null}
+      <header className="mt-6 mb-8">
+        <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+          Notes
+        </h1>
+        <p className="mt-2 text-sm text-ink-muted tabular-nums">
+          {notes.length} {notes.length === 1 ? "note" : "notes"} jotted between
+          posts.
+        </p>
+      </header>
 
       {isOwner ? (
-        <div className="mt-8">
+        <div className="mb-2">
           <NoteComposer handle={handle} />
         </div>
       ) : null}
 
       {notes.length === 0 ? (
-        <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
+        <p className="mt-10 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
           {isOwner
             ? "No notes yet. Pin your first thought above."
             : "No notes yet."}
         </p>
       ) : (
-        <ol className="mt-10 divide-y divide-line border-t border-line">
+        <ol className="mt-8 divide-y divide-line border-t border-line">
           {notes.map((note) => (
-            <li key={note.id} className="-mx-4 rounded-xl px-4 py-6 transition-colors hover:bg-paper-soft/60">
-              <time
-                dateTime={note.date}
-                className="text-xs text-ink-faint tabular-nums"
-              >
-                {formatDate(note.date)}
-              </time>
+            <li
+              key={note.id}
+              className="group -mx-4 rounded-xl border-l-2 border-transparent px-4 py-6 transition-[background-color,border-color] duration-300 ease-out hover:border-seal/60 hover:bg-paper-soft/60"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 rounded-full bg-seal/60 transition-colors duration-300 group-hover:bg-seal"
+                />
+                <time
+                  dateTime={note.date}
+                  className="text-xs text-ink-faint tabular-nums"
+                >
+                  {formatDate(note.date)}
+                </time>
+              </div>
               <div className="prose prose-sm prose-neutral max-w-none mt-2 font-serif text-lg leading-relaxed text-ink">
                 <Markdown>{note.body}</Markdown>
               </div>
