@@ -41,6 +41,10 @@ export function useDraftAutosave(opts: {
   const { key, state, dirty, onRecover } = opts;
   const recoveredRef = useRef(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
+  // Snapshot of the last draft actually written to localStorage. `saving` is
+  // derived (dirty && snapshot differs) so the indicator never calls setState
+  // inside the effect; only the debounced write callback does.
+  const [savedSnapshot, setSavedSnapshot] = useState<string | null>(null);
 
   // Recover a previous autosave once, before the user starts typing.
   useEffect(() => {
@@ -55,18 +59,23 @@ export function useDraftAutosave(opts: {
   const { title, tags, body, excerpt } = state;
   useEffect(() => {
     if (!dirty) return;
+    const snapshot = JSON.stringify({ title, tags, body, excerpt });
     const t = setTimeout(() => {
       const at = new Date().toISOString();
       localStorage.setItem(keyFor(key), JSON.stringify({ title, tags, body, excerpt, savedAt: at }));
       setSavedAt(at);
+      setSavedSnapshot(snapshot);
     }, 1200);
     return () => clearTimeout(t);
   }, [key, title, tags, body, excerpt, dirty]);
 
+  const saving = dirty && savedSnapshot !== JSON.stringify({ title, tags, body, excerpt });
+
   const clear = useCallback(() => {
     localStorage.removeItem(keyFor(key));
     setSavedAt(null);
+    setSavedSnapshot(null);
   }, [key]);
 
-  return { savedAt, clear };
+  return { savedAt, saving, clear };
 }

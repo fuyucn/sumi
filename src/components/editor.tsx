@@ -9,7 +9,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 import Image from "@tiptap/extension-image";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { headingSlug } from "@/lib/heading-slug";
 import {
   Code,
@@ -207,11 +207,6 @@ export function Editor({
     immediatelyRender: false, // avoid SSR hydration mismatch under Next App Router
     onUpdate: ({ editor }) => onChange(toMarkdown(editor)),
   });
-
-  useEffect(() => {
-    if (editor) onChange(toMarkdown(editor));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

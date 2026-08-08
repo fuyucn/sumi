@@ -10,6 +10,7 @@ import { savePostAction, uploadImageAction } from "@/app/write/actions";
 import { saveAgentPostAction } from "@/app/write/agent-actions";
 import type { AiTask } from "@/content/ai-store";
 import type { HeadingInfo } from "@/lib/heading-slug";
+import { estimateReadingTime } from "@/lib/reading-time";
 
 export function PostForm({
   initial,
@@ -49,7 +50,7 @@ export function PostForm({
   const [busy, setBusy] = useState(false);
   const [recoveredAt, setRecoveredAt] = useState<string | null>(null);
 
-  const { savedAt, clear } = useDraftAutosave({
+  const { savedAt, saving, clear } = useDraftAutosave({
     key: draftKey,
     state: { title, tags, body, excerpt, savedAt: "" },
     dirty,
@@ -119,6 +120,7 @@ export function PostForm({
   const savedTime = savedAt
     ? new Date(savedAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
     : null;
+  const { words, minutes } = estimateReadingTime(body);
 
   return (
     <div className="flex flex-col">
@@ -174,15 +176,27 @@ export function PostForm({
         {error ? (
           <p className="mr-auto text-sm text-seal">{error}</p>
         ) : (
-          <p className="mr-auto text-xs text-ink-faint">
-            {savedTime ? (
-              <>
-                <span aria-hidden className="save-dot mr-1.5 text-seal">●</span>
-                Autosaved locally at {savedTime}
-              </>
-            ) : (
-              "Everything is autosaved to your browser as you type."
-            )}
+          <p className="mr-auto flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-faint">
+            <span>
+              {saving ? (
+                <>
+                  <span aria-hidden className="save-dot mr-1.5 text-seal">●</span>
+                  Saving…
+                </>
+              ) : savedTime ? (
+                <>
+                  <span aria-hidden className="save-dot mr-1.5 text-seal">●</span>
+                  Autosaved locally at {savedTime}
+                </>
+              ) : (
+                "Everything is autosaved to your browser as you type."
+              )}
+            </span>
+            <span aria-hidden className="text-line-strong">·</span>
+            <span className="tabular-nums">
+              {words} {words === 1 ? "word" : "words"}
+              {words > 0 ? ` · ${minutes} min read` : ""}
+            </span>
           </p>
         )}
         <button
