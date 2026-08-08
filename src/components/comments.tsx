@@ -40,9 +40,12 @@ function CommentNode({
     <li>
       <div className="group py-5 first:pt-0 last:pb-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-          <span className="link-underline font-medium text-ink-muted transition-colors duration-300 group-hover:text-seal">
+          <Link
+            href={`/@${comment.handle}`}
+            className="link-underline font-medium text-ink-muted transition-colors duration-300 group-hover:text-seal"
+          >
             <AuthorName handle={comment.handle} />
-          </span>
+          </Link>
           <span aria-hidden className="text-line-strong">
             ·
           </span>
