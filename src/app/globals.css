@@ -778,6 +778,48 @@ textarea,
   }
 }
 
+/* AI 总结 key points: each bullet slides in a beat after the last, starting
+   after the panel rise so the reading path settles top-to-bottom. */
+@media (prefers-reduced-motion: no-preference) {
+  .point-stagger > * {
+    animation: point-in 0.3s var(--ease-out) both;
+  }
+  .point-stagger > *:nth-child(1) {
+    animation-delay: 0.08s;
+  }
+  .point-stagger > *:nth-child(2) {
+    animation-delay: 0.13s;
+  }
+  .point-stagger > *:nth-child(3) {
+    animation-delay: 0.18s;
+  }
+  .point-stagger > *:nth-child(4) {
+    animation-delay: 0.23s;
+  }
+  .point-stagger > *:nth-child(5) {
+    animation-delay: 0.28s;
+  }
+  .point-stagger > *:nth-child(6) {
+    animation-delay: 0.33s;
+  }
+  .point-stagger > *:nth-child(7) {
+    animation-delay: 0.38s;
+  }
+  .point-stagger > *:nth-child(n + 8) {
+    animation-delay: 0.43s;
+  }
+  @keyframes point-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
 /* The 墨 hanko stamps down once on hover — a seal imprint instead of a flat
    color swap. Runs only when motion is allowed; reduced-motion keeps the
    color change only. */

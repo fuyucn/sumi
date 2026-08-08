@@ -175,7 +175,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
               <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                 Key points
               </p>
-              <ul className="mt-2.5 space-y-2">
+              <ul className="point-stagger mt-2.5 space-y-2">
                 {task.result.points.map((point, i) => (
                   <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-muted">
                     <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-seal" />
