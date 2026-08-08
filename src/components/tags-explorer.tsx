@@ -3,11 +3,13 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { TagInfo } from "@/content/store";
 import { EmptyState } from "@/components/empty-state";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 
 export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
+  const reduce = useReducedMotion();
 
   const filtered = useMemo(() => {
     if (!q) return tags;
@@ -55,30 +57,47 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
           hint="Try a broader keyword."
         />
       ) : (
-        <div className="divide-y divide-line border-t border-line">
-          {filtered.map((tag) => (
-            <Link
-              key={tag.name}
-              href={`/tag/${encodeURIComponent(tag.name)}`}
-              transitionTypes={["nav-forward"]}
-              className="group relative flex items-baseline justify-between rounded-md py-4 pl-3 pr-8 transition-[background-color,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-deep/40 hover:text-seal sm:pr-10"
-            >
-              <span className="font-serif text-lg text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-1 group-hover:text-seal">
-                <span className="text-seal">#</span>
-                {tag.name}
-              </span>
-              <span className="text-sm text-ink-faint transition-colors group-hover:text-seal/80">
-                {tag.count} {tag.count === 1 ? "post" : "posts"}
-              </span>
-              <span
-                aria-hidden
-                className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100"
+        <motion.div
+          layout={!reduce}
+          className="divide-y divide-line border-t border-line"
+        >
+          <AnimatePresence initial={reduce ? false : undefined} mode="popLayout">
+            {filtered.map((tag, i) => (
+              <motion.div
+                key={tag.name}
+                layout={!reduce}
+                initial={reduce ? false : { opacity: 0, y: 10 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, scale: 0.985 }}
+                transition={{
+                  duration: 0.24,
+                  delay: reduce ? 0 : Math.min(i * 0.035, 0.28),
+                  ease: [0.16, 1, 0.3, 1],
+                }}
               >
-                →
-              </span>
-            </Link>
-          ))}
-        </div>
+                <Link
+                  href={`/tag/${encodeURIComponent(tag.name)}`}
+                  transitionTypes={["nav-forward"]}
+                  className="group relative flex items-baseline justify-between rounded-md py-4 pl-3 pr-8 transition-[background-color,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-deep/40 hover:text-seal sm:pr-10"
+                >
+                  <span className="font-serif text-lg text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-1 group-hover:text-seal">
+                    <span className="text-seal">#</span>
+                    {tag.name}
+                  </span>
+                  <span className="text-sm text-ink-faint transition-colors group-hover:text-seal/80">
+                    {tag.count} {tag.count === 1 ? "post" : "posts"}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100"
+                  >
+                    →
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       )}
     </div>
   );

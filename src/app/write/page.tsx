@@ -9,6 +9,7 @@ import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
 import { EmptyState } from "@/components/empty-state";
+import { Reveal } from "@/components/reveal";
 import { Feather } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -52,41 +53,39 @@ function PostRow({ post }: { post: ListingPost }) {
   const isDraft = post.status === "draft";
   const date = formatDate(isDraft ? post.createdAt : post.publishedAt);
   return (
-    <li className="group border-t border-line first:border-t-0">
-      <div className="flex items-center justify-between gap-4 py-4">
-        <Link
-          href={`/write/${post.slug}${post.isAgent ? `?agent=${encodeURIComponent(post.handle)}` : ""}`}
-          className="min-w-0 flex-1 font-serif text-lg leading-snug text-ink transition-[color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal"
+    <div className="flex items-center justify-between gap-4 py-4">
+      <Link
+        href={`/write/${post.slug}${post.isAgent ? `?agent=${encodeURIComponent(post.handle)}` : ""}`}
+        className="min-w-0 flex-1 font-serif text-lg leading-snug text-ink transition-[color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal"
+      >
+        {post.title || "Untitled"}
+        {post.isAgent ? (
+          <span className="ml-2 inline-block rounded-full border border-seal/40 px-2 py-0.5 align-middle text-xs font-medium tracking-wide text-seal">
+            Agent
+          </span>
+        ) : null}
+        <span className="mt-0.5 block text-sm font-sans text-ink-faint">
+          {post.isAgent && post.displayName ? `${post.displayName} · @${post.handle} · ` : ""}
+          {date ? `${date} · ` : ""}
+          {post.tags.length ? "#" + post.tags.join("  #") : "Untagged"}
+        </span>
+      </Link>
+      <div className="flex shrink-0 items-center gap-3">
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            isDraft ? "bg-ink/[0.06] text-ink-soft" : "bg-seal/[0.1] text-seal"
+          }`}
         >
-          {post.title || "Untitled"}
-          {post.isAgent ? (
-            <span className="ml-2 inline-block rounded-full border border-seal/40 px-2 py-0.5 align-middle text-xs font-medium tracking-wide text-seal">
-              Agent
-            </span>
-          ) : null}
-          <span className="mt-0.5 block text-sm font-sans text-ink-faint">
-            {post.isAgent && post.displayName ? `${post.displayName} · @${post.handle} · ` : ""}
-            {date ? `${date} · ` : ""}
-            {post.tags.length ? "#" + post.tags.join("  #") : "Untagged"}
-          </span>
-        </Link>
-        <div className="flex shrink-0 items-center gap-3">
-          <span
-            className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              isDraft ? "bg-ink/[0.06] text-ink-soft" : "bg-seal/[0.1] text-seal"
-            }`}
-          >
-            {isDraft ? "Draft" : "Published"}
-          </span>
-          <PostRowActions
-            handle={post.handle}
-            slug={post.slug}
-            status={post.status}
-            isAgent={post.isAgent}
-          />
-        </div>
+          {isDraft ? "Draft" : "Published"}
+        </span>
+        <PostRowActions
+          handle={post.handle}
+          slug={post.slug}
+          status={post.status}
+          isAgent={post.isAgent}
+        />
       </div>
-    </li>
+    </div>
   );
 }
 
@@ -161,13 +160,20 @@ export default async function WriteDashboard({
         />
       ) : (
         <ul>
-          {visible.map((p) => (
-            <PostRow key={`${p.handle}/${p.slug}`} post={p} />
+          {visible.map((p, i) => (
+            <Reveal
+              key={`${p.handle}/${p.slug}`}
+              as="li"
+              delay={Math.min(i * 0.04, 0.28)}
+              className="group border-t border-line first:border-t-0"
+            >
+              <PostRow post={p} />
+            </Reveal>
           ))}
         </ul>
       )}
 
-      <section className="mt-12">
+      <Reveal as="section" delay={0.1} className="mt-12">
         <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
           Collections
         </h2>
@@ -194,7 +200,7 @@ export default async function WriteDashboard({
             <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
           </Link>
         </div>
-      </section>
+      </Reveal>
     </main>
   );
 }

@@ -8,6 +8,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { AiProviderForm } from "@/components/ai-provider-form";
 import { SignOutButton } from "@/components/sign-out-button";
 import { PageTransition } from "@/components/page-transition";
+import { Reveal } from "@/components/reveal";
 import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ export default async function SettingsPage() {
         </Link>
       </p>
       <div className="mt-10 space-y-6">
-        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+        <Reveal as="section" className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             Profile
           </h2>
@@ -56,9 +57,9 @@ export default async function SettingsPage() {
           <div className="mt-5">
             <ProfileForm initial={profile} handle={handle} />
           </div>
-        </section>
+        </Reveal>
 
-        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+        <Reveal as="section" delay={0.06} className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             AI 总结
           </h2>
@@ -83,9 +84,9 @@ export default async function SettingsPage() {
               />
             )}
           </div>
-        </section>
+        </Reveal>
 
-        <section className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
+        <Reveal as="section" delay={0.12} className="rounded-card border border-line bg-paper/60 p-5 shadow-card sm:p-6">
           <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
             登录与安全
           </h2>
@@ -127,7 +128,7 @@ export default async function SettingsPage() {
             <SignOutButton />
             <p className="text-xs text-ink-faint">GitHub 登录仅用于身份验证，内容全部存在自己的数据库里。</p>
           </div>
-        </section>
+        </Reveal>
       </div>
       </main>
     </PageTransition>
