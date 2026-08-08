@@ -66,6 +66,7 @@ export function ProjectGallery({
           onClick={close}
         >
           <img
+            key={active}
             src={images[active]}
             alt={`${title} image ${active + 1}`}
             width={1600}
@@ -77,7 +78,7 @@ export function ProjectGallery({
             type="button"
             onClick={close}
             aria-label="Close gallery"
-            className="absolute right-4 top-4 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
+            className="press absolute right-4 top-4 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
           >
             <X size={18} weight="bold" />
           </button>
@@ -90,7 +91,7 @@ export function ProjectGallery({
                   step(-1);
                 }}
                 aria-label="Previous image"
-                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
+                className="press absolute left-4 top-1/2 -translate-y-1/2 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
               >
                 <ArrowLeft size={18} weight="bold" />
               </button>
@@ -101,7 +102,7 @@ export function ProjectGallery({
                   step(1);
                 }}
                 aria-label="Next image"
-                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
+                className="press absolute right-4 top-1/2 -translate-y-1/2 rounded-full border border-white/20 p-2 text-white transition-colors hover:bg-white/10"
               >
                 <ArrowRight size={18} weight="bold" />
               </button>
