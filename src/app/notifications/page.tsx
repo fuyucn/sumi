@@ -110,7 +110,10 @@ export default async function NotificationsPage() {
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+            Inbox
+          </p>
+          <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
             Notifications
           </h1>
           <p className="mt-2 font-serif text-lg text-ink-muted">

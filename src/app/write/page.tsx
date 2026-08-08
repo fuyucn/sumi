@@ -127,8 +127,8 @@ export default async function WriteDashboard({
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium uppercase tracking-widest text-ink-faint">Writing</p>
-          <h1 className="mt-1 font-serif text-4xl font-semibold tracking-tight text-ink">Your posts</h1>
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">Writing</p>
+          <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">Your posts</h1>
         </div>
         <Link
           href="/write/new"

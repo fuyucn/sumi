@@ -22,7 +22,10 @@ export default async function SettingsPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
-      <h1 className="font-serif text-4xl font-semibold tracking-tight text-ink">
+      <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+        Configure
+      </p>
+      <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
         Settings
       </h1>
       <p className="mt-2 text-sm text-ink-muted">
