@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Editor } from "./editor";
 import { TagPicker } from "./tag-picker";
 import { AiSummaryEditor } from "./ai-summary-editor";
@@ -117,6 +118,18 @@ export function PostForm({
 
   return (
     <div className="flex flex-col">
+      <Link
+        href="/write"
+        className="group mb-5 inline-flex w-fit items-center gap-1.5 text-sm font-medium text-ink-faint transition-colors hover:text-seal"
+      >
+        <span
+          aria-hidden
+          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+        >
+          ←
+        </span>
+        Your posts
+      </Link>
       {agentSource ? (
         <div className="mb-4 flex items-center justify-between gap-3 rounded border border-seal/30 bg-seal/[0.06] px-4 py-2.5 text-sm text-ink">
           <span>
