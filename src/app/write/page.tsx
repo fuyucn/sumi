@@ -8,6 +8,8 @@ import { WriteTabs } from "@/components/write-tabs";
 import { db } from "@/lib/db";
 import { agentKeys } from "@/db/schema";
 import type { PostMeta } from "@/content/types";
+import { EmptyState } from "@/components/empty-state";
+import { Feather } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -147,16 +149,16 @@ export default async function WriteDashboard({
       />
 
       {visible.length === 0 ? (
-        <div className="border-t border-line py-24 text-center">
-          <p className="font-serif text-lg text-ink-muted">Nothing here yet.</p>
-          <p className="mt-2 text-sm text-ink-faint">
-            {scope === "agent"
+        <EmptyState
+          className="mt-10"
+          icon={<Feather size={20} weight="duotone" />}
+          title="Nothing here yet."
+          hint={
+            scope === "agent"
               ? "Agent hasn't written any posts yet."
-              : scope === "mine"
-                ? "Start your first post. It autosaves to your browser as you type."
-                : "Start your first post. It autosaves to your browser as you type."}
-          </p>
-        </div>
+              : "Start your first post. It autosaves to your browser as you type."
+          }
+        />
       ) : (
         <ul>
           {visible.map((p) => (

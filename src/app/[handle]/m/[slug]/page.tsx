@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getReadContentStore } from "@/content";
 import type { Post } from "@/content/types";
 import { displayName } from "@/lib/display-name";
+import { EmptyState } from "@/components/empty-state";
+import { BookOpen } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -55,16 +57,23 @@ export default async function MagazinePage({
         </p>
       </header>
       {posts.length === 0 ? (
-        <p className="mt-10 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          This magazine is empty.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<BookOpen size={20} weight="duotone" />}
+          title="This magazine is empty."
+          hint="Collected posts will line up here."
+        />
       ) : (
         <ol className="mt-8 divide-y divide-line border-t border-line">
           {posts.map((post, i) => (
             <li
               key={post.slug}
-              className="group -mx-3 rounded-lg px-3 py-5 transition-colors hover:bg-paper-soft/60"
+              className="group relative -mx-3 rounded-lg px-3 py-5 transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-soft/60"
             >
+              <span
+                aria-hidden
+                className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 scale-y-0 rounded-full bg-seal transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:scale-y-100"
+              />
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 shrink-0 font-serif text-sm text-seal tabular-nums">
                   {String(i + 1).padStart(2, "0")}

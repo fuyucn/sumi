@@ -4,6 +4,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { BookOpen } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -30,9 +32,12 @@ export default async function MagazinesPage() {
         </Link>
       </header>
       {magazines.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No magazines yet.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<BookOpen size={20} weight="duotone" />}
+          title="No magazines yet."
+          hint="Group posts into a collectible magazine."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {magazines.map((mag, i) => (

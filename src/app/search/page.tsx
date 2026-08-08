@@ -5,6 +5,7 @@ import { getDisplayNameMap } from "@/lib/display-name";
 import Link from "next/link";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -93,27 +94,23 @@ export default async function SearchPage({
               ))}
             </div>
           ) : (
-            <div className="mt-4 rounded-card border border-dashed border-line-strong px-6 py-16 text-center">
-              <span
-                aria-hidden
-                className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
-              >
-                <MagnifyingGlass size={20} weight="duotone" />
-              </span>
-              <p className="mt-5 font-serif text-lg text-ink-soft">
-                Nothing on this shelf.
-              </p>
-              <p className="mt-1 text-sm text-ink-faint">
-                Try a different keyword, or{" "}
-                <Link
-                  href="/posts"
-                  className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
-                >
-                  browse all posts
-                </Link>
-                .
-              </p>
-            </div>
+            <EmptyState
+              className="mt-4"
+              icon={<MagnifyingGlass size={20} weight="duotone" />}
+              title="Nothing on this shelf."
+              hint={
+                <>
+                  Try a different keyword, or{" "}
+                  <Link
+                    href="/posts"
+                    className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+                  >
+                    browse all posts
+                  </Link>
+                  .
+                </>
+              }
+            />
           )}
         </div>
       ) : null}

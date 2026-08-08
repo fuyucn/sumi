@@ -3,6 +3,8 @@ import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { Tag } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -69,9 +71,12 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
         </div>
       ) : null}
       {matches.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No posts tagged #{tag} yet.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<Tag size={20} weight="duotone" />}
+          title={`No posts tagged #${tag} yet.`}
+          hint="Tag a post and it will show up here."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {matches.map(({ handle, post }, i) => (

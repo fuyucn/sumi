@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
+import { EmptyState } from "@/components/empty-state";
+import { Files } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +28,12 @@ export default async function WritePagesPage() {
         </Link>
       </header>
       {pages.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No pages yet. Create an about page, a colophon, or anything standalone.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<Files size={20} weight="duotone" />}
+          title="No pages yet."
+          hint="Create an about page, a colophon, or anything standalone."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {pages.map((page) => (

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { listFeed, type FeedItem } from "@/content/feed";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
+import { EmptyState } from "@/components/empty-state";
+import { Article } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -49,9 +51,12 @@ export default async function PostsPage() {
       </header>
 
       {groups.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          Nothing published yet.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<Article size={20} weight="duotone" />}
+          title="Nothing published yet."
+          hint="Posts will collect here as they go live."
+        />
       ) : (
         <div className="space-y-14">
           {groups.map(({ year, posts }) => (

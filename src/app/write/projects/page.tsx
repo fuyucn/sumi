@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
+import { EmptyState } from "@/components/empty-state";
+import { Stack } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +28,12 @@ export default async function WriteProjectsPage() {
         </Link>
       </header>
       {projects.length === 0 ? (
-        <p className="border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
-          No projects yet. Showcase something you built.
-        </p>
+        <EmptyState
+          className="mt-10"
+          icon={<Stack size={20} weight="duotone" />}
+          title="No projects yet."
+          hint="Showcase something you built."
+        />
       ) : (
         <div className="divide-y divide-line border-t border-line">
           {projects.map((project) => (
