@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
@@ -42,9 +43,15 @@ export default async function Home() {
           </p>
           <Link
             href="/write"
-            className="btn-primary mt-8 px-6 py-3"
+            className="btn-primary group mt-8 px-6 py-3"
           >
             Start writing
+            <ArrowRight
+              size={16}
+              weight="duotone"
+              aria-hidden
+              className="transition-transform duration-200 ease-out group-hover:translate-x-0.5"
+            />
           </Link>
         </div>
 

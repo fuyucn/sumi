@@ -28,7 +28,18 @@
   --shadow-card-hover: 0 2px 4px rgb(30 27 22 / 0.06), 0 20px 44px -18px rgb(30 27 22 / 0.2);
   --shadow-pop: 0 24px 60px -24px rgb(30 27 22 / 0.28);
 
-  --animate-rise: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* Motion language: three named easings + three duration buckets. All
+     transitions in the codebase reference these tokens (never `ease`). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --animate-rise: rise 0.55s var(--ease-out) both;
+  --animate-drawer-in: drawer-in 0.3s var(--ease-out) both;
+  --animate-fade-in: fade-in 0.28s var(--ease-out) both;
 
   @keyframes rise {
     from {
@@ -40,6 +51,26 @@
       transform: translateY(0);
     }
   }
+
+  @keyframes drawer-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
 }
 
 html {
@@ -48,15 +79,28 @@ html {
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern", "liga", "calt";
   scroll-behavior: smooth;
+  /* Hallmark gate 34: clip, never `hidden`, so sticky headers keep working. */
+  overflow-x: clip;
 }
 
 body {
   background-color: var(--color-paper);
   color: var(--color-ink);
+  overflow-x: clip;
   background-image:
     radial-gradient(1200px 520px at 82% -8%, color-mix(in srgb, var(--color-seal) 5%, transparent), transparent 62%),
     radial-gradient(900px 420px at -6% 24%, color-mix(in srgb, var(--color-ink) 3%, transparent), transparent 55%);
   background-attachment: fixed;
+}
+
+/* Theme switches crossfade the ground instead of snapping. First paint is
+   unaffected: the head script applies the saved theme before body renders. */
+@media (prefers-reduced-motion: no-preference) {
+  body {
+    transition:
+      background-color var(--dur-short) var(--ease-in-out),
+      color var(--dur-short) var(--ease-in-out);
+  }
 }
 
 /* Paper grain: a whisper of texture so flat surfaces still feel physical. */
@@ -169,8 +213,8 @@ body {
   opacity: 0;
   visibility: hidden;
   transition:
-    opacity 0.15s ease,
-    visibility 0.15s ease;
+    opacity var(--dur-micro) var(--ease-out),
+    visibility var(--dur-micro) var(--ease-out);
 }
 @media (hover: hover) {
   .group:hover .nav-tooltip {
@@ -197,7 +241,7 @@ body {
   padding: 0.5rem 1rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  transition: transform 0.2s ease;
+  transition: transform var(--dur-short) var(--ease-out);
 }
 .skip-link:focus-visible {
   transform: translateY(0);
@@ -219,7 +263,10 @@ body {
   }
 
   .lift {
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+    transition:
+      transform var(--dur-short) var(--ease-out),
+      box-shadow var(--dur-short) var(--ease-out),
+      border-color var(--dur-short) var(--ease-out);
   }
   .lift:hover {
     transform: translateY(-3px);
@@ -245,6 +292,13 @@ body {
   html {
     scroll-behavior: auto;
   }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 150ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
 }
 
 .link-underline {
@@ -252,7 +306,7 @@ body {
   background-position: 0 100%;
   background-repeat: no-repeat;
   background-size: 0% 1px;
-  transition: background-size 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: background-size var(--dur-short) var(--ease-out);
 }
 .link-underline:hover {
   background-size: 100% 1px;
@@ -260,10 +314,30 @@ body {
 
 /* Icon buttons and ghost actions press down with a physical tick. */
 .press {
-  transition: transform 0.12s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform var(--dur-micro) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out);
 }
 .press:active {
   transform: translateY(1px) scale(0.98);
+}
+
+/* Article headings get a quiet in-place anchor that appears on hover. */
+.heading-anchor {
+  opacity: 0;
+  margin-left: 0.4em;
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--color-seal);
+  text-decoration: none;
+  vertical-align: 0.08em;
+  transition: opacity var(--dur-micro) var(--ease-out);
+}
+.group\/heading:hover .heading-anchor,
+.heading-anchor:focus-visible {
+  opacity: 1;
 }
 
 /* Reading + writing surfaces use the serif for a calm, book-like feel. */
@@ -481,11 +555,11 @@ body {
     font-weight: 500;
     white-space: nowrap;
     transition:
-      background-color 0.2s ease,
-      color 0.2s ease,
-      border-color 0.2s ease,
-      transform 0.12s ease,
-      opacity 0.2s ease;
+      background-color var(--dur-short) var(--ease-out),
+      color var(--dur-short) var(--ease-out),
+      border-color var(--dur-short) var(--ease-out),
+      transform var(--dur-micro) var(--ease-out),
+      opacity var(--dur-short) var(--ease-out);
   }
   .btn-primary:active,
   .btn-seal:active,

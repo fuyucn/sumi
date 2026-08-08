@@ -289,11 +289,11 @@ export function Nav() {
         ? createPortal(
             <div className="md:hidden">
               <div
-                className="fixed inset-0 z-[45] bg-ink/20"
+                className="fixed inset-0 z-[45] bg-ink/20 animate-fade-in"
                 aria-hidden
                 onClick={closeMenu}
               />
-              <div className="fixed inset-x-0 top-16 z-50 border-b border-line bg-paper px-5 py-4 shadow-pop animate-rise">
+              <div className="fixed inset-x-0 top-16 z-50 border-b border-line bg-paper px-5 py-4 shadow-pop animate-drawer-in">
             <nav className="flex flex-col gap-0.5" aria-label="Mobile">
               <DrawerLink href="/" active={isActive("/")} onClick={closeMenu}>
                 <House size={17} weight="duotone" aria-hidden />

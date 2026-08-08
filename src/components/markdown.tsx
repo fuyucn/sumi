@@ -28,8 +28,24 @@ function headingText(children: ReactNode): string {
 
 function makeHeading(tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   return function Heading({ children }: { children?: ReactNode }) {
-    // scroll-mt keeps anchor jumps clear of the sticky nav.
-    return createElement(tag, { id: headingSlug(headingText(children)), className: "scroll-mt-24" }, children);
+    const id = headingSlug(headingText(children));
+    const text = headingText(children);
+    // scroll-mt keeps anchor jumps clear of the sticky nav; the trailing
+    // "#" anchor links to the heading itself and appears on hover.
+    return createElement(
+      tag,
+      { id, className: "scroll-mt-24 group/heading" },
+      children,
+      createElement(
+        "a",
+        {
+          href: `#${id}`,
+          "aria-label": `Link to ${text}`,
+          className: "heading-anchor",
+        },
+        "#",
+      ),
+    );
   };
 }
 
