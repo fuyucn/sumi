@@ -19,16 +19,22 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
         action="/tags"
         method="get"
         role="search"
-        className="flex items-stretch gap-2"
+        className="relative flex items-stretch gap-2"
         onSubmit={(e) => e.preventDefault()}
       >
+        <MagnifyingGlass
+          size={16}
+          weight="duotone"
+          aria-hidden
+          className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-ink-faint"
+        />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search tags…"
           aria-label="Search tags"
-          className="field min-w-0 flex-1"
+          className="field min-w-0 flex-1 pl-10"
         />
         {q ? (
           <button

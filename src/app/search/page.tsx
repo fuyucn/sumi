@@ -19,6 +19,7 @@ export default async function SearchPage({
   const store = await getReadContentStore();
   const results = query ? (await store?.searchPosts(query)) ?? [] : null;
   const names = results ? await getDisplayNameMap(results.map(({ handle }) => handle)) : new Map<string, string>();
+  const tags = (await store?.listTags()) ?? [];
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
@@ -34,14 +35,20 @@ export default async function SearchPage({
         </p>
       </header>
 
-      <form action="/search" method="get" className="flex items-stretch gap-2">
+      <form action="/search" method="get" className="relative flex items-stretch gap-2">
+        <MagnifyingGlass
+          size={16}
+          weight="duotone"
+          aria-hidden
+          className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-ink-faint"
+        />
         <input
           type="search"
           name="q"
           defaultValue={query}
           placeholder="Search posts…"
           aria-label="Search posts"
-          className="field min-w-0 flex-1"
+          className="field min-w-0 flex-1 pl-10"
         />
         <button
           type="submit"
@@ -51,7 +58,44 @@ export default async function SearchPage({
         </button>
       </form>
 
-      {query ? (
+      {!query ? (
+        <Reveal as="section" className="mt-14">
+          <p className="text-xs font-medium uppercase tracking-[0.14em] text-ink-faint">
+            Popular topics
+          </p>
+          {tags.length > 0 ? (
+            <>
+              <div className="mt-5 flex max-w-3xl flex-wrap items-baseline gap-x-5 gap-y-3">
+                {tags.slice(0, 14).map((tag) => (
+                  <Link
+                    key={tag.name}
+                    href={`/tag/${encodeURIComponent(tag.name)}`}
+                    className="group press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal"
+                  >
+                    <span className="text-seal">#</span>
+                    {tag.name}
+                    <span className="ml-1.5 font-sans text-[0.6875rem] font-normal text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/70">
+                      {tag.count}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <p className="mt-6 text-sm text-ink-muted">
+                Or search above to find words across every shelf.
+              </p>
+            </>
+          ) : (
+            <div className="mt-5 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
+              <p className="font-serif text-lg text-ink-soft">
+                The shelves are still quiet.
+              </p>
+              <p className="mt-1.5 text-sm text-ink-faint">
+                Search will light up as posts are published.
+              </p>
+            </div>
+          )}
+        </Reveal>
+      ) : (
         <div className="mt-10">
           <p className="text-sm text-ink-muted">
             {results && results.length > 0
@@ -113,7 +157,7 @@ export default async function SearchPage({
             />
           )}
         </div>
-      ) : null}
+      )}
     </main>
   );
 }
