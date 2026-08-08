@@ -275,7 +275,7 @@ textarea,
 /* Shared motion: content drifts up softly on first paint; cards lift on hover. */
 @media (prefers-reduced-motion: no-preference) {
   .rise {
-    animation: rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: rise 0.55s var(--ease-out) both;
   }
   .rise-delay-1 {
     animation-delay: 0.08s;

@@ -135,7 +135,7 @@ export default async function Home() {
             Latest ink
           </h2>
           <Link
-            href="/search"
+            href="/posts"
             className="link-underline text-sm text-ink-faint transition-colors hover:text-ink-muted"
           >
             Explore all
