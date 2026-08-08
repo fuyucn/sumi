@@ -37,6 +37,16 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local AI/agent tooling (kept out of the public repo)
+.agents/
+.claude/
+AGENTS.md
+CLAUDE.md
+docs/superpowers/
+opencode.json
+tui.json
+skills-lock.json
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

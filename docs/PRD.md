@@ -1,8 +1,6 @@
 # Sumi 墨 — Product Requirements Document
 
 > Status: v1.2 · Page: product requirements for the Sumi personal-space platform
-> Companion spec: `docs/superpowers/specs/2026-06-12-open-source-note-platform-design.md`
-> （历史设计稿；其中"内容存 GitHub 仓库"的方案已由 Postgres `sumi_*` 主存储取代，GitHub 仅为可选遗留后端）
 
 ## 1. Summary
 
@@ -12,14 +10,13 @@ infrastructure** (D1 + R2) or your own Docker / VPS. Creators sign in with GitHu
 (allowlist-gated), write Markdown in a clean TipTap editor, and every article,
 image, comment, magazine, and profile is stored in the owner's own database —
 Postgres (`sumi_*` tables, Docker/VPS/Vercel) or Cloudflare D1+R2 — a portable,
-version-controlled archive of everything published. A GitHub content repository
-is an optional legacy backend.
+version-controlled archive of everything published.
 
 ## 2. Goals & Non-goals
 
 Goals:
 1. One-command Docker deploy (`docker compose up -d`) plus free Cloudflare deploy.
-2. GitHub login + content stored in your own database (Postgres or D1); GitHub repo optional.
+2. GitHub login + content stored in your own database (Postgres or D1).
 3. A great writing experience (TipTap → Markdown).
 4. Contributor-friendly: single codebase, TypeScript end-to-end.
 5. Ink-on-paper design language: Geist + Newsreader, Phosphor icons, portal home
@@ -49,8 +46,8 @@ notifications, native mobile app.
 - Next.js (App Router) + TypeScript on Vercel.
 - Next.js (App Router) + TypeScript, deployable to Cloudflare Workers, Docker, or a VPS.
 - Accounts/sessions → Postgres/D1 via Drizzle + Better Auth (GitHub OAuth, allowlist gate).
-- Content (articles/images/comments/magazines/profile) → Postgres `sumi_*` tables (`DbContentStore`), or D1+R2 on Cloudflare; GitHub repo optional legacy backend.
-- `ContentStore` abstraction is the seam between Postgres (primary), Cloudflare, and optional GitHub backends.
+- Content (articles/images/comments/magazines/profile) → Postgres `sumi_*` tables (`DbContentStore`), or D1+R2 on Cloudflare.
+- `ContentStore` abstraction is the seam between Postgres (primary) and Cloudflare backends.
 
 ## 6. Functional requirements
 
@@ -66,10 +63,8 @@ notifications, native mobile app.
 
 ### FR-3 Comments
 - Any signed-in user may comment on any published post.
-- Comment stored per-post (GitHub legacy layout:
-  `content/@<handle>/<slug>/comments/<ts>-<author>.md`, mirrored to
-  `sumi_comments` in Postgres / D1) with frontmatter (`author`, `date`) + body;
-  flat, time-ordered.
+- Comment stored per-post in `sumi_comments` (Postgres / D1) with frontmatter
+  (`author`, `date`) + body; flat, time-ordered.
 - **Nested replies** (NEW): a comment may carry an optional `parent` reference
   (its `id` = the comment filename). Threads render as an indented tree with an
   inline "Reply" composer per comment.
@@ -78,16 +73,14 @@ notifications, native mobile app.
 
 ### FR-4 Magazines / collections (NEW — this PRD)
 - A creator curates their own posts into a named, ordered collection ("magazine").
-- Stored per-creator (GitHub legacy layout:
-  `content/@<handle>/magazines/<mag>.md`, mirrored to `sumi_magazines` in
-  Postgres / D1) with frontmatter (`title`, `description`, `items[]`).
+- Stored per-creator in `sumi_magazines` (Postgres / D1) with frontmatter
+  (`title`, `description`, `items[]`).
 - Magazine page `/@handle/m/<mag>`, plus creation UI in `/write/magazines`.
 - Only the owning creator may create/edit their magazines.
 
 ### FR-5 Profile & settings (NEW — this PRD)
-- Creator profile stored per-creator (GitHub legacy layout:
-  `content/@<handle>/profile.md`, mirrored to `sumi_profiles` in Postgres / D1)
-  with `displayName`, `bio`.
+- Creator profile stored per-creator in `sumi_profiles` (Postgres / D1) with
+  `displayName`, `bio`.
 - `/settings` page lets the signed-in creator edit their own profile.
 - Creator homepage renders their profile (display name + bio).
 
@@ -101,13 +94,13 @@ notifications, native mobile app.
 ### FR-8 Postgres storage (primary)
 - `DbContentStore` stores content in the `sumi_*` Postgres tables (created by
   the `0001` migration). Enabled with `DB_MIRROR=1`; reads/writes/search come
-  from Postgres instead of the (optional) GitHub repo.
+  from Postgres.
 
 ### FR-9 Likes & follows (done)
 - Like/unlike any published post; count + active state stored per post
-  (`sumi_likes` in Postgres/D1, `likes.json` in the legacy GitHub layout).
+  (`sumi_likes` in Postgres/D1).
 - Follow/unfollow creators with a Follow button on the profile page, stored in
-  `sumi_follows` (Postgres/D1) and `following.json` (legacy GitHub layout).
+  `sumi_follows` (Postgres/D1).
 
 ### FR-10 Deployment (done)
 - **Cloudflare free tier**: `pnpm cf:build && pnpm cf:deploy`; D1 (`DB`) for
@@ -217,7 +210,7 @@ notifications, native mobile app.
 ## 7. Non-functional requirements
 
 - Serverless-safe: no local FS writes for content; all via the `ContentStore`
-  seam (Postgres `DbContentStore`, Cloudflare D1+R2, or optional GitHub repo).
+  seam (Postgres `DbContentStore`, Cloudflare D1+R2).
 - Testable: frontmatter parse/serialize, paths, action cores, and store integration
   are unit-tested; auth gates use pglite.
 - Clean `pnpm typecheck`, `pnpm test`, `pnpm lint`, `pnpm build`.

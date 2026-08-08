@@ -1,7 +1,7 @@
 # Sumi 墨 — 架构设计与核心流程
 
 > 状态: v1.1 · 与 `docs/PRD.md` 配套，描述当前已实现的系统架构、数据模型与关键业务流程。
-> 更新日期: 2026-08-07（v1.1: 内容主存储对齐为 Postgres `sumi_*` 表 / Cloudflare D1+R2，GitHub 仓库降级为可选遗留后端）
+> 更新日期: 2026-08-07（v1.2: 移除可选遗留 GitHub 内容后端，内容只存 Postgres `sumi_*` 表 / Cloudflare D1+R2）
 
 ---
 
@@ -10,11 +10,11 @@
 Sumi 是一个开源的**个人空间门户**（对标 mx-space / Shiro 的产品形态:首页门户 + 文章 + 手记 + 标签体系），
   同时保留多创作者协作能力（allowlist 门禁下的 GitHub 登录）。它的核心设计理念是:
 
-- **内容即数据**: 所有文章、图片、评论、杂志都以结构化内容的形式存入**创作者自己的数据库**——Postgres `sumi_*` 表（Docker / VPS / Vercel）或 Cloudflare D1+R2，天然可迁移、可版本化、可搜索。GitHub 内容仓库仅是可选遗留后端。
+- **内容即数据**: 所有文章、图片、评论、杂志都以结构化内容的形式存入**创作者自己的数据库**——Postgres `sumi_*` 表（Docker / VPS / Vercel）或 Cloudflare D1+R2，天然可迁移、可版本化、可搜索。
 - **账号与内容分离**: 登录/会话数据放在 Postgres / D1，内容数据也放在同一套数据库（或 Cloudflare D1+R2），通过 `ContentStore` 抽象统一读写。
 - **Serverless 友好**: 不在本地文件系统写内容，所有读写都走数据库绑定 / ContentStore 接口，可部署到 Cloudflare Workers、Docker 自托管或自定义 VPS。
 
-一句话概括数据流:**GitHub OAuth 登录 → 会话库存会话 → 内容读写走 ContentStore（Postgres DbContentStore / Cloudflare D1+R2 / 可选 GitHub 任一后端）**。
+一句话概括数据流:**GitHub OAuth 登录 → 会话库存会话 → 内容读写走 ContentStore（Postgres DbContentStore 或 Cloudflare D1+R2）**。
 
 ---
 
@@ -38,7 +38,6 @@ flowchart TB
     subgraph DataLayer["数据层"]
         PG[("Postgres / Neon / D1<br/>user/session/account (Drizzle ORM)")]
         Mirror[("Postgres sumi_* 内容表<br/>DbContentStore (DB_MIRROR=1, 主存储)")]
-        Repo["GitHub 内容仓库<br/>content/... (Octokit, 可选遗留后端)"]
         CF[("Cloudflare D1 + R2<br/>CF_ENABLED=1 时的内容后端")]
     end
 
@@ -53,15 +52,13 @@ flowchart TB
     Auth --> PG
     Pages --> Mirror
     SA --> Mirror
-    Pages --> Repo
-    SA --> Repo
     Pages -.-> CF
     SA -.-> CF
     Auth --> OAuth
     OAuth --> API
 ```
 
-**强调**: 页面渲染是 SSR（`export const dynamic = "force-dynamic"`），每次请求实时从当前内容后端（Postgres / D1 / 可选 GitHub）读取，因此"发布即生效、无需重新部署"。
+**强调**: 页面渲染是 SSR（`export const dynamic = "force-dynamic"`），每次请求实时从当前内容后端（Postgres / D1）读取，因此"发布即生效、无需重新部署"。
 
 ---
 
@@ -77,7 +74,6 @@ flowchart TB
 | Markdown | `gray-matter`(frontmatter) + `react-markdown` + `remark-gfm` | 解析/序列化与渲染 |
 | 认证 | Better Auth + GitHub OAuth | 登录、会话、allowlist 门禁 |
 | ORM | Drizzle + `postgres`(postgres-js) | Postgres 访问（Neon 兼容） |
-| GitHub | `@octokit/rest` | 可选遗留内容后端（GitHub 内容仓库读写） |
 | 内容层 | `DbContentStore`（Drizzle + postgres-js） | Postgres `sumi_*` 主存储读写 |
 | 校验 | zod | env / 表单 / 输入校验 |
 | 测试 | Vitest + PGlite + vite-tsconfig-paths | 单测、auth 门禁、内容 store |
@@ -90,7 +86,7 @@ flowchart TB
 ### 4.1 表现层（页面与组件）
 - `src/app/*` — App Router 页面:**门户首页**（身份区 + 最新文章 + 标签云）、文章页 `/[handle]/[slug]`、创作者页 `/[handle]`、手记时间线 `/[handle]/notes`、友链页 `/friends`、标签库 `/tags` 与标签页 `/tag/[slug]`、搜索 `/search`、写作 `/write`、杂志 `/write/magazines`、设置 `/settings`、登录 `/sign-in`。
 - `src/components/*` — 客户端组件:TipTap 编辑器、评论表单、杂志表单、资料表单、导航栏等。
-- 公共读页面一律通过 `getReadContentStore()`（按配置选择 Postgres `DbContentStore` / Cloudflare / 匿名 Octokit），无需登录即可浏览。
+- 公共读页面一律通过 `getReadContentStore()`（按配置选择 Postgres `DbContentStore` / Cloudflare D1+R2），无需登录即可浏览。
 
 **UI 设计系统（ink-on-paper）**: 全局令牌定义在 `src/app/globals.css` 的 `@theme` 中:
 - 配色: 纸 `paper #f7f4ec` 系 + 墨 `ink #1e1b16` 系 + 单一朱印色 `seal #b3402e`（亮/暗双模式）。
@@ -109,12 +105,11 @@ flowchart TB
 - `src/lib/auth.ts` — Better Auth 单例（惰性 Proxy），GitHub OAuth + 自定义 `username` 字段 + allowlist 门禁 hook。
 - `src/lib/env.ts` — zod 校验环境变量，惰性加载单例。
 - `src/lib/db.ts` — Drizzle + postgres-js 惰性单例。
-- `src/lib/github.ts` — Octokit 封装成 `GitHubClient`（文件读写/目录列举/二进制上传）。
 - `src/lib/current-user.ts` / `session.ts` / `user.ts` — 会话与 handle 解析。
 
 ### 4.4 内容层（ContentStore 抽象）
-- `src/content/store.ts` — `ContentStore` 接口（文章/评论/杂志/资料/图片/手记/友链的统一读写，是 GitHub / Postgres / Cloudflare 三后端共用的接缝）。
-- `src/content/github-content-store.ts` / `db-content-store.ts` / `cloudflare-content-store.ts` — 同一接口的三个实现（Postgres 主存储 / Git 遗留文件 / D1+R2），手记与友链在三个后端行为一致。
+- `src/content/store.ts` — `ContentStore` 接口（文章/评论/杂志/资料/图片/手记/友链的统一读写，是 Postgres / Cloudflare 两后端共用的接缝）。
+- `src/content/db-content-store.ts` / `cloudflare-content-store.ts` — 同一接口的两个实现（Postgres 主存储 / D1+R2），手记与友链在两个后端行为一致。
 - `src/content/frontmatter.ts` — Markdown ↔ frontmatter 序列化/解析（含手记）。
 - `src/content/paths.ts` — 仓库目录约定与 slug 规则。
 - `src/content/types.ts` — 领域类型（`Post / Comment / Magazine / Profile`，以及手记 `Note`、友链 `Friend`）。
@@ -172,47 +167,25 @@ erDiagram
 - 认证表 `user` / `session` / `account` / `verification`（`src/db/schema.ts`）。
 - `agent_keys`（`src/db/schema.ts`）为 agent 发布服务：只存 SHA-256 密钥摘要与
   Ed25519 公钥，`scripts/create-agent.ts` 一次性签发明文 bearer key + 私钥 JWK。
-- `account.access_token` 存 GitHub OAuth token；仅在启用遗留 GitHub 后端时，
-  `src/content/github-token.ts` 据此为已登录用户建立可写 store（默认 Postgres 主存储不需要它）。
+- `account.access_token` 存 GitHub OAuth token；内容读写走服务端配置的
+  Postgres / D1 后端，不需要该 token。
 - `user.username` 存 GitHub login（`mapProfileToUser` 写入），是内容路径 `@<handle>` 的来源。
 
 ### 5.2 内容存储 — 所有创作者内容
 
 **默认（主存储）**: Postgres `sumi_*` 表（`DbContentStore`，`DB_MIRROR=1`），或
-Cloudflare D1+R2（`CF_ENABLED=1`）。下面的 Git 目录布局描述的是**可选遗留
-GitHub 后端**的仓库约定；Postgres / D1 用同构的表结构承载相同内容
+Cloudflare D1+R2（`CF_ENABLED=1`）。Postgres / D1 用同构的表结构承载相同内容
 （`sumi_posts` / `sumi_comments` / `sumi_magazines` / `sumi_profiles` /
 `sumi_notes` / `sumi_friends` 等）。
 
-```mermaid
-graph TD
-    Root["content/"] --> H["@fuyucn/"]
-    Sub["@another-creator/"] -.同构.-> Root
-
-    H --> P["my-first-post/<br/>(slug，来自标题)"]
-    P --> PI["index.md"]
-    P --> IMG["images/*<br/>(上传的图片)"]
-    P --> C["comments/<br/>2026-08-02...-author.md"]
-
-    H --> MAG["magazines/"]
-    MAG --> M1["daily.md"]
-    MAG --> M2["essays.md"]
-
-    H --> PROF["profile.md"]
-    H --> NOTES["notes/"]
-    NOTES --> N1["2026-08-07...-handle.md"]
-
-    Root --> F["friends.json<br/>(站点级)"]
-```
-
-- 每篇文章一个目录：`content/@<handle>/<slug>/index.md`，frontmatter 含 `title / tags / status / publishedAt / excerpt / coverImage`，正文为 Markdown。
-- 图片提交到 `content/@<handle>/<slug>/images/<name>`（base64 经 Octokit 写入）。
-- 评论是扁平文件：`comments/<ISO时间戳>-<作者handle>.md`，按 `date` 升序列出。
-- 杂志（合集）：`magazines/<mag>.md`，frontmatter 含 `title / description / items[]`。
-- 资料：`profile.md`，frontmatter 含 `displayName / bio`。
-- 手记（时间线）：`notes/<ISO时间戳>-<handle>.md`，frontmatter 含 `author / date`，按 `date` 降序列出。
-- 友链：站点级单文件 `content/friends.json`，数组 `{ friends: [{ id, name, url, avatar?, bio?, createdAt }] }`，按 `createdAt` 升序展示。
-- `paths.ts` 集中定义这些约定，`slugify()` 负责标题转 slug。
+- 每篇文章一行 `sumi_posts`：frontmatter 字段（`title / tags / status / publishedAt / excerpt / coverImage`）+ Markdown 正文。
+- 图片经上传接口存入 R2（Cloudflare）或 base64 入库（Postgres），随文章存储。
+- 评论在 `sumi_comments`（flat、time-ordered），支持 `parent` 引用形成嵌套回复。
+- 杂志（合集）：`sumi_magazines`，frontmatter 含 `title / description / items[]`。
+- 资料：`sumi_profiles`，frontmatter 含 `displayName / bio`。
+- 手记（时间线）：`sumi_notes`，frontmatter 含 `author / date`，按 `date` 降序列出。
+- 友链：站点级 `sumi_friends`，数组 `{ friends: [{ id, name, url, avatar?, bio?, createdAt }] }`，按 `createdAt` 升序展示。
+- `paths.ts` 集中定义 slug 规则，`slugify()` 负责标题转 slug。
 
 > Postgres 主存储（`DbContentStore`）用 `sumi_*` 表承载同样的数据；Cloudflare D1 用 `notes` / `friends` 表，建表 SQL 见 `drizzle/d1-schema.sql`（`drizzle/*.sql` 迁移为 Postgres 方言，不适用于 D1）。
 
@@ -220,7 +193,7 @@ graph TD
 
 AI 功能依赖 Postgres 镜像（`DB_MIRROR=1`），通过独立的 `AiStore` 接缝
 （`src/content/ai-store.ts` 接口 + `src/content/db-ai-store.ts` 实现）读写两张表；
-Cloudflare D1 / GitHub 后端 `getAiStore()` 返回 null，功能优雅降级：
+Cloudflare D1 后端 `getAiStore()` 返回 null，功能优雅降级：
 
 - `sumi_ai_providers` — 按 creator handle 一行：`base_url / api_key / model / enabled / updated_at`。
   API Key 仅服务端存储，页面只回传「是否已配置」的占位符，绝不回显明文。
@@ -277,8 +250,8 @@ sequenceDiagram
 sequenceDiagram
     participant R as 读者(未登录)
     participant N as Next.js SSR
-    participant CS as ReadContentStore (DbContentStore / CF / Octokit)
-    participant S as 存储后端 (Postgres sumi_* / D1 / GitHub)
+    participant CS as ReadContentStore (DbContentStore / CF)
+    participant S as 存储后端 (Postgres sumi_* / D1)
 
     R->>N: GET / (或 /@handle, /@handle/slug, /tag/slug)
     N->>CS: getReadContentStore() (工厂按 CF_ENABLED / DB_MIRROR 选择)
@@ -320,7 +293,7 @@ sequenceDiagram
     participant E as Editor
     participant A as uploadImageAction
     participant CS as ContentStore
-    participant S as 存储后端 (Postgres / R2 / GitHub)
+    participant S as 存储后端 (Postgres / R2 / D1)
 
     W->>E: 选择/拖入图片
     E->>A: {title, filename, base64}
@@ -392,14 +365,11 @@ flowchart LR
         WAPP --> R2
     end
 
-    CONTENT -.->|可选遗留| GHRepo["GitHub 内容仓库 (GITHUB_CONTENT_REPO)"]
-    Cloud -.->|可选遗留| GHRepo
 ```
 
 - **Docker 一键**: `docker compose up -d --build`，宿主端口 `:3005` 映射容器 `:3000`。`migrate` 与 `app` 通过 `depends_on: service_completed_successfully` 保证迁移先行（`Dockerfile` / `docker-compose.yml`）。
 - **Postgres 为主**: `DB_MIRROR=1` 时内容读写/搜索全部走内置 Postgres 的
-  `sumi_*` 表（`DbContentStore`），无需 GitHub 仓库；`GITHUB_CONTENT_REPO`
-  仅作为可选遗留后端。
+  `sumi_*` 表（`DbContentStore`）。
 - **Cloudflare 免费托管**: `pnpm cf:build && pnpm cf:deploy`，OpenNext 把 Next 构建为 Worker；会话/内容走 D1（`DB` 绑定），图片走 R2（`IMAGES` 绑定），前置资源创建见 §11.2。
 - **自定义 VPS**: `bash scripts/deploy-vps.sh` 幂等安装 Node/pnpm/PM2、构建、迁移并常驻运行。
 - `env_file: .env` 注入配置；`BETTER_AUTH_TRUSTED_ORIGINS` 用于信任本地代理来源（如内置浏览器 `app.sumi.orb.local`），详见 `README` 的 Docker 一节。
@@ -489,10 +459,9 @@ sequenceDiagram
 ## 8. 关键设计决策与取舍
 
 1. **内容与会话都放自己的数据库** —— Postgres `sumi_*` 表（Docker/VPS/Vercel）或
-   Cloudflare D1+R2 承载全部内容，创作者完全掌控、可导出、可版本化；GitHub
-   内容仓库只是可选遗留后端。
+   Cloudflare D1+R2 承载全部内容，创作者完全掌控、可导出、可版本化。
 2. **统一 `ContentStore` 抽象** —— `DbContentStore`（Postgres 主存储）/
-   `CloudflareContentStore` / `GitHubContentStore` 三个实现共享同一接口，按
+   `CloudflareContentStore` 两个实现共享同一接口，按
    `CF_ENABLED` / `DB_MIRROR` 环境开关选择（工厂见 `src/content/index.ts`）。
 3. **slug 派生自标题** —— 改标题会产生新路径（旧文件被孤儿化），代码注释明确提示;这是 v0 的取舍。
 4. **Allowlist 门禁只在建号时执行** —— 用户被移出 allowlist 后仍可登录（注释注明权衡，撤销需改 `sign-in` 检查）。
@@ -521,8 +490,6 @@ sequenceDiagram
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | ✅ | GitHub OAuth App 凭据 |
 | `ALLOWED_GITHUB_USERS` | ⭕ | 允许登录的用户名，逗号分隔（空 = 拒绝所有人） |
 | `DB_MIRROR` | ⭕ | Postgres 主存储开关（置 "1" 时内容读写/搜索走 `sumi_*` 表，推荐开启） |
-| `GITHUB_CONTENT_REPO` | ⭕ | 可选遗留后端：内容仓库 `owner/repo`（默认无需配置） |
-| `GITHUB_CONTENT_TOKEN` | ⭕ | 公开读取私有/限流遗留仓库的可选 token |
 | `CF_ENABLED` | ⭕ | Cloudflare 运行开关（置 "1" 时命中 CF 内容后端；Docker/VPS 留空） |
 
 ---
@@ -539,8 +506,7 @@ Sumi 的单一代码库可部署到三种目标，它们共享同一套 `next.co
 
 > 备注：Cloudflare 是**首选免费路径**（`CF_ENABLED=1` 时内容走 D1+R2），
 > Docker/VPS/Vercel 默认走 Postgres `sumi_*` 内容表（`DB_MIRROR=1`）。三条路径
-> 共享同一套 `ContentStore` 抽象与 env 校验，可随时切换；GitHub 内容仓库为
-> 可选遗留后端，不再依赖。
+> 共享同一套 `ContentStore` 抽象与 env 校验，可随时切换。
 
 ### 11.1 运行时如何选择存储后端（ContentStore 工厂）
 
@@ -551,15 +517,15 @@ env.CF_ENABLED 是否为真？
 ├─ 是 → 构造 Cloudflare 后端（D1 绑定 `DB` + R2 绑定 `IMAGES` 传入 Binding 层）
 └─ 否 → DB_MIRROR=1 且 DATABASE_URL 可用？
          ├─ 是 → 构造 Postgres 主存储后端（DbContentStore）
-         └─ 否 → 构造可选遗留 GitHub 后端（GitHubContentStore，走 Octokit）
+         └─ 否 → 无可用内容后端（返回 null，调用方按空状态处理）
 ```
 
 要点：
-- `ContentStore` 接口（`src/content/store.ts`）保持不变；GitHub / Postgres 镜像 / Cloudflare D1+R2 三个实现都实现同一接口，保证 Server Actions / 页面只依赖抽象（工厂见 `src/content/index.ts`）。
+- `ContentStore` 接口（`src/content/store.ts`）保持不变；Postgres 镜像 / Cloudflare D1+R2 两个实现都实现同一接口，保证 Server Actions / 页面只依赖抽象（工厂见 `src/content/index.ts`）。
 - `env.CF_ENABLED` 是唯一提示键（见 §10）。CF 绑定（D1/R2）由 `wrangler.jsonc` 声明并在 Worker 运行时注入，**不会**以 `process.env` 形式出现。
-- 三种目标共用同一套 GitHub OAuth 认证与会话表（Postgres 或 D1 建模由各后端负责）。
+- 两种目标共用同一套 GitHub OAuth 认证与会话表（Postgres 或 D1 建模由各后端负责）。
 - 推荐配置（Docker/VPS/Vercel）为 `DB_MIRROR=1`：内容写入只进 Postgres
-  `sumi_*` 表，不产生任何 GitHub 仓库依赖。
+  `sumi_*` 表。
 
 ### 11.2 Cloudflare 前置资源
 

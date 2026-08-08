@@ -8,7 +8,6 @@ const base = {
   GITHUB_CLIENT_ID: "cid",
   GITHUB_CLIENT_SECRET: "csecret",
   ALLOWED_GITHUB_USERS: "alice,bob",
-  GITHUB_CONTENT_REPO: "alice/sumi-content",
 };
 
 test("parses a full valid env", () => {
@@ -31,20 +30,6 @@ test("requires GITHUB_CLIENT_ID and SECRET", () => {
   const rest: Partial<typeof base> = { ...base };
   delete rest.GITHUB_CLIENT_ID;
   expect(() => loadEnv(rest)).toThrow();
-});
-
-test("requires GITHUB_CONTENT_REPO in owner/repo form", () => {
-  expect(() => loadEnv({ ...base, GITHUB_CONTENT_REPO: "noslash" })).toThrow();
-});
-
-test("treats an empty GITHUB_CONTENT_REPO as unset (not a regex error)", () => {
-  const env = loadEnv({ ...base, GITHUB_CONTENT_REPO: "" });
-  expect(env.GITHUB_CONTENT_REPO).toBeUndefined();
-});
-
-test("treats an empty GITHUB_CONTENT_TOKEN as unset", () => {
-  const env = loadEnv({ ...base, GITHUB_CONTENT_TOKEN: "" });
-  expect(env.GITHUB_CONTENT_TOKEN).toBeUndefined();
 });
 
 test("treats an empty CF_ENABLED as unset (optional)", () => {

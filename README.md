@@ -4,10 +4,9 @@ Sumi is an open-source, multi-creator publishing platform inspired by note.com
 and mx-space. Creators sign in with GitHub (only explicitly allowed accounts
 may access), write articles in a clean editor, and every piece of content is
 stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D1
-+ R2 — as a portable, version-controlled archive of everything published. A
-GitHub content repository remains an optional legacy backend.
++ R2 — as a portable, version-controlled archive of everything published.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/OWNER/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/fuyucn/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS)
 
 
 ## Features
@@ -25,7 +24,7 @@ GitHub content repository remains an optional legacy backend.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
 - **Own your content** — every article, image, comment, and magazine is stored in your own Postgres (or Cloudflare D1) database, portable and version-controlled; no GitHub repo required.
-- **Postgres-first storage** — content lives in the `sumi_*` Postgres tables via `DbContentStore`; the GitHub content repo (`GITHUB_CONTENT_REPO`) is an optional legacy backend.
+- **Postgres-first storage** — content lives in the `sumi_*` Postgres tables via `DbContentStore` (Cloudflare uses D1 + R2 through the same `ContentStore` seam).
 - **SEO / discovery** — `/robots.txt`, `/sitemap.xml`, and an RSS feed at `/feed.xml` are generated from published posts (absolute URLs from `BETTER_AUTH_URL`).
 
 ## Tech stack
@@ -39,7 +38,7 @@ GitHub content repository remains an optional legacy backend.
 
 1. Clone the repo and install dependencies:
    ```bash
-   git clone https://github.com/OWNER/sumi.git
+   git clone https://github.com/fuyucn/sumi.git
    cd sumi
    pnpm install
    ```
@@ -64,9 +63,7 @@ GitHub content repository remains an optional legacy backend.
 
 6. Set `ALLOWED_GITHUB_USERS` to your GitHub username (comma-separated for multiple users).
 7. Storage: content is stored in Postgres by default (set `DB_MIRROR=1` to serve
-   reads/writes/search from the `sumi_*` tables). The GitHub content repo is an
-   **optional legacy backend** — only set `GITHUB_CONTENT_REPO` (to `owner/repo`,
-   plus `GITHUB_CONTENT_TOKEN` for private repos) if you still want it.
+   reads/writes/search from the `sumi_*` tables).
 8. Run migrations to create tables:
    ```bash
    pnpm db:migrate
@@ -86,9 +83,7 @@ GitHub content repository remains an optional legacy backend.
    - `BETTER_AUTH_URL` — your production domain, e.g. `https://sumi.example.com`
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` — create a separate **production** GitHub OAuth app whose callback URL is `https://YOUR_DOMAIN/api/auth/callback/github`
    - `ALLOWED_GITHUB_USERS` — comma-separated GitHub usernames
-   - `DB_MIRROR=1` — store content in Postgres (default recommendation; omit to use the optional legacy GitHub backend)
-   - `GITHUB_CONTENT_REPO` — optional legacy backend: `owner/repo` of a GitHub content repository
-   - `GITHUB_CONTENT_TOKEN` — optional GitHub token for public reads of the content repo (omit for public repos)
+   - `DB_MIRROR=1` — store content in Postgres (default recommendation)
 4. After the first successful deploy, run the migration once against the production database:
    ```bash
    DATABASE_URL=<production-url> pnpm db:migrate
@@ -112,7 +107,7 @@ Run the whole stack (Postgres + migrations + app) with a single `docker compose`
    - `BETTER_AUTH_SECRET` — generate with `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`
    - `BETTER_AUTH_URL` — `http://localhost:3000` for local runs, your domain for production
    - `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` + `ALLOWED_GITHUB_USERS`
-   - `DB_MIRROR=1` — store content in the bundled Postgres (default); `GITHUB_CONTENT_REPO` is optional and only needed for the legacy GitHub backend
+   - `DB_MIRROR=1` — store content in the bundled Postgres (default)
 
    The default `DATABASE_URL` (`postgresql://sumi:sumi@db:5432/sumi`) points at the bundled Postgres container, so you don't need Neon. To use a remote/Neon database instead, just override `DATABASE_URL` in `.env`.
 
@@ -122,7 +117,8 @@ Run the whole stack (Postgres + migrations + app) with a single `docker compose`
    ```
    Compose waits for Postgres to be healthy, runs migrations automatically, and only then starts the app.
 
-4. Open **http://localhost:3000**.
+4. Open **http://localhost:3005** (the app is published on port `3005`; change the
+   `ports` mapping in `docker-compose.yml` if you prefer another port).
 
 5. Check status / logs:
    ```bash
@@ -201,11 +197,11 @@ For local Cloudflare testing: `pnpm cf:dev` (builds then runs a Wrangler preview
 ## Status
 
 - **Foundation** — Next.js scaffold, GitHub OAuth via Better Auth with an allowlist gate, Drizzle + Neon, Vercel deploy config — **complete**.
-- **Content engine** — Postgres-first `DbContentStore` (markdown + frontmatter), per-creator content layout, optional legacy GitHub backend — **complete**.
+- **Content engine** — Postgres-first `DbContentStore` (markdown + frontmatter), per-creator content layout — **complete**.
 - **Writing & reading** — TipTap editor, drafts/publish, image upload, article/creator/tag/home pages — **complete**.
 - **Community** — nested comments, magazines/collections, and profile/settings — **complete**.
 - **Discovery** — full-text search (`/search`), tags library — **complete**.
-- **Extensibility** — Cloudflare (D1/R2) backend plus the optional legacy GitHub backend, all behind the shared `ContentStore` seam — **complete**.
+- **Extensibility** — Cloudflare (D1/R2) backend alongside Postgres, all behind the shared `ContentStore` seam — **complete**.
 - **Agent publishing** — local stdio MCP server (`mcp/index.mjs`), remote Streamable HTTP MCP server (`/api/mcp`, bearer auth), DPoP-style request signing, and a publishing runner — **complete**.
 - **Deployment** — Docker compose, VPS (PM2), Vercel, and Cloudflare/OpenNext (`pnpm cf:build` verified against `next@16.2.12`) — **complete**.
 

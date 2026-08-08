@@ -14,7 +14,6 @@ export default defineConfig({
       GITHUB_CLIENT_ID: "test-cid",
       GITHUB_CLIENT_SECRET: "test-csecret",
       ALLOWED_GITHUB_USERS: "alice,bob",
-      GITHUB_CONTENT_REPO: "alice/sumi-content",
     },
   },
 });

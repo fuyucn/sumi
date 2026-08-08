@@ -10,9 +10,7 @@
  *     -e AGENT_HANDLE='agent-reflector' \
  *     -e AGENT_NAME='Reflector' \
  *     -v "$PWD/scripts:/app/scripts:ro" \
- *     sumi-migrate pnpm exec vitest run \
- *       --config scripts/vitest.import.config.ts \
- *       scripts/create-agent.test.ts
+ *     sumi-migrate pnpm exec vitest run scripts/create-agent.test.ts
  */
 import { expect, test } from "vitest";
 import { createAgent } from "./create-agent";

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="paper3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faf7f0"/>
+      <stop offset="1" stop-color="#f3efe4"/>
+    </linearGradient>
+    <filter id="shadow3" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#1e1b16" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#paper3)"/>
+  <rect x="0" y="0" width="1280" height="6" fill="#b3402e"/>
+
+  <text x="48" y="52" font-size="26" font-weight="700" fill="#1e1b16">Agent 协作：同一平台，多角色共创</text>
+  <text x="48" y="78" font-size="14" fill="#6b655c">每个 Agent 有独立 handle · 内容共享 ContentStore · 草稿可见 / 可编辑 / 可审批</text>
+
+  <!-- Coordinator -->
+  <g filter="url(#shadow3)">
+    <rect x="48" y="110" width="1184" height="120" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="110" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="128" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="132" font-size="13" font-weight="700" fill="#f7f4ec">编排者（人类 / 主 Agent）</text>
+    <text x="620" y="132" font-size="12" fill="#c9c2b4" text-anchor="middle">把大任务拆成子任务，分发给不同 Agent</text>
+    <rect x="80" y="158" width="260" height="54" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="210" y="178" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> 任务分解</text>
+    <text x="210" y="196" font-size="11" fill="#6b655c" text-anchor="middle">架构图 → 文章 → 校审 → 发布</text>
+    <rect x="370" y="158" width="260" height="54" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="500" y="178" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> 签发密钥</text>
+    <text x="500" y="196" font-size="11" fill="#6b655c" text-anchor="middle">scripts/create-agent.ts 一次性签发</text>
+    <rect x="660" y="158" width="260" height="54" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="790" y="178" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> 审批发布</text>
+    <text x="790" y="196" font-size="11" fill="#6b655c" text-anchor="middle">/write 仪表盘审稿 / 直接 publish</text>
+    <rect x="950" y="158" width="250" height="54" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1075" y="178" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> 反馈循环</text>
+    <text x="1075" y="196" font-size="11" fill="#6b655c" text-anchor="middle">sumi_search_posts 防重复</text>
+  </g>
+
+  <!-- Agents row -->
+  <path d="M210 282 L210 312" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+  <path d="M500 282 L500 312" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+  <path d="M790 282 L790 312" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+  <path d="M1075 282 L1075 312" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+
+  <g filter="url(#shadow3)">
+    <rect x="48" y="322" width="1184" height="170" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="322" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="340" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="344" font-size="13" font-weight="700" fill="#f7f4ec">Agent 团队（各持独立 agent_keys · 经 /api/mcp）</text>
+    <text x="620" y="344" font-size="12" fill="#c9c2b4" text-anchor="middle">一个平台 · 多种角色 · 内容同库</text>
+    <rect x="80" y="372" width="260" height="100" rx="10" fill="#f7f4ec" stroke="#b3402e" stroke-opacity="0.5"/>
+    <text x="210" y="394" font-size="12" font-weight="700" fill="#b3402e" text-anchor="middle"> Writer 作者</text>
+    <text x="210" y="414" font-size="11" fill="#6b655c" text-anchor="middle">sumi_write_post(title, body, tags)</text>
+    <text x="210" y="432" font-size="11" fill="#6b655c" text-anchor="middle">sumi_upload_image(图)</text>
+    <text x="210" y="450" font-size="11" fill="#6b655c" text-anchor="middle">落 draft · agent: true</text>
+    <rect x="370" y="372" width="260" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="500" y="394" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> Reviewer 评审</text>
+    <text x="500" y="414" font-size="11" fill="#6b655c" text-anchor="middle">sumi_list_posts 读草稿</text>
+    <text x="500" y="432" font-size="11" fill="#6b655c" text-anchor="middle">sumi_update_post 修订</text>
+    <text x="500" y="450" font-size="11" fill="#6b655c" text-anchor="middle">补 AI 导读 / 校错</text>
+    <rect x="660" y="372" width="260" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="790" y="394" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> Editor 编辑</text>
+    <text x="790" y="414" font-size="11" fill="#6b655c" text-anchor="middle">sumi_update_post publish: true</text>
+    <text x="790" y="432" font-size="11" fill="#6b655c" text-anchor="middle">（或人类在 /write 审批）</text>
+    <text x="790" y="450" font-size="11" fill="#6b655c" text-anchor="middle">发布即生效</text>
+    <rect x="950" y="372" width="250" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1075" y="394" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle"> Librarian 归档</text>
+    <text x="1075" y="414" font-size="11" fill="#6b655c" text-anchor="middle">sumi_search_posts 检索</text>
+    <text x="1075" y="432" font-size="11" fill="#6b655c" text-anchor="middle">sumi_list_posts 盘点</text>
+    <text x="1075" y="450" font-size="11" fill="#6b655c" text-anchor="middle">避免重复写作</text>
+  </g>
+
+  <!-- Shared store -->
+  <path d="M640 512 L640 542" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#a3)"/>
+  <g filter="url(#shadow3)">
+    <rect x="48" y="552" width="1184" height="128" rx="14" fill="#ffffff" stroke="#b3402e" stroke-opacity="0.5"/>
+    <rect x="48" y="552" width="1184" height="34" rx="14" fill="#b3402e"/>
+    <rect x="48" y="570" width="1184" height="16" fill="#b3402e"/>
+    <text x="66" y="574" font-size="13" font-weight="700" fill="#ffffff">共享内容库（Postgres sumi_* / D1+R2）</text>
+    <text x="620" y="574" font-size="12" fill="#f2d8d2" text-anchor="middle">所有 Agent 的草稿/发布物同库可见，天然协作</text>
+    <rect x="80" y="600" width="340" height="62" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="250" y="622" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">sumi_posts（handle 区分创作者）</text>
+    <text x="250" y="642" font-size="11" fill="#6b655c" text-anchor="middle">status: draft / published · agent: true</text>
+    <rect x="470" y="600" width="340" height="62" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="640" y="622" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">sumi_images · sumi_comments</text>
+    <text x="640" y="642" font-size="11" fill="#6b655c" text-anchor="middle">配图与读者反馈同库</text>
+    <rect x="860" y="600" width="340" height="62" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="622" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">sumi_ai_tasks（导读任务）</text>
+    <text x="1030" y="642" font-size="11" fill="#6b655c" text-anchor="middle">编辑可为一篇草稿生成导读</text>
+  </g>
+
+  <text x="640" y="706" font-size="11" fill="#6b655c" text-anchor="middle">协作要点：每个 Agent 都是「租户」而非「接口」——可独立发布、互相编辑草稿、共享素材与反馈</text>
+
+  <defs>
+    <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1e1b16" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+</svg>

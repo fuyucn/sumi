@@ -19,7 +19,6 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "@octokit/rest": "^22.0.1",
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/postcss": "^4.3.1",
     "@tailwindcss/typography": "^0.5.20",

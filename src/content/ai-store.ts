@@ -1,8 +1,9 @@
 // AI provider config + summary tasks (Postgres mirror backend).
 //
-// Kept as a separate small interface (not part of ContentStore) so the legacy
-// GitHub / Cloudflare D1 backends can simply return null from `getAiStore()`
-// and the feature degrades gracefully (no AI panel, no settings section).
+// Kept as a separate small interface (not part of ContentStore) so backends
+// without the mirror tables (Cloudflare D1) can simply return null from
+// `getAiStore()` and the feature degrades gracefully (no AI panel, no settings
+// section).
 
 export type AiTaskStatus = "pending" | "running" | "done" | "failed";
 

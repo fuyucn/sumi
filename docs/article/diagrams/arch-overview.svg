@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faf7f0"/>
+      <stop offset="1" stop-color="#f3efe4"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#1e1b16" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="760" fill="url(#paper)"/>
+  <rect x="0" y="0" width="1280" height="6" fill="#b3402e"/>
+
+  <text x="48" y="52" font-size="26" font-weight="700" fill="#1e1b16">Sumi 墨 · 系统架构总览</text>
+  <text x="48" y="78" font-size="14" fill="#6b655c">全栈个人空间 · Next.js 16 App Router · GitHub OAuth · 内容即数据（Postgres / D1+R2）</text>
+
+  <!-- Client -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="110" width="1184" height="110" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="110" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="128" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="132" font-size="13" font-weight="700" fill="#f7f4ec">客户端 Client</text>
+    <text x="620" y="132" font-size="12" fill="#c9c2b4" text-anchor="middle">匿名可读 · 无需登录即可浏览</text>
+    <rect x="80" y="160" width="330" height="42" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="245" y="178" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle"> 外部浏览器</text>
+    <text x="245" y="194" font-size="11" fill="#6b655c" text-anchor="middle">localhost:3005 / 公网域名</text>
+    <rect x="470" y="160" width="330" height="42" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="635" y="178" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle"> 内置浏览器 / 代理</text>
+    <text x="635" y="194" font-size="11" fill="#6b655c" text-anchor="middle">app.sumi.orb.local（可信来源）</text>
+    <rect x="860" y="160" width="340" height="42" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="178" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle"> Agent 客户端（远程 MCP）</text>
+    <text x="1030" y="194" font-size="11" fill="#6b655c" text-anchor="middle">Claude / opencode 等，经 /api/mcp</text>
+  </g>
+
+  <!-- Sumi app -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="252" width="1184" height="210" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="252" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="270" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="274" font-size="13" font-weight="700" fill="#f7f4ec">Sumi — Next.js 16（App Router · TypeScript · SSR）</text>
+    <rect x="80" y="302" width="360" height="140" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="260" y="322" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">页面 Pages（SSR）</text>
+    <text x="260" y="342" font-size="11" fill="#6b655c" text-anchor="middle">portal home / 文章 / 创作者 / 标签</text>
+    <text x="260" y="358" font-size="11" fill="#6b655c" text-anchor="middle">搜索 / 写作 / 手记 / 设置</text>
+    <text x="260" y="386" font-size="11" fill="#b3402e" text-anchor="middle">force-dynamic：发布即生效</text>
+    <text x="260" y="402" font-size="11" fill="#6b655c" text-anchor="middle">无需重新部署</text>
+    <rect x="470" y="302" width="360" height="140" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="650" y="322" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">应用层 Server Actions + API</text>
+    <text x="650" y="342" font-size="11" fill="#6b655c" text-anchor="middle">savePost / addComment / saveProfile</text>
+    <text x="650" y="358" font-size="11" fill="#6b655c" text-anchor="middle">/api/auth/* · /api/agent/*</text>
+    <text x="650" y="386" font-size="11" fill="#b3402e" text-anchor="middle">/api/mcp（远程 MCP 服务器）</text>
+    <text x="650" y="402" font-size="11" fill="#6b655c" text-anchor="middle">resolveDeps + guard() 统一门禁</text>
+    <rect x="860" y="302" width="340" height="140" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="322" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">认证 Better Auth</text>
+    <text x="1030" y="342" font-size="11" fill="#6b655c" text-anchor="middle">GitHub OAuth + PKCE</text>
+    <text x="1030" y="358" font-size="11" fill="#6b655c" text-anchor="middle">Allowlist 门禁（建号时）</text>
+    <text x="1030" y="386" font-size="11" fill="#b3402e" text-anchor="middle">username ← GitHub login</text>
+    <text x="1030" y="402" font-size="11" fill="#6b655c" text-anchor="middle">会话 Cookie 鉴权</text>
+  </g>
+
+  <!-- ContentStore -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="494" width="1184" height="110" rx="14" fill="#ffffff" stroke="#b3402e" stroke-opacity="0.5"/>
+    <rect x="48" y="494" width="1184" height="34" rx="14" fill="#b3402e"/>
+    <rect x="48" y="512" width="1184" height="16" fill="#b3402e"/>
+    <text x="66" y="516" font-size="13" font-weight="700" fill="#ffffff">内容层 ContentStore 抽象（唯一接缝）</text>
+    <text x="620" y="516" font-size="12" fill="#f2d8d2" text-anchor="middle">页面 / Actions / Agent 只依赖接口，后端可切换</text>
+    <rect x="80" y="544" width="360" height="44" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="260" y="563" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle">DbContentStore（Postgres 主存储）</text>
+    <text x="260" y="580" font-size="11" fill="#6b655c" text-anchor="middle">DB_MIRROR=1 · Docker / VPS / Vercel</text>
+    <rect x="470" y="544" width="360" height="44" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="650" y="563" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle">CloudflareContentStore（D1 + R2）</text>
+    <text x="650" y="580" font-size="11" fill="#6b655c" text-anchor="middle">CF_ENABLED=1 · OpenNext Worker</text>
+    <rect x="860" y="544" width="340" height="44" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="563" font-size="13" font-weight="600" fill="#1e1b16" text-anchor="middle">AiStore（Postgres 镜像专属）</text>
+    <text x="1030" y="580" font-size="11" fill="#6b655c" text-anchor="middle">AI 导读任务与 provider 配置</text>
+  </g>
+
+  <!-- Storage -->
+  <g filter="url(#shadow)">
+    <rect x="48" y="636" width="1184" height="88" rx="14" fill="#1e1b16"/>
+    <text x="66" y="664" font-size="13" font-weight="700" fill="#f7f4ec">存储层 Storage</text>
+    <rect x="80" y="678" width="360" height="34" rx="8" fill="#2c2822"/>
+    <text x="260" y="699" font-size="12" fill="#f7f4ec" text-anchor="middle">Postgres · sumi_* 内容表（Drizzle ORM）</text>
+    <rect x="470" y="678" width="360" height="34" rx="8" fill="#2c2822"/>
+    <text x="650" y="699" font-size="12" fill="#f7f4ec" text-anchor="middle">Cloudflare D1 会话/内容 + R2 图片/缓存</text>
+    <rect x="860" y="678" width="340" height="34" rx="8" fill="#2c2822"/>
+    <text x="1030" y="699" font-size="12" fill="#f7f4ec" text-anchor="middle">agent_keys · 会话 · 认证表</text>
+  </g>
+
+  <!-- Arrows -->
+  <path d="M245 220 L245 246" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1e1b16" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+  <path d="M635 220 L635 246" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1030 220 L1030 246" stroke="#b3402e" stroke-opacity="0.6" stroke-width="2" fill="none" marker-end="url(#arrow-red)"/>
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#b3402e" fill-opacity="0.6"/>
+    </marker>
+  </defs>
+  <path d="M260 462 L260 488" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M650 462 L650 488" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1030 462 L1030 488" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M260 604 L260 630" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M650 604 L650 630" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M1030 604 L1030 630" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <text x="640" y="742" font-size="11" fill="#6b655c" text-anchor="middle">GitHub OAuth 授权 → 会话 → 内容读写一律走 ContentStore；Docker / VPS / Cloudflare 共享同一代码库与接缝</text>
+</svg>

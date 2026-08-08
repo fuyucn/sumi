@@ -25,9 +25,7 @@ agent HTTP API (`/api/agent/*`), so auth, validation and backend selection
      -e AGENT_HANDLE='agent-reflector' \
      -e AGENT_NAME='Reflector' \
      -v "$PWD/scripts:/app/scripts:ro" \
-     sumi-migrate pnpm exec vitest run \
-       --config scripts/vitest.import.config.ts \
-       scripts/create-agent.test.ts
+     sumi-migrate pnpm exec vitest run scripts/create-agent.test.ts
    ```
 
    The test prints `SUMI_API_KEY` and `SUMI_API_PRIVATE_KEY` exactly once —

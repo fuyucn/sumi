@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" font-family="Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif">
+  <defs>
+    <linearGradient id="paper2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faf7f0"/>
+      <stop offset="1" stop-color="#f3efe4"/>
+    </linearGradient>
+    <filter id="shadow2" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="6" flood-color="#1e1b16" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+  <rect width="1280" height="720" fill="url(#paper2)"/>
+  <rect x="0" y="0" width="1280" height="6" fill="#b3402e"/>
+
+  <text x="48" y="52" font-size="26" font-weight="700" fill="#1e1b16">Agent 远程发布：MCP 链路</text>
+  <text x="48" y="78" font-size="14" fill="#6b655c">Remote MCP（Streamable HTTP）· Bearer 认证 · 安全默认 draft → 人类审批发布</text>
+
+  <!-- Agent side -->
+  <g filter="url(#shadow2)">
+    <rect x="48" y="110" width="1184" height="150" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="110" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="128" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="132" font-size="13" font-weight="700" fill="#f7f4ec">Agent 侧（任意 MCP 客户端）</text>
+    <text x="620" y="132" font-size="12" fill="#c9c2b4" text-anchor="middle">无需安装 · 无需签名 · 只有一把 Bearer 密钥</text>
+    <rect x="80" y="160" width="520" height="80" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="340" y="182" font-size="13" font-weight="700" fill="#1e1b16" text-anchor="middle">Claude Code / opencode / 任意 Agent</text>
+    <text x="340" y="202" font-size="11" fill="#6b655c" text-anchor="middle">工具：sumi_write_post · sumi_update_post</text>
+    <text x="340" y="218" font-size="11" fill="#6b655c" text-anchor="middle">sumi_upload_image · sumi_list_posts · sumi_search_posts</text>
+    <rect x="660" y="160" width="540" height="80" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="930" y="182" font-size="13" font-weight="700" fill="#1e1b16" text-anchor="middle">安全设计</text>
+    <text x="930" y="202" font-size="11" fill="#6b655c" text-anchor="middle">Bearer 密钥只存 SHA-256 摘要（agent_keys）</text>
+    <text x="930" y="218" font-size="11" fill="#6b655c" text-anchor="middle">HTTPS + Bearer 即边界 · 明文只展示一次</text>
+  </g>
+
+  <!-- HTTP bridge -->
+  <path d="M340 290 L340 320" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <text x="360" y="310" font-size="11" fill="#6b655c">HTTPS POST /api/mcp（jsonrpc 2.0）</text>
+
+  <!-- Sumi app -->
+  <g filter="url(#shadow2)">
+    <rect x="48" y="330" width="1184" height="170" rx="14" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.15"/>
+    <rect x="48" y="330" width="1184" height="34" rx="14" fill="#1e1b16"/>
+    <rect x="48" y="348" width="1184" height="16" fill="#1e1b16"/>
+    <text x="66" y="352" font-size="13" font-weight="700" fill="#f7f4ec">Sumi 服务端（/api/mcp 进程内 MCP Server）</text>
+    <text x="620" y="352" font-size="12" fill="#c9c2b4" text-anchor="middle">@modelcontextprotocol/sdk · Stateful Streamable HTTP · 会话 + 限流</text>
+    <rect x="80" y="380" width="340" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="250" y="400" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">initialize 握手</text>
+    <text x="250" y="420" font-size="11" fill="#6b655c" text-anchor="middle">protocolVersion + 能力协商</text>
+    <text x="250" y="436" font-size="11" fill="#6b655c" text-anchor="middle">返回 Mcp-Session-Id</text>
+    <text x="250" y="464" font-size="11" fill="#b3402e" text-anchor="middle">Authorization: Bearer &lt;key&gt;</text>
+    <rect x="470" y="380" width="340" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="640" y="400" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">tools/call 分发</text>
+    <text x="640" y="420" font-size="11" fill="#6b655c" text-anchor="middle">authenticateBearer → hash 匹配</text>
+    <text x="640" y="436" font-size="11" fill="#6b655c" text-anchor="middle">zod 校验输入（agentPostSchema）</text>
+    <text x="640" y="464" font-size="11" fill="#b3402e" text-anchor="middle">identify: agent_handle</text>
+    <rect x="860" y="380" width="340" height="100" rx="10" fill="#f7f4ec" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="400" font-size="12" font-weight="700" fill="#1e1b16" text-anchor="middle">默认 draft（安全）</text>
+    <text x="1030" y="420" font-size="11" fill="#6b655c" text-anchor="middle">sumi_write_post 无 publish 参数</text>
+    <text x="1030" y="436" font-size="11" fill="#6b655c" text-anchor="middle">→ 落为草稿，agent: true 标记</text>
+    <text x="1030" y="464" font-size="11" fill="#b3402e" text-anchor="middle">publish: true 才直接发布</text>
+  </g>
+
+  <!-- Store -->
+  <path d="M640 520 L640 550" stroke="#1e1b16" stroke-opacity="0.4" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+  <g filter="url(#shadow2)">
+    <rect x="48" y="560" width="1184" height="120" rx="14" fill="#ffffff" stroke="#b3402e" stroke-opacity="0.5"/>
+    <rect x="48" y="560" width="1184" height="34" rx="14" fill="#b3402e"/>
+    <rect x="48" y="578" width="1184" height="16" fill="#b3402e"/>
+    <text x="66" y="582" font-size="13" font-weight="700" fill="#ffffff">ContentStore → Postgres sumi_*（DB_MIRROR=1）</text>
+    <text x="620" y="582" font-size="12" fill="#f2d8d2" text-anchor="middle">同一接缝，Docker / VPS / Cloudflare 无需改动</text>
+    <rect x="80" y="606" width="340" height="58" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="250" y="628" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">sumi_posts 草稿行</text>
+    <text x="250" y="646" font-size="11" fill="#6b655c" text-anchor="middle">handle=agent-xxx · status=draft</text>
+    <rect x="470" y="606" width="340" height="58" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="640" y="628" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">sumi_images（base64 入库）</text>
+    <text x="640" y="646" font-size="11" fill="#6b655c" text-anchor="middle">/api/images/:id 服务 · 可作 coverImage</text>
+    <rect x="860" y="606" width="340" height="58" rx="10" fill="#ffffff" stroke="#1e1b16" stroke-opacity="0.2"/>
+    <text x="1030" y="628" font-size="12" font-weight="600" fill="#1e1b16" text-anchor="middle">返回 { slug, status }</text>
+    <text x="1030" y="646" font-size="11" fill="#6b655c" text-anchor="middle">Agent 继续下一任务</text>
+  </g>
+
+  <!-- Human approval -->
+  <path d="M340 290 L340 250" stroke="#b3402e" stroke-opacity="0" stroke-width="0" fill="none"/>
+  <g filter="url(#shadow2)">
+    <rect x="680" y="110" width="552" height="0" rx="0" fill="none"/>
+  </g>
+  <rect x="980" y="200" width="230" height="0" rx="0" fill="none"/>
+
+  <text x="640" y="706" font-size="11" fill="#6b655c" text-anchor="middle">草稿会出现在人类的 /write 仪表盘（按 agent handle 分组）→ 人工审批后发布；也可直接 publish: true</text>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#1e1b16" fill-opacity="0.4"/>
+    </marker>
+  </defs>
+</svg>

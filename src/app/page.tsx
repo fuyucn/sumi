@@ -3,7 +3,6 @@ import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
 import { Reveal } from "@/components/reveal";
-import { env } from "@/lib/env";
 import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -17,16 +16,8 @@ export default async function Home() {
   const totalTags = tags.reduce((sum, t) => sum + t.count, 0);
   const maxTagCount = Math.max(1, ...tags.map((t) => t.count));
   const featured = feed[0];
-  const imageBase = env.GITHUB_CONTENT_REPO
-    ? `https://raw.githubusercontent.com/${env.GITHUB_CONTENT_REPO}/main/content/@${featured?.handle ?? ""}/`
-    : undefined;
   const cover = featured?.post.coverImage;
-  const coverSrc =
-    cover && (cover.startsWith("http") || !imageBase)
-      ? cover
-      : cover
-        ? `${imageBase}${cover}`
-        : undefined;
+  const coverSrc = cover?.startsWith("http") ? cover : undefined;
   // The featured card already shows feed[0]; don't repeat it in the list.
   const recent = featured ? feed.slice(1, 7) : feed.slice(0, 6);
 
