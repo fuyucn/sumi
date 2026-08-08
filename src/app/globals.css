@@ -324,6 +324,31 @@ body {
   transform: translateY(1px) scale(0.98);
 }
 
+/* The 墨 hanko stamps down once on hover — a seal imprint instead of a flat
+   color swap. Runs only when motion is allowed; reduced-motion keeps the
+   color change only. */
+@media (prefers-reduced-motion: no-preference) {
+  .seal-stamp {
+    transition:
+      background-color var(--dur-short) var(--ease-out),
+      box-shadow var(--dur-short) var(--ease-out);
+  }
+  .group:hover .seal-stamp {
+    animation: stamp 0.34s var(--ease-out);
+  }
+  @keyframes stamp {
+    0% {
+      transform: scale(1) rotate(0deg);
+    }
+    45% {
+      transform: scale(1.1) rotate(-3deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
+}
+
 /* Article headings get a quiet in-place anchor that appears on hover. */
 .heading-anchor {
   opacity: 0;

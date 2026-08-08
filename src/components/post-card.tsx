@@ -27,7 +27,7 @@ export function PostCard({
       />
       <time
         dateTime={post.publishedAt}
-        className="pt-1 text-sm text-ink-faint tabular-nums sm:pt-1.5"
+        className="pt-1 text-sm text-ink-faint tabular-nums transition-colors duration-300 group-hover:text-seal/80 sm:pt-1.5"
       >
         {date}
       </time>
@@ -73,6 +73,12 @@ export function PostCard({
           </div>
         ) : null}
       </div>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-xl text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100 md:block"
+      >
+        →
+      </span>
     </article>
   );
 }

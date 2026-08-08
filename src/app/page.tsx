@@ -3,6 +3,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
+import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
 import { getDisplayNameMap } from "@/lib/display-name";
 
@@ -107,22 +108,7 @@ export default async function Home() {
         </aside>
       </section>
 
-      <Reveal as="section">
-        <dl className="mt-14 grid grid-cols-3 divide-x divide-line border-y border-line">
-          {[
-            { label: "Posts", value: feed.length },
-            { label: "Writers", value: creators },
-            { label: "Tags", value: totalTags },
-          ].map((stat) => (
-            <div key={stat.label} className="px-5 py-5 sm:px-8">
-              <dt className="text-xs tracking-wide text-ink-faint">{stat.label}</dt>
-              <dd className="mt-1 font-serif text-3xl font-semibold tracking-tight text-ink tabular-nums">
-                {stat.value}
-              </dd>
-            </div>
-          ))}
-        </dl>
-      </Reveal>
+      <HomeStats posts={feed.length} writers={creators} tags={totalTags} />
 
       <section className="mt-20 lg:mt-28">
         <div className="flex items-end justify-between gap-6 border-b border-line pb-4">

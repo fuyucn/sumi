@@ -181,7 +181,7 @@ export function Nav() {
         >
           <span
             aria-hidden
-            className="flex h-7 w-7 items-center justify-center rounded-[8px] bg-seal font-sans text-[0.8125rem] font-bold text-paper shadow-sm transition-colors group-hover:bg-seal-soft"
+            className="seal-stamp flex h-7 w-7 items-center justify-center rounded-[8px] bg-seal font-sans text-[0.8125rem] font-bold text-paper shadow-sm group-hover:bg-seal-soft"
           >
             墨
           </span>
