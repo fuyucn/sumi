@@ -32,6 +32,10 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
     const params = new URLSearchParams(window.location.search);
     const code = params.get("error");
     if (code) {
+      // Read the OAuth failure once after hydration; the value lives in the
+      // URL, not in server-rendered markup, so a render-time read would
+      // mismatch on SSR. Intentionally not derived during render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(hintFor(code, params.get("error_description")));
     }
   }, []);

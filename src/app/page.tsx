@@ -47,20 +47,20 @@ export default async function Home() {
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
       <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div>
-          <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
+          <h1 className="rise font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
             A quiet place to write
             <span aria-hidden className="seal-in text-seal">
               .
             </span>
           </h1>
-          <p className="mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
+          <p className="rise rise-delay-1 mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
             Your words, inked onto warm paper and kept in your own quiet
             space. Write, note, and share at your own pace.
           </p>
           <Link
             href={user ? "/write" : "/posts"}
             transitionTypes={["nav-forward"]}
-            className="btn-primary group mt-8 px-6 py-3"
+            className="btn-primary group rise rise-delay-2 mt-8 px-6 py-3"
           >
             {user ? "Start writing" : "Read the latest"}
             <ArrowRight
@@ -72,7 +72,7 @@ export default async function Home() {
           </Link>
         </div>
 
-        <aside>
+        <aside className="rise rise-delay-3">
           {featured && coverSrc ? (
             <Link
               href={`/@${featured.handle}/${featured.post.slug}`}
@@ -136,7 +136,7 @@ export default async function Home() {
       <HomeStats posts={feed.length} writers={creators} tags={totalTags} />
 
       <section className="mt-20 lg:mt-28">
-        <div className="flex items-end justify-between gap-6 border-b border-line pb-4">
+        <Reveal as="div" className="flex items-end justify-between gap-6 border-b border-line pb-4">
           <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
             Latest ink
           </h2>
@@ -153,7 +153,7 @@ export default async function Home() {
               className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/link:translate-x-0.5"
             />
           </Link>
-        </div>
+        </Reveal>
 
         {feed.length === 0 ? (
           <EmptyState

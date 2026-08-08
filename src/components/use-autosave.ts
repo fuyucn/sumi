@@ -61,7 +61,7 @@ export function useDraftAutosave(opts: {
       setSavedAt(at);
     }, 1200);
     return () => clearTimeout(t);
-  }, [key, title, tags, body, dirty]);
+  }, [key, title, tags, body, excerpt, dirty]);
 
   const clear = useCallback(() => {
     localStorage.removeItem(keyFor(key));

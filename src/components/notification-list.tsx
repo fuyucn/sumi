@@ -1,6 +1,6 @@
  "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { markNotificationsReadAction } from "@/app/community/actions";
@@ -102,7 +102,12 @@ export function NotificationList({
   const [optimisticIds, setOptimisticIds] = useState<Set<string>>(new Set());
   const reduce = useReducedMotion();
 
-  useEffect(() => {
+  // When the server list refreshes, drop optimistic ids that are no longer
+  // unread (either the row disappeared or mark-all-read landed). Doing this
+  // during render keeps the rollback and the server state in one source.
+  const [prevNotifications, setPrevNotifications] = useState(notifications);
+  if (prevNotifications !== notifications) {
+    setPrevNotifications(notifications);
     setOptimisticIds((prev) => {
       if (prev.size === 0) return prev;
       const next = new Set<string>();
@@ -112,7 +117,7 @@ export function NotificationList({
       }
       return next;
     });
-  }, [notifications]);
+  }
 
   const unreadCount = notifications.filter(
     (n) => !n.read && !optimisticIds.has(n.id),
