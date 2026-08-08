@@ -3,7 +3,7 @@ import { getAiStore } from "@/content";
 import { AI_TASK_LIMIT, rateLimit } from "@/lib/rate-limit";
 
 /**
- * Public read-only polling endpoint for the AI 导读 panel on a post page.
+ * Public read-only polling endpoint for the AI 总结 panel on a post page.
  * Returns the latest summary task state for (handle, slug); the panel never
  * exposes the provider config or API key.
  */

@@ -72,7 +72,7 @@ function CommentNode({
         ) : null}
       </div>
       {replies.length > 0 ? (
-        <ul className="ml-4 space-y-1 border-l-2 border-line pl-5 sm:ml-6">
+        <ul className="ml-4 space-y-1 border-l-2 border-seal/20 pl-5 sm:ml-6">
           {replies.map((child) => (
             <CommentNode
               key={child.id}
@@ -100,7 +100,14 @@ export async function Comments({ handle, slug }: { handle: string; slug: string 
 
   return (
     <section className="mt-16 border-t border-line pt-8">
-      <h2 className="font-serif text-xl font-semibold tracking-tight text-ink">Comments</h2>
+      <h2 className="font-serif text-xl font-semibold tracking-tight text-ink">
+        Comments
+        {comments.length > 0 ? (
+          <span className="ml-2 align-middle font-sans text-sm font-normal text-ink-faint tabular-nums">
+            {comments.length}
+          </span>
+        ) : null}
+      </h2>
       {comments.length > 0 ? (
         <ul className="mt-6 divide-y divide-line">
           {roots.map((root) => (

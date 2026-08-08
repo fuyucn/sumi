@@ -15,7 +15,7 @@ export interface AiProviderConfig {
   enabled: boolean;
 }
 
-/** One bullet of an AI 导读. `anchor` is the article heading slug the point links to. */
+/** One bullet of an AI 总结. `anchor` is the article heading slug the point links to. */
 export interface AiSummaryPoint {
   text: string;
   anchor?: string;

@@ -276,11 +276,24 @@ export function Nav() {
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
-            {menuOpen ? (
-              <X size={18} weight="duotone" aria-hidden />
-            ) : (
-              <List size={18} weight="duotone" aria-hidden />
-            )}
+            <span className="relative block h-[18px] w-[18px]">
+              <X
+                size={18}
+                weight="duotone"
+                aria-hidden
+                className={`absolute inset-0 transition-all duration-200 ${
+                  menuOpen ? "rotate-0 scale-100 opacity-100" : "-rotate-90 scale-50 opacity-0"
+                }`}
+              />
+              <List
+                size={18}
+                weight="duotone"
+                aria-hidden
+                className={`absolute inset-0 transition-all duration-200 ${
+                  menuOpen ? "rotate-90 scale-50 opacity-0" : "rotate-0 scale-100 opacity-100"
+                }`}
+              />
+            </span>
           </button>
         </div>
       </div>

@@ -49,14 +49,20 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
             <a
               key={tag.name}
               href={`/tag/${encodeURIComponent(tag.name)}`}
-              className="group flex items-baseline justify-between py-4 transition-colors hover:text-seal"
+              className="group relative flex items-baseline justify-between py-4 pl-1 pr-8 transition-colors hover:text-seal sm:pr-10"
             >
               <span className="font-serif text-lg text-ink transition-colors group-hover:text-seal">
                 <span className="text-seal">#</span>
                 {tag.name}
               </span>
-              <span className="text-sm text-ink-faint">
+              <span className="text-sm text-ink-faint transition-colors group-hover:text-seal/80">
                 {tag.count} {tag.count === 1 ? "post" : "posts"}
+              </span>
+              <span
+                aria-hidden
+                className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+              >
+                →
               </span>
             </a>
           ))}

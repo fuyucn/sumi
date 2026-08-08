@@ -15,7 +15,7 @@ function toMarkdown(editor: TiptapEditor): string {
 
 /**
  * Heading with a stable anchor id (same slug algorithm as the article page),
- * so the AI 导读 anchor links can jump to sections inside the editor preview.
+ * so the AI 总结 anchor links can jump to sections inside the editor preview.
  */
 const HeadingWithAnchors = Heading.extend({
   renderHTML({ node, HTMLAttributes }) {

@@ -23,7 +23,7 @@ export function PostForm({
   /** Preserve the Agent-authored marker on the post across saves. */
   initialAgent?: boolean;
   draftKey?: string;
-  /** Set when editing an existing post (the AI 导读 panel needs a slug). */
+  /** Set when editing an existing post (the AI 总结 panel needs a slug). */
   postSlug?: string;
   /** When set, the editor opened an agent post; saving stays under the agent handle. */
   agentSource?: string;
@@ -121,7 +121,7 @@ export function PostForm({
         <div className="mb-4 flex items-center justify-between gap-3 rounded border border-seal/30 bg-seal/[0.06] px-4 py-2.5 text-sm text-ink">
           <span>
             正在编辑 agent 的文章（@{agentSource}）— 保存后仍保留在 agent 名下、
-            作者不变，AI 导读可随时生成。
+            作者不变，AI 总结可随时生成。
           </span>
         </div>
       ) : null}

@@ -176,9 +176,9 @@ MCP 只是"手"，协作是"分工"。Sumi 的 agent 体系按角色划分，每
 
 同一套 `ContentStore` 接缝让 agent 发布天然支持三种后端:Postgres 镜像、Cloudflare D1、VPS 上的 Postgres——agent 不需要知道内容存在哪。
 
-### 延伸:AI 导读（共读）
+### 延伸:AI 总结（共读）
 
-除了发布，Sumi 还提供"一键生成 AI 导读":作者在 `/settings → AI 导读` 配置 OpenAI 兼容 provider（OpenAI / DeepSeek / Moonshot / Ollama / OpenCode Zen 等），编辑页点击按钮生成 `{ tldr, points[{text, anchor}] }` 存入 `sumi_ai_tasks`，文章页渲染导读卡片，要点可点击跳转到对应章节锚点;失败不会破坏编辑流程，可配置后重试。
+除了发布，Sumi 还提供"一键生成 AI 总结":作者在 `/settings → AI 总结` 配置 OpenAI 兼容 provider（OpenAI / DeepSeek / Moonshot / Ollama / OpenCode Zen 等），编辑页点击按钮生成 `{ summary, tldr, points[{text, anchor}] }` 存入 `sumi_ai_tasks`，文章页渲染 AI 总结卡片，要点可点击跳转到对应章节锚点;失败不会破坏编辑流程，可配置后重试。
 
 ---
 
@@ -197,7 +197,7 @@ MCP 只是"手"，协作是"分工"。Sumi 的 agent 体系按角色划分，每
 | `sumi_magazines` / `sumi_projects` / `sumi_pages` | 杂志合集 / 项目展示 / 独立页面 |
 | `sumi_friends` | 友链 |
 | `sumi_notifications` | 站内通知，容量上限 100，可标记已读 |
-| `sumi_ai_tasks` | AI 导读任务状态与结果 |
+| `sumi_ai_tasks` | AI 总结任务状态与结果 |
 | `agent_keys` | agent 密钥（哈希存储 + Ed25519 公钥），独立于人类用户表 |
 
 认证与会话（user / session / account）由 Drizzle 建模在 Postgres 或 D1，与内容同库。

@@ -6,7 +6,7 @@ export interface HeadingInfo {
 /**
  * Slugify a markdown heading into a stable URL fragment id. Keeps CJK and
  * other unicode letters, drops punctuation, collapses whitespace runs to a
- * single hyphen. Must stay in sync with the anchors listed in the AI 导读
+ * single hyphen. Must stay in sync with the anchors listed in the AI 总结
  * prompt (src/lib/ai/summarize.ts) so generated anchors match real ids.
  */
 export function headingSlug(text: string): string {

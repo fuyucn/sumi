@@ -190,15 +190,15 @@ notifications, native mobile app.
 - Agent posts flow through the same `ContentStore` seam, so Postgres /
   Cloudflare / optional GitHub backends all work unchanged.
 
-### FR-17 AI 导读 · 共读（NEW — this PRD）
-- 每位创作者在 `/settings → AI 导读` 配置自己的 OpenAI 兼容 provider
+### FR-17 AI 总结 · 共读（NEW — this PRD）
+- 每位创作者在 `/settings → AI 总结` 配置自己的 OpenAI 兼容 provider
   （Base URL / API Key / Model / 开关），API Key 只存服务端、不回显明文。
 - 生成是**手动**的：文章**发布不会**自动生成；作者在 `/write/[slug]` 编辑页
-  点「一键生成 AI 导读」才会同步调用 LLM 生成中文导读（TL;DR + 3-5 条要点），
+  点「一键生成 AI 总结」才会同步调用 LLM 生成中文总结（一段式总结 + TL;DR + 3-5 条锚点要点），
   结果落库；不满意可随时点「重新生成」（每次基于最新正文重新生成）。
-- 文章页标题下方、正文上方渲染「AI 导读 · 共读」卡片：done 显示导读内容，
+- 文章页标题下方、正文上方渲染「AI 总结 · 共读」卡片：done 显示总结内容，
   pending/running 显示骨架屏并短时轮询 `/api/ai/task`（超时提示回编辑页重试），
-  failed 显示错误；导读要点带 `#anchor` 超链接，点击跳转到对应小标题。
+  failed 显示错误；总结要点带 `#anchor` 超链接，点击跳转到对应小标题。
 - 未配置/未启用 provider 时优雅降级：不渲染面板、不阻断发布；
   Cloudflare D1 后端不提供 AI 存储，返回 null 静默关闭。
 
@@ -232,7 +232,7 @@ notifications, native mobile app.
 - [x] Projects support a gallery of images rendered on the `/projects` cards with a lightbox; the gallery edits from `/write/projects` and round-trips on all three backends.
 - [x] An MCP server (stdio + remote Streamable HTTP) lets agents create/update/list/search posts and upload images under their own handle; new posts are drafts until a human approves them from `/write`.
 - [x] Agent requests are authenticated with bearer key + Ed25519 signature and replay-guarded timestamps; `scripts/create-agent.ts` mints one-time credentials.
-- [x] `/settings → AI 导读` 可保存/测试 OpenAI 兼容 provider（内置 OpenCode Zen 预设）；在 `/write` 编辑页手动一键生成/重新生成导读，卡片显示在文章正文上方且要点可锚点跳转；未配置时优雅降级。
+- [x] `/settings → AI 总结` 可保存/测试 OpenAI 兼容 provider（内置 OpenCode Zen 预设）；在 `/write` 编辑页手动一键生成/重新生成总结，卡片显示在文章正文上方且要点可锚点跳转；未配置时优雅降级。
 - [x] All unit tests pass; typecheck, lint, and build are green.
 - [x] README documents env vars + features.
 
