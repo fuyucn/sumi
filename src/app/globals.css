@@ -134,6 +134,7 @@ body {
    layer downward (page > card > sunken well), never pure black or white. */
 :root {
   color-scheme: light;
+  scrollbar-color: var(--color-line-strong) var(--color-paper-deep);
 }
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-theme="light"]) {
@@ -175,7 +176,6 @@ body {
   --shadow-card: 0 1px 2px rgb(10 7 4 / 0.35), 0 14px 36px -18px rgb(10 7 4 / 0.6);
   --shadow-card-hover: 0 2px 4px rgb(10 7 4 / 0.4), 0 22px 48px -20px rgb(10 7 4 / 0.68);
   --shadow-pop: 0 28px 64px -26px rgb(10 7 4 / 0.75);
-  scrollbar-color: var(--color-line-strong) var(--color-paper-deep);
 }
 
 /* Moonlit atmosphere: a dim cinnabar glow high on the right, a faint warm
@@ -214,6 +214,14 @@ body {
   outline: 2px solid color-mix(in srgb, var(--color-seal) 60%, transparent);
   outline-offset: 2px;
   border-radius: 3px;
+}
+
+/* The typing caret wears the same cinnabar as the hanko: a small reminder
+   that this ink is yours. */
+input,
+textarea,
+[contenteditable="true"] {
+  caret-color: var(--color-seal);
 }
 
 /* Hide scrollbars for horizontally scrollable chrome (nav, tag rails). */
