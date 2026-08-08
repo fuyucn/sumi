@@ -389,6 +389,26 @@ textarea,
   }
 }
 
+/* Notification badge pops in when unread count appears or changes. */
+@media (prefers-reduced-motion: no-preference) {
+  .badge-pop {
+    animation: badge-pop 0.28s var(--ease-out);
+  }
+  @keyframes badge-pop {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+    65% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
 /* Skeleton shimmer: a soft light sweep over loading bars, used by the
    AI 总结 panel while a generation task is still running. */
 @media (prefers-reduced-motion: no-preference) {

@@ -269,7 +269,10 @@ export function Nav() {
                 >
                   <Bell size={16} weight="duotone" aria-hidden />
                   {unread > 0 ? (
-                    <span className="pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper">
+                    <span
+                      key={unread}
+                      className="badge-pop pointer-events-none absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-seal px-1 text-[0.625rem] font-bold leading-none text-paper"
+                    >
                       {unread > 9 ? "9+" : unread}
                     </span>
                   ) : null}
@@ -393,7 +396,10 @@ export function Nav() {
                   <Bell size={17} weight="duotone" aria-hidden />
                   Inbox
                   {unread > 0 ? (
-                    <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-seal px-1.5 text-[0.6875rem] font-bold leading-none text-paper">
+                    <span
+                      key={unread}
+                      className="badge-pop ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-seal px-1.5 text-[0.6875rem] font-bold leading-none text-paper"
+                    >
                       {unread > 9 ? "9+" : unread}
                     </span>
                   ) : null}
