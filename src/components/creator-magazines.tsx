@@ -17,6 +17,7 @@ export async function CreatorMagazines({ handle }: { handle: string }) {
           <div key={mag.slug} className="py-4">
             <Link
               href={`/@${handle}/m/${mag.slug}`}
+              transitionTypes={["nav-forward"]}
               className="link-underline font-serif text-xl font-medium text-ink transition-colors hover:text-ink"
             >
               {mag.title}

@@ -6,6 +6,7 @@ import { PostCard } from "@/components/post-card";
 import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Feather } from "@phosphor-icons/react/dist/ssr";
@@ -42,9 +43,10 @@ export default async function Home() {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
+    <PageTransition>
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
       <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        <div className="rise">
+        <div>
           <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
             A quiet place to write
             <span aria-hidden className="seal-in text-seal">
@@ -57,6 +59,7 @@ export default async function Home() {
           </p>
           <Link
             href={user ? "/write" : "/posts"}
+            transitionTypes={["nav-forward"]}
             className="btn-primary group mt-8 px-6 py-3"
           >
             {user ? "Start writing" : "Read the latest"}
@@ -69,10 +72,11 @@ export default async function Home() {
           </Link>
         </div>
 
-        <aside className="rise rise-delay-1">
+        <aside>
           {featured && coverSrc ? (
             <Link
               href={`/@${featured.handle}/${featured.post.slug}`}
+              transitionTypes={["nav-forward"]}
               className="group lift block overflow-hidden rounded-card border border-line bg-paper-raised shadow-card"
             >
               <img
@@ -138,6 +142,7 @@ export default async function Home() {
           </h2>
           <Link
             href="/posts"
+            transitionTypes={["nav-forward"]}
             className="group/link link-underline inline-flex items-center gap-1 text-sm text-ink-faint transition-colors hover:text-ink-muted"
           >
             Explore all
@@ -186,6 +191,7 @@ export default async function Home() {
               <Link
                 key={tag.name}
                 href={`/tag/${encodeURIComponent(tag.name)}`}
+                transitionTypes={["nav-forward"]}
                 className={`${tagSize(tag.count)} group press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal`}
               >
                 <span className="text-seal">#</span>
@@ -198,6 +204,7 @@ export default async function Home() {
           </div>
         </Reveal>
       ) : null}
-    </main>
+      </main>
+    </PageTransition>
   );
 }

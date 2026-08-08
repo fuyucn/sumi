@@ -466,6 +466,55 @@ textarea,
   }
 }
 
+/* Route transitions: navigations tagged nav-forward / nav-back step the page
+   a short editorial distance (old leaves first, new arrives after); untagged
+   navigations snap. Guarded by support and reduced-motion like all motion. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (view-transition-name: root) {
+    ::view-transition-old(.nav-forward) {
+      --vt-offset: -28px;
+      animation:
+        160ms var(--ease-in) both vt-fade reverse,
+        360ms var(--ease-in-out) both vt-slide reverse;
+    }
+    ::view-transition-new(.nav-forward) {
+      --vt-offset: 28px;
+      animation:
+        200ms var(--ease-out) 160ms both vt-fade,
+        360ms var(--ease-in-out) both vt-slide;
+    }
+    ::view-transition-old(.nav-back) {
+      --vt-offset: 28px;
+      animation:
+        160ms var(--ease-in) both vt-fade reverse,
+        360ms var(--ease-in-out) both vt-slide reverse;
+    }
+    ::view-transition-new(.nav-back) {
+      --vt-offset: -28px;
+      animation:
+        200ms var(--ease-out) 160ms both vt-fade,
+        360ms var(--ease-in-out) both vt-slide;
+    }
+
+    @keyframes vt-fade {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @keyframes vt-slide {
+      from {
+        translate: var(--vt-offset) 0;
+      }
+      to {
+        translate: 0 0;
+      }
+    }
+  }
+}
+
 .link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0 100%;

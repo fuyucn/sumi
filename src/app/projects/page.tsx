@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import type { Project } from "@/content/types";
 import { ProjectGallery } from "@/components/project-gallery";
+import { PageTransition } from "@/components/page-transition";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
@@ -38,7 +39,8 @@ export default async function ProjectsPage() {
   const names = await getDisplayNameMap(items.map(({ handle }) => handle));
 
   return (
-    <main className="max-w-4xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-4xl mx-auto px-5 pt-14 pb-24">
       <header className="mb-12">
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
           Built
@@ -143,6 +145,7 @@ export default async function ProjectsPage() {
           })}
         </div>
       )}
-    </main>
+      </main>
+    </PageTransition>
   );
 }

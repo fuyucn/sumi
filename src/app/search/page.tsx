@@ -6,6 +6,7 @@ import Link from "next/link";
 import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,8 @@ export default async function SearchPage({
   const tags = (await store?.listTags()) ?? [];
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <header className="mb-12">
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
           Find
@@ -69,6 +71,7 @@ export default async function SearchPage({
         {query ? (
           <Link
             href="/search"
+            transitionTypes={["nav-back"]}
             className="btn-ghost shrink-0 px-4"
           >
             Clear
@@ -88,6 +91,7 @@ export default async function SearchPage({
                   <Link
                     key={tag.name}
                     href={`/tag/${encodeURIComponent(tag.name)}`}
+                    transitionTypes={["nav-forward"]}
                     className="group press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal"
                   >
                     <span className="text-seal">#</span>
@@ -165,6 +169,7 @@ export default async function SearchPage({
                   Try a different keyword, or{" "}
                   <Link
                     href="/posts"
+                    transitionTypes={["nav-forward"]}
                     className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
                   >
                     browse all posts
@@ -176,6 +181,7 @@ export default async function SearchPage({
           )}
         </div>
       )}
-    </main>
+      </main>
+    </PageTransition>
   );
 }

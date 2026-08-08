@@ -54,6 +54,7 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
           ) : (
             <Link
               href={`/@${n.actor}`}
+              transitionTypes={["nav-forward"]}
               className="link-underline font-medium text-ink transition-colors hover:text-seal"
             >
               {n.actorName}
@@ -65,6 +66,7 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
               {" "}
               <Link
                 href={postHref}
+                transitionTypes={["nav-forward"]}
                 className="link-underline text-ink-muted transition-colors hover:text-seal"
               >
                 your post

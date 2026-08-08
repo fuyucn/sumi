@@ -6,6 +6,7 @@ import {
   NotificationList,
   type NotificationItem,
 } from "@/components/notification-list";
+import { PageTransition } from "@/components/page-transition";
 import { getDisplayNameMap } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +47,10 @@ export default async function NotificationsPage() {
   }));
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
-      <NotificationList notifications={items} />
-    </main>
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
+        <NotificationList notifications={items} />
+      </main>
+    </PageTransition>
   );
 }

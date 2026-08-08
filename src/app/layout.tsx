@@ -58,7 +58,9 @@ export default async function RootLayout({
         </a>
         <SearchShortcut />
         <Nav />
-        <div id="main" tabIndex={-1} className="flex-1 outline-none">
+        {/* Page content rises on full page load; client navigations are
+            animated by the per-page ViewTransition instead. */}
+        <div id="main" tabIndex={-1} className="rise flex-1 outline-none">
           {children}
         </div>
         <footer className="mt-24 border-t border-line">

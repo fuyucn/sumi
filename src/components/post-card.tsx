@@ -32,6 +32,7 @@ export function PostCard({
       />
       <Link
         href={`/@${handle}/${post.slug}`}
+        transitionTypes={["nav-forward"]}
         className="absolute inset-0 z-0"
         aria-label={post.title}
       />
@@ -44,6 +45,7 @@ export function PostCard({
       <div className="pointer-events-none relative z-10">
         <Link
           href={`/@${handle}/${post.slug}`}
+          transitionTypes={["nav-forward"]}
           className="pointer-events-auto block"
           aria-label={post.title}
         >
@@ -67,6 +69,7 @@ export function PostCard({
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
           <Link
             href={`/@${handle}`}
+            transitionTypes={["nav-forward"]}
             className="link-underline pointer-events-auto font-medium text-ink-muted transition-colors hover:text-ink"
           >
             {authorName || `@${handle}`}
@@ -83,6 +86,7 @@ export function PostCard({
               <Link
                 key={t}
                 href={`/tag/${encodeURIComponent(t)}`}
+                transitionTypes={["nav-forward"]}
                 className="pointer-events-auto transition-colors hover:text-seal"
               >
                 {highlight ? (

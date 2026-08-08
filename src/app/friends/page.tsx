@@ -6,6 +6,7 @@ import { FriendForm } from "@/components/friend-form";
 import { DeleteFriendButton } from "@/components/delete-friend-button";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 import { UsersThree } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,8 @@ export default async function FriendsPage() {
   const signedIn = !!user;
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
         Ring
       </p>
@@ -91,6 +93,7 @@ export default async function FriendsPage() {
           ))}
         </ul>
       )}
-    </main>
+      </main>
+    </PageTransition>
   );
 }

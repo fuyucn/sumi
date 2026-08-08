@@ -8,6 +8,7 @@ import {
   useMotionValue,
   useReducedMotion,
 } from "motion/react";
+import { PageTransition } from "@/components/page-transition";
 
 /** True only on pointer-fine devices; touch devices skip the spotlight. */
 function useHoverCapable() {
@@ -42,7 +43,8 @@ export default function NotFound() {
   };
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-5 py-24 text-center rise">
+    <PageTransition>
+      <main className="mx-auto flex min-h-[70vh] max-w-2xl flex-col items-center justify-center px-5 py-24 text-center">
       <motion.div
         ref={ref}
         onMouseMove={onMove}
@@ -74,13 +76,14 @@ export default function NotFound() {
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <Link href="/" className="btn-primary px-6 py-3">
+        <Link href="/" transitionTypes={["nav-back"]} className="btn-primary px-6 py-3">
           Back home
         </Link>
-        <Link href="/posts" className="btn-ghost px-6 py-3">
+        <Link href="/posts" transitionTypes={["nav-forward"]} className="btn-ghost px-6 py-3">
           Browse posts
         </Link>
       </div>
-    </main>
+      </main>
+    </PageTransition>
   );
 }

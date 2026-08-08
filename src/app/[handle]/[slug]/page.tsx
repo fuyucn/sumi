@@ -7,6 +7,7 @@ import { Comments } from "@/components/comments";
 import { LikeButton } from "@/components/like-button";
 import { AiSummaryPanel } from "@/components/ai-summary-panel";
 import { ReadingProgress } from "@/components/reading-progress";
+import { PageTransition } from "@/components/page-transition";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { estimateReadingTime } from "@/lib/reading-time";
@@ -53,11 +54,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   const sections = headingInfos.map((h) => ({ id: h.slug, label: h.text }));
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-28">
       <ReadingProgress sections={sections} />
       <header>
         <Link
           href="/posts"
+          transitionTypes={["nav-back"]}
           className="group/back link-underline text-sm text-ink-faint transition-colors hover:text-ink"
         >
           <span
@@ -71,38 +74,37 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         <h1 className="mt-4 font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {post.title}
         </h1>
-        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-faint">
-          <a
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm text-ink-faint">
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+            <Link
             href={`/@${data.handle}`}
-            className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
-          >
-            {data.authorName}
-          </a>
-          {post.agent ? (
-            <>
+              transitionTypes={["nav-forward"]}
+              className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+            >
+              {data.authorName}
+            </Link>
+            {post.agent ? (
               <span
                 aria-hidden
                 className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium tracking-wide text-seal"
               >
                 Agent
               </span>
-            </>
-          ) : null}
-          {post.publishedAt ? (
-            <>
-              <span aria-hidden className="text-line-strong">·</span>
-              <time dateTime={post.publishedAt}>
-                {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </time>
-            </>
-          ) : null}
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft"
-          >
+            ) : null}
+            {post.publishedAt ? (
+              <>
+                <span aria-hidden className="text-line-strong">·</span>
+                <time dateTime={post.publishedAt}>
+                  {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+              </>
+            ) : null}
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft tabular-nums">
             <Clock size={12} weight="duotone" aria-hidden />
             {reading.minutes} min read · {reading.words.toLocaleString("en-US")}{" "}
             {reading.words === 1 ? "word" : "words"}
@@ -145,13 +147,14 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
       {post.tags.length > 0 ? (
         <footer className="mt-16 flex flex-wrap items-center gap-3 border-t border-line pt-8 text-sm text-ink-faint">
           {post.tags.map((t) => (
-            <a
+            <Link
               key={t}
               href={`/tag/${encodeURIComponent(t)}`}
+              transitionTypes={["nav-forward"]}
               className="press rounded-full border border-line-strong px-3 py-1 transition-colors hover:border-seal hover:bg-seal-wash/60 hover:text-seal"
             >
               #{t}
-            </a>
+            </Link>
           ))}
         </footer>
       ) : null}
@@ -164,6 +167,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         />
       </div>
       <Comments handle={data.handle} slug={decodedSlug} />
-    </main>
+      </main>
+    </PageTransition>
   );
 }

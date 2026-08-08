@@ -4,6 +4,7 @@ import { PostCard } from "@/components/post-card";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 import { Tag } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -24,9 +25,11 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
     .sort(([, a], [, b]) => b - a)
     .slice(0, 8);
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <Link
         href="/tags"
+        transitionTypes={["nav-back"]}
         className="group inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-seal"
       >
         <span
@@ -61,6 +64,7 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
               <Link
                 key={name}
                 href={`/tag/${encodeURIComponent(name)}`}
+                transitionTypes={["nav-forward"]}
                 className="rounded-full border border-line-strong px-3 py-1 text-sm text-ink-muted transition-colors hover:border-seal hover:text-seal"
               >
                 #{name}
@@ -93,6 +97,7 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </PageTransition>
   );
 }

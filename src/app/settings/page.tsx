@@ -7,6 +7,7 @@ import { getAiStore, getContentStoreForUser } from "@/content";
 import { ProfileForm } from "@/components/profile-form";
 import { AiProviderForm } from "@/components/ai-provider-form";
 import { SignOutButton } from "@/components/sign-out-button";
+import { PageTransition } from "@/components/page-transition";
 import { displayName } from "@/lib/display-name";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +29,8 @@ export default async function SettingsPage() {
   const isAllowed = allowlist.includes(handle.toLowerCase());
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
         Configure
       </p>
@@ -127,6 +129,7 @@ export default async function SettingsPage() {
           </div>
         </section>
       </div>
-    </main>
+      </main>
+    </PageTransition>
   );
 }

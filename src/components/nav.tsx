@@ -44,6 +44,7 @@ function IconLink({
   return (
     <Link
       href={href}
+      transitionTypes={["nav-forward"]}
       className={iconClass(active)}
       aria-current={active ? "page" : undefined}
       aria-label={label}
@@ -81,6 +82,7 @@ function NavLink({
   return (
     <Link
       href={href}
+      transitionTypes={["nav-forward"]}
       aria-current={active ? "page" : undefined}
       className={[
         "press isolate relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
@@ -120,6 +122,7 @@ function DrawerLink({
     <Link
       href={href}
       onClick={onClick}
+      transitionTypes={["nav-forward"]}
       className={`press flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
         active ? "bg-seal-wash text-seal" : "text-ink-soft hover:bg-seal-wash/40 hover:text-ink"
       }`}
@@ -136,6 +139,7 @@ function UserChip({ handle }: { handle: string }) {
   return (
     <Link
       href={`/@${handle}`}
+      transitionTypes={["nav-forward"]}
       className="press group relative flex h-9 items-center gap-2 rounded-full border border-line-strong bg-paper pl-1 pr-3 text-sm font-medium text-ink transition-colors hover:border-seal/40 hover:bg-seal-wash/40"
       aria-label={`Profile of ${name}`}
     >
@@ -262,6 +266,7 @@ export function Nav() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between gap-3">
         <Link
           href="/"
+          transitionTypes={["nav-back"]}
           className="group flex shrink-0 items-center gap-2 font-serif text-lg font-semibold tracking-tight text-ink transition-opacity hover:opacity-90"
         >
           <span
@@ -330,6 +335,7 @@ export function Nav() {
               </div>
               <Link
                 href="/write"
+                transitionTypes={["nav-forward"]}
                 className="btn-primary hidden px-4 py-1.5 md:inline-flex"
               >
                 <Feather size={15} weight="duotone" aria-hidden />
@@ -342,6 +348,7 @@ export function Nav() {
           ) : (
             <Link
               href="/sign-in"
+              transitionTypes={["nav-forward"]}
               className="btn-ghost hidden md:inline-flex"
             >
               <SignIn size={15} weight="duotone" aria-hidden />

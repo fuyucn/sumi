@@ -10,6 +10,7 @@ import { getUserHandle } from "@/lib/user";
 import { displayName } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 import { Article } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +37,8 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
       ? (await store.listFollowing(signedInHandle)).includes(handle)
       : false;
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <header className="mb-10">
         <CreatorProfile handle={handle} />
         <div className="mt-3 flex flex-wrap items-center gap-4">
@@ -92,6 +94,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         </div>
       )}
       <CreatorMagazines handle={handle} />
-    </main>
+      </main>
+    </PageTransition>
   );
 }

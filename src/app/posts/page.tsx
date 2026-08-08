@@ -3,6 +3,7 @@ import { listFeed, type FeedItem } from "@/content/feed";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
+import { PageTransition } from "@/components/page-transition";
 import { Article } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +35,8 @@ export default async function PostsPage() {
   const groups = groupByYear(feed);
 
   return (
-    <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
+    <PageTransition>
+      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
       <header className="mb-12">
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
           Shelf
@@ -114,6 +116,7 @@ export default async function PostsPage() {
           ))}
         </div>
       )}
-    </main>
+      </main>
+    </PageTransition>
   );
 }
