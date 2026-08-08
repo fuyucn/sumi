@@ -666,6 +666,8 @@ body {
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   overflow-x: auto;
+  /* Top band keeps the language label and copy button clear of the first line. */
+  padding: 2.75rem 1.25rem 1.25rem;
 }
 
 .prose .shiki span {

@@ -117,6 +117,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           height={900}
           loading="lazy"
           decoding="async"
+          referrerPolicy="no-referrer"
           className="mt-8 w-full rounded-card border border-line object-cover shadow-card"
         />
       ) : null}

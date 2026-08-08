@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { headingSlug } from "@/lib/heading-slug";
 import { highlightCode } from "@/lib/shiki-highlight";
+import { CodeBlockCopy } from "@/components/code-block-copy";
 
 /**
  * Resolve a URL against a base. If `src` is already absolute (starts with
@@ -67,11 +68,12 @@ async function HighlightedCode({ lang, code }: { lang: string; code: string }) {
       {lang ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute right-4 top-3 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-ink-muted"
+          className="pointer-events-none absolute left-4 top-3 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-ink-muted"
         >
           {lang}
         </span>
       ) : null}
+      <CodeBlockCopy code={code} />
     </div>
   );
 }
@@ -106,7 +108,13 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
         // Body figures load off the critical path; decode async so long
         // articles with many screenshots don't jank on scroll.
         img: ({ src, alt }) => (
-          <img src={src} alt={alt ?? ""} loading="lazy" decoding="async" />
+          <img
+            src={src}
+            alt={alt ?? ""}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+          />
         ),
       }}
       urlTransform={(url, key) => {
