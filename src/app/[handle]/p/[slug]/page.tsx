@@ -34,26 +34,30 @@ export default async function IndependentPage({ params }: { params: Promise<{ ha
 
   return (
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
-      <header>
+      <Link
+        href={`/@${data.handle}`}
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-seal"
+      >
+        <span
+          aria-hidden
+          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
+        >
+          ←
+        </span>
+        {data.authorName}
+      </Link>
+      <header className="mt-6">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">Page</p>
         <h1 className="font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {page.title}
         </h1>
-        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
-          <Link
-            href={`/@${data.handle}`}
-            className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
-          >
-            {data.authorName}
-          </Link>
-          {page.description ? (
-            <>
-              <span aria-hidden className="text-line-strong">·</span>
-              <span>{page.description}</span>
-            </>
-          ) : null}
-        </div>
+        {page.description ? (
+          <p className="mt-3 font-serif text-lg leading-relaxed text-ink-muted">
+            {page.description}
+          </p>
+        ) : null}
       </header>
-      <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
+      <article className="mt-8 prose prose-stone max-w-none font-serif prose-headings:font-serif">
         <Markdown>{page.body}</Markdown>
       </article>
     </main>
