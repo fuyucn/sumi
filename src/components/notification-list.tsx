@@ -33,6 +33,7 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
   const label = typeLabel[n.type] ?? typeLabel.comment;
   const postHref = n.postHandle && n.postSlug ? `/@${n.postHandle}/${n.postSlug}` : null;
   const isAi = n.type === "ai";
+  const reduce = useReducedMotion();
   return (
     <li
       className={`-mx-3 flex gap-3 rounded-lg px-3 py-4 transition-colors duration-[var(--dur-long)] ease-[var(--ease-out)] ${
@@ -81,12 +82,19 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
         ) : null}
         <p className="mt-1 text-xs text-ink-faint">
           {n.dateLabel}
-          <span
-            aria-hidden
-            className={`ml-2 inline-block h-2 w-2 rounded-full bg-seal align-middle transition-[transform,opacity] duration-[var(--dur-long)] ease-[var(--ease-out)] ${
-              isRead ? "scale-0 opacity-0" : "scale-100 opacity-100"
-            }`}
-          />
+          <AnimatePresence initial={false}>
+            {!isRead ? (
+              <motion.span
+                key="unread-dot"
+                aria-hidden
+                initial={reduce ? false : { scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={reduce ? undefined : { scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 520, damping: 26 }}
+                className="ml-2 inline-block h-2 w-2 rounded-full bg-seal align-middle"
+              />
+            ) : null}
+          </AnimatePresence>
         </p>
       </div>
     </li>
