@@ -4,6 +4,7 @@ import type { NewPost } from "./types";
 export const writeFormSchema = z.object({
   title: z.string().trim().min(1, "Title is required").max(200),
   body: z.string().default(""),
+  excerpt: z.string().max(300).default(""),
   tags: z.string().default(""),
   publish: z.boolean().default(false),
   publishedAt: z.string().optional(),
@@ -22,6 +23,7 @@ export function buildNewPost(form: unknown, now: Date): NewPost {
   return {
     title: f.title,
     body: f.body,
+    ...(f.excerpt.trim() ? { excerpt: f.excerpt.trim() } : {}),
     tags,
     status: f.publish ? "published" : "draft",
     ...(f.agent ? { agent: true } : {}),

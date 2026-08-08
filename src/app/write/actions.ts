@@ -117,8 +117,9 @@ export async function generateSummaryAction(
     );
     // Backfill the post's excerpt (导读) from the AI TL;DR so list cards and
     // metadata stay fresh without manual writing. Only for the author's own
-    // posts — agent posts keep whatever excerpt their author set.
-    if (!sourceHandle && result.tldr) {
+    // posts — agent posts keep whatever excerpt their author set — and only
+    // when the author hasn't written a manual 导读 (manual wins over AI).
+    if (!sourceHandle && result.tldr && !post.excerpt?.trim()) {
       try {
         await store.savePost(handle, {
           slug,
@@ -179,13 +180,18 @@ export async function clearSummaryAction(slug: string, sourceHandle?: string): P
   const aiStore = await getAiStore();
   if (!aiStore) return { ok: false, error: "AI 后端未配置（需要 Postgres 存储）" };
 
+  // Capture the backfilled excerpt (导读) before deleting the task, so clearing
+  // only removes what AI wrote and never a manually authored 导读.
+  const existingTask = await aiStore.getTask(taskHandle, slug);
   await aiStore.deleteTask(taskHandle, slug);
 
-  // Only clear the excerpt backfill for the author's own posts; agent posts keep
-  // whatever excerpt their author set.
-  if (!sourceHandle) {
+  // Only clear the excerpt backfill for the author's own posts when the current
+  // 导读 exactly matches the AI TL;DR backfill; agent posts and manual 导读
+  // are left untouched.
+  const aiBackfilled = existingTask?.status === "done" && existingTask.result?.tldr;
+  if (!sourceHandle && aiBackfilled) {
     const post = await store.getPost(handle, slug);
-    if (post) {
+    if (post && post.excerpt === aiBackfilled.slice(0, 200)) {
       try {
         await store.savePost(handle, {
           slug,

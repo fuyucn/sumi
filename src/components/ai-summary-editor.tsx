@@ -71,7 +71,7 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
         <div>
           <p className="text-sm font-medium text-ink">AI 总结</p>
           <p className="mt-0.5 text-xs text-ink-faint">
-            基于当前正文一键生成总结；TL;DR 会自动同步为文章导读，展示在列表卡片与搜索描述中
+            基于当前正文一键生成总结；当导读留空时，TL;DR 会自动回填为文章导读（列表卡片与搜索描述），手写导读优先
           </p>
         </div>
         {task?.model ? (

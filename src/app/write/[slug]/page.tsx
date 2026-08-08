@@ -60,7 +60,13 @@ export default async function EditPage({
         initialAgent={post.agent}
         initialAiTask={aiTask}
         aiHeadings={extractHeadings(post.body)}
-        initial={{ title: post.title, tags: post.tags.join(", "), body: post.body, publishedAt: post.publishedAt }}
+        initial={{
+          title: post.title,
+          tags: post.tags.join(", "),
+          body: post.body,
+          excerpt: post.excerpt ?? "",
+          publishedAt: post.publishedAt,
+        }}
       />
     </main>
   );

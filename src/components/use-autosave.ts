@@ -5,6 +5,7 @@ export interface DraftData {
   title: string;
   tags: string[];
   body: string;
+  excerpt: string;
   savedAt: string;
 }
 
@@ -51,12 +52,12 @@ export function useDraftAutosave(opts: {
   }, [key]);
 
   // Debounced autosave — only after real edits.
-  const { title, tags, body } = state;
+  const { title, tags, body, excerpt } = state;
   useEffect(() => {
     if (!dirty) return;
     const t = setTimeout(() => {
       const at = new Date().toISOString();
-      localStorage.setItem(keyFor(key), JSON.stringify({ title, tags, body, savedAt: at }));
+      localStorage.setItem(keyFor(key), JSON.stringify({ title, tags, body, excerpt, savedAt: at }));
       setSavedAt(at);
     }, 1200);
     return () => clearTimeout(t);

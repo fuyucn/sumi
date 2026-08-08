@@ -20,7 +20,7 @@ export function PostForm({
   initialAiTask,
   aiHeadings,
 }: {
-  initial?: { title: string; tags: string; body: string; publishedAt?: string };
+  initial?: { title: string; tags: string; body: string; excerpt?: string; publishedAt?: string };
   /** Preserve the Agent-authored marker on the post across saves. */
   initialAgent?: boolean;
   draftKey?: string;
@@ -38,6 +38,7 @@ export function PostForm({
       ? initial.tags.split(",").map((t) => t.trim()).filter(Boolean)
       : [],
   );
+  const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [initialBody, setInitialBody] = useState(initial?.body ?? "");
   const [editorKey, setEditorKey] = useState(0);
@@ -48,11 +49,12 @@ export function PostForm({
 
   const { savedAt, clear } = useDraftAutosave({
     key: draftKey,
-    state: { title, tags, body, savedAt: "" },
+    state: { title, tags, body, excerpt, savedAt: "" },
     dirty,
     onRecover: useCallback((d: DraftData) => {
       setTitle(d.title);
       setTags(d.tags);
+      setExcerpt(d.excerpt ?? "");
       setBody(d.body);
       setInitialBody(d.body);
       setEditorKey((k) => k + 1);
@@ -70,6 +72,10 @@ export function PostForm({
   }
   function handleBody(md: string) {
     setBody(md);
+    setDirty(true);
+  }
+  function handleExcerpt(v: string) {
+    setExcerpt(v);
     setDirty(true);
   }
 
@@ -91,6 +97,7 @@ export function PostForm({
       title,
       tags: tags.join(", "),
       body,
+      excerpt,
       publish,
       publishedAt: initial?.publishedAt,
       agent: agentSource ? true : initialAgent,
@@ -154,6 +161,20 @@ export function PostForm({
         className="w-full bg-transparent font-serif text-[2.25rem] font-semibold leading-tight tracking-tight text-ink placeholder:text-ink-faint/60 focus:outline-none"
       />
       <TagPicker value={tags} onChange={handleTags} />
+      <div className="mt-4">
+        <input
+          value={excerpt}
+          onChange={(e) => handleExcerpt(e.target.value)}
+          maxLength={300}
+          placeholder="导读（可选）：一句话摘要，显示在列表卡片与搜索描述中；留空时 AI 总结的 TL;DR 会自动回填"
+          className="w-full border-b border-line bg-transparent py-2 text-sm leading-relaxed text-ink placeholder:text-ink-faint/50 focus:border-seal focus:outline-none transition-colors duration-[var(--dur-short)]"
+        />
+        {excerpt ? (
+          <p className="mt-1.5 text-xs text-ink-faint">
+            手动导读优先，AI 总结不会再覆盖它
+          </p>
+        ) : null}
+      </div>
       <Editor key={editorKey} initialMarkdown={initialBody} onChange={handleBody} uploadImage={handleUploadImage} />
 
       {postSlug ? (
