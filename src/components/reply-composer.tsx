@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { CaretDown } from "@phosphor-icons/react";
 import { CommentForm } from "@/components/comment-form";
 
 export function ReplyComposer({
@@ -18,7 +19,7 @@ export function ReplyComposer({
   return (
     <div>
       {open ? (
-        <div className="mt-3 rounded border border-line bg-paper px-4 py-3">
+        <div className="panel-enter mt-3 rounded-card border border-line bg-paper px-4 py-3">
           <CommentForm
             postHandle={postHandle}
             slug={slug}
@@ -31,9 +32,10 @@ export function ReplyComposer({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-2 text-xs font-medium uppercase tracking-widest text-ink-faint transition-colors hover:text-ink-muted"
+          className="press mt-2 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-widest text-ink-faint transition-colors hover:text-ink-muted"
         >
           Reply
+          <CaretDown size={11} weight="bold" aria-hidden />
         </button>
       )}
     </div>

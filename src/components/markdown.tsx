@@ -79,9 +79,8 @@ async function HighlightedCode({ lang, code }: { lang: string; code: string }) {
 function Code({ className, children }: { className?: string; children?: ReactNode }) {
   const match = /language-([\w-]+)/.exec(className ?? "");
   const lang = match?.[1];
-  const code = String(children ?? "").replace(/\n$/, "");
-  if (lang && code.includes("\n")) {
-    return <HighlightedCode lang={lang} code={code} />;
+  if (lang) {
+    return <HighlightedCode lang={lang} code={String(children ?? "").replace(/\n$/, "")} />;
   }
   return <code className={className}>{children}</code>;
 }

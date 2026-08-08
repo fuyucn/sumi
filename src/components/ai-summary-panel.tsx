@@ -79,27 +79,43 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
       {task.status === "done" && task.result ? (
         <div key={task.finishedAt ?? "done"} className="panel-enter mt-4">
           {task.result.summary ? (
-            <p className="font-serif text-[1.05rem] leading-relaxed text-ink">{task.result.summary}</p>
+            <p className="font-serif text-[1.0625rem] leading-relaxed text-ink">
+              {task.result.summary}
+            </p>
           ) : null}
-          <p className="mt-3 font-serif text-sm leading-relaxed text-ink-muted">{task.result.tldr}</p>
+
+          <div className="mt-4 rounded-r-lg border-l-2 border-seal bg-seal-wash/40 px-4 py-3">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-seal">
+              TL;DR
+            </p>
+            <p className="mt-1 font-serif text-sm leading-relaxed text-ink">
+              {task.result.tldr}
+            </p>
+          </div>
+
           {task.result.points.length > 0 ? (
-            <ul className="mt-4 space-y-2">
-              {task.result.points.map((point, i) => (
-                <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-muted">
-                  <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-seal" />
-                  {point.anchor && headings.includes(point.anchor) ? (
-                    <a
-                      href={`#${point.anchor}`}
-                      className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
-                    >
-                      {point.text}
-                    </a>
-                  ) : (
-                    point.text
-                  )}
-                </li>
-              ))}
-            </ul>
+            <div className="mt-4">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+                Key points
+              </p>
+              <ul className="mt-2.5 space-y-2">
+                {task.result.points.map((point, i) => (
+                  <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-ink-muted">
+                    <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-seal" />
+                    {point.anchor && headings.includes(point.anchor) ? (
+                      <a
+                        href={`#${point.anchor}`}
+                        className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+                      >
+                        {point.text}
+                      </a>
+                    ) : (
+                      point.text
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </div>
       ) : task.status === "failed" ? (

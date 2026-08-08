@@ -1,6 +1,12 @@
-import { renderToStaticMarkup } from "react-dom/server";
+import { renderToReadableStream, renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vitest";
 import { Markdown, resolveUrl } from "./markdown";
+
+/** Await async (Shiki) code blocks by rendering through the readable stream. */
+async function renderMarkdown(md: string): Promise<string> {
+  const stream = await renderToReadableStream(<Markdown>{md}</Markdown>);
+  return await new Response(stream).text();
+}
 
 test("renders markdown headings and bold to HTML", () => {
   const html = renderToStaticMarkup(<Markdown>{"# Title\n\nsome **bold** text"}</Markdown>);
@@ -14,9 +20,21 @@ test("renders CJK headings with stable anchor ids", () => {
   expect(html).toContain("正文");
 });
 
-test("renders GFM tables", () => {
+test("renders GFM tables inside the framed scroll container", () => {
   const html = renderToStaticMarkup(<Markdown>{"| a | b |\n|---|---|\n| 1 | 2 |"}</Markdown>);
+  expect(html).toContain("my-6 overflow-x-auto rounded-card border border-line");
   expect(html).toContain("<table>");
+  expect(html).toContain("<th>a</th>");
+  expect(html).toContain("<td>1</td>");
+});
+
+test("renders fenced code blocks with Shiki and a language label", async () => {
+  const html = await renderMarkdown("```ts\nconst x: number = 1;\n```");
+  expect(html).toContain("relative my-4");
+  expect(html).toContain("class=\"shiki");
+  expect(html).toContain(">ts</span>");
+  expect(html).toContain("<span class=\"line\">");
+  expect(html).toContain(">const</span>");
 });
 
 test("does not render raw HTML (XSS safety)", () => {

@@ -60,32 +60,42 @@ export default async function Home() {
           {featured && coverSrc ? (
             <Link
               href={`/@${featured.handle}/${featured.post.slug}`}
-              className="group block overflow-hidden rounded-card border border-line bg-paper-raised shadow-card transition-shadow hover:shadow-card-hover"
+              className="group lift block overflow-hidden rounded-card border border-line bg-paper-raised shadow-card"
             >
               <img
                 src={coverSrc}
                 alt={featured.post.title}
                 width={1200}
                 height={800}
-                className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                className="aspect-[3/2] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
               />
               <div className="p-5">
-                <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
-                  Latest ink
-                </p>
-                <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors group-hover:text-seal">
-                  {featured.post.title}
-                </h2>
-                <p className="mt-1.5 text-sm text-ink-faint">
-                  {names.get(featured.handle)}
-                  {featured.post.publishedAt
-                    ? ` · ${new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}`
-                    : ""}
-                </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+                      Latest ink
+                    </p>
+                    <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors duration-300 group-hover:text-seal">
+                      {featured.post.title}
+                    </h2>
+                    <p className="mt-1.5 text-sm text-ink-faint">
+                      {names.get(featured.handle)}
+                      {featured.post.publishedAt
+                        ? ` · ${new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}`
+                        : ""}
+                    </p>
+                  </div>
+                  <span
+                    aria-hidden
+                    className="pointer-events-none shrink-0 translate-x-1 font-serif text-2xl text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
+                  >
+                    →
+                  </span>
+                </div>
               </div>
             </Link>
           ) : (
