@@ -672,7 +672,8 @@ textarea,
    blocks follow light/dark like everything else. */
 .prose .shiki {
   color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
+  /* Sunken well: the page's paper-deep, not Shiki's stark #fff. */
+  background-color: var(--color-paper-deep);
   border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
   overflow-x: auto;
@@ -687,7 +688,7 @@ textarea,
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-theme="light"]) .prose .shiki {
     color: var(--shiki-dark);
-    background-color: var(--shiki-dark-bg);
+    background-color: var(--color-paper-deep);
   }
 
   :root:not(.light):not([data-theme="light"]) .prose .shiki span {
@@ -698,7 +699,7 @@ textarea,
 :root.dark .prose .shiki,
 :root[data-theme="dark"] .prose .shiki {
   color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
+  background-color: var(--color-paper-deep);
 }
 
 :root.dark .prose .shiki span,
