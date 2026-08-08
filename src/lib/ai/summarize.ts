@@ -53,7 +53,8 @@ export function parseSummaryResponse(raw: string): AiSummaryResult {
     ? parsed.points.map(parseSummaryPoint).filter((p): p is AiSummaryPoint => p !== null)
     : [];
   if (!points.length) throw new Error("LLM reply missing points");
-  return { tldr: parsed.tldr.trim(), points };
+  const summary = typeof parsed.summary === "string" && parsed.summary.trim() ? parsed.summary.trim() : undefined;
+  return { summary, tldr: parsed.tldr.trim(), points };
 }
 
 export function summaryPrompt(body: string): Array<{ role: "system" | "user"; content: string }> {
@@ -66,11 +67,14 @@ export function summaryPrompt(body: string): Array<{ role: "system" | "user"; co
     {
       role: "system",
       content:
-        `你是一位资深中文编辑。阅读全文后，输出一段「AI 导读」帮助读者快速决定是否细读：一句话 TL;DR 加上 3-5 条要点。每条要点尽量对应文章的一个小标题章节，方便读者点击跳转。只输出 JSON，不要任何解释：{"tldr":"一句话总结，60 字以内","points":[{"text":"要点内容","anchor":"章节锚点 slug 或 null"}]}。` +
+        `你是一位资深中文编辑。阅读全文后，输出「AI 总结」帮助读者快速决定是否细读：一段连贯的总结段落（summary）、一句话 TL;DR 和 3-5 条要点（points）。` +
+        `summary 用 100-180 字把文章核心观点、结构与结论完整复述一遍，可独立阅读；tldr 是一句话概括，60 字以内；` +
+        `每条要点尽量对应文章的一个小标题章节，方便读者点击跳转。只输出 JSON，不要任何解释：` +
+        `{"summary":"一段式完整总结，100-180 字","tldr":"一句话总结，60 字以内","points":[{"text":"要点内容","anchor":"章节锚点 slug 或 null"}]}。` +
         `要求：anchor 必须从下面的「可用锚点」列表中挑选；没有对应章节时填 null。` +
         `可用锚点（slug → 标题）：\n${anchorList}`,
     },
-    { role: "user", content: `请为下面这篇文章生成导读：\n\n${body.slice(0, 12_000)}` },
+    { role: "user", content: `请为下面这篇文章生成 AI 总结：\n\n${body.slice(0, 12_000)}` },
   ];
 }
 

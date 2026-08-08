@@ -23,6 +23,8 @@ export interface AiSummaryPoint {
 
 /** Parsed LLM output for a summary task. */
 export interface AiSummaryResult {
+  /** 一段式完整总结（可选，旧任务可能没有）。 */
+  summary?: string;
   tldr: string;
   points: AiSummaryPoint[];
 }

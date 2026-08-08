@@ -152,7 +152,7 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
           onChange={(e) => setEnabled(e.target.checked)}
           className="size-4 accent-seal"
         />
-        启用 AI 导读（在编辑页手动一键生成）
+        启用 AI 总结（在编辑页手动一键生成）
       </label>
 
       {error ? <p className="text-sm text-seal">{error}</p> : null}

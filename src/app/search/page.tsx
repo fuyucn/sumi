@@ -61,7 +61,16 @@ export default async function SearchPage({
                 />
               ))}
             </div>
-          ) : null}
+          ) : (
+            <div className="mt-4 rounded-card border border-dashed border-line-strong px-6 py-14 text-center">
+              <p className="font-serif text-lg text-ink-soft">
+                Nothing on this shelf.
+              </p>
+              <p className="mt-1 text-sm text-ink-faint">
+                Try a different keyword, or browse all posts.
+              </p>
+            </div>
+          )}
         </div>
       ) : null}
     </main>

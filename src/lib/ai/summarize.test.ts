@@ -38,6 +38,15 @@ describe("parseSummaryResponse", () => {
   test("normalizes legacy string points to object form", () => {
     const result = parseSummaryResponse(`{"tldr":"导读","points":["要点一","要点二"]}`);
     expect(result.points).toEqual([{ text: "要点一" }, { text: "要点二" }]);
+    expect(result.summary).toBeUndefined();
+  });
+
+  test("parses optional summary paragraph and trims it", () => {
+    const result = parseSummaryResponse(
+      `{"summary":"  一段完整的文章总结，覆盖结构、观点与结论。  ","tldr":"一句话","points":[{"text":"要点","anchor":null}]}`,
+    );
+    expect(result.summary).toBe("一段完整的文章总结，覆盖结构、观点与结论。");
+    expect(result.tldr).toBe("一句话");
   });
 
   test("rejects missing tldr", () => {
@@ -61,9 +70,10 @@ describe("parseSummaryResponse", () => {
 });
 
 describe("summaryPrompt", () => {
-  test("asks for JSON tldr + anchored points and includes the body", () => {
+  test("asks for summary + tldr + anchored points and includes the body", () => {
     const messages = summaryPrompt("# 安装\n\n这是正文内容");
     expect(messages[0].role).toBe("system");
+    expect(messages[0].content).toContain("summary");
     expect(messages[0].content).toContain("TL;DR");
     expect(messages[0].content).toContain("anchor");
     expect(messages[0].content).toContain("安装 → 安装");

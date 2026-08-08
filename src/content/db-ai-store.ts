@@ -38,7 +38,11 @@ function parseResult(raw: string | null): AiSummaryResult | null {
       const points = parsed.points
         .map(parseSummaryPoint)
         .filter((p): p is AiSummaryPoint => p !== null);
-      if (points.length) return { tldr: parsed.tldr, points };
+      if (points.length) {
+        const summary =
+          typeof parsed.summary === "string" && parsed.summary.trim() ? parsed.summary.trim() : undefined;
+        return { summary, tldr: parsed.tldr, points };
+      }
     }
   } catch {
     // fall through — treat malformed stored result as null

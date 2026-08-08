@@ -15,7 +15,7 @@ const typeLabel: Record<NotificationType, string> = {
   reply: "replied to your comment",
   like: "liked your post",
   follow: "followed you",
-  ai: "updated your post's AI 导读",
+  ai: "updated your post's AI 总结",
 };
 
 function formatDate(iso: string): string {
@@ -48,7 +48,7 @@ function NotificationRow({ n, actorName }: { n: Notification; actorName: string 
       <div className="min-w-0 flex-1 text-sm leading-relaxed">
         <p className="text-ink">
           {isAi ? (
-            <span className="font-medium text-ink">AI 导读</span>
+            <span className="font-medium text-ink">AI 总结</span>
           ) : (
             <Link
               href={`/@${n.actor}`}

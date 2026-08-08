@@ -47,7 +47,7 @@ export async function getTagsLibraryAction(): Promise<TagInfo[]> {
 export type GenerateSummaryResult = { ok: true; task: AiTask } | { ok: false; error: string };
 
 /**
- * Author-only, synchronous one-click AI 导读 generation from the editor.
+ * Author-only, synchronous one-click AI 总结 generation from the editor.
  * Runs the LLM call inline so the button returns the finished result directly
  * (no background queue); the result is persisted so the article page shows it.
  */
@@ -87,11 +87,11 @@ export async function generateSummaryAction(
         actor: handle,
         postHandle: handle,
         postSlug: slug,
-        body: "AI 导读未生成：未配置 AI provider（Settings → AI 导读）",
+        body: "AI 总结未生成：未配置 AI provider（Settings → AI 总结）",
       },
       new Date(),
     );
-    return { ok: false, error: "未配置 AI provider：请到 Settings → AI 导读 中启用" };
+    return { ok: false, error: "未配置 AI provider：请到 Settings → AI 总结 中启用" };
   }
 
   const now = new Date();
@@ -109,7 +109,7 @@ export async function generateSummaryAction(
         actor: handle,
         postHandle: handle,
         postSlug: slug,
-        body: `AI 导读已生成（${provider.model}）`,
+        body: `AI 总结已生成（${provider.model}）`,
       },
       now,
     );
@@ -123,7 +123,7 @@ export async function generateSummaryAction(
         actor: handle,
         postHandle: handle,
         postSlug: slug,
-        body: `AI 导读生成失败：${message.slice(0, 300)}`,
+        body: `AI 总结生成失败：${message.slice(0, 300)}`,
       },
       now,
     );

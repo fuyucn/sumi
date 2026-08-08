@@ -580,6 +580,7 @@ body {
   }
   .btn-primary:hover {
     background-color: var(--color-ink-soft);
+    transform: translateY(-1px);
   }
 
   .btn-seal {
@@ -589,6 +590,7 @@ body {
   }
   .btn-seal:hover {
     background-color: var(--color-seal-soft);
+    transform: translateY(-1px);
   }
 
   .btn-ghost {
@@ -600,5 +602,6 @@ body {
   .btn-ghost:hover {
     background-color: color-mix(in srgb, var(--color-ink) 3%, transparent);
     color: var(--color-ink);
+    transform: translateY(-1px);
   }
 }

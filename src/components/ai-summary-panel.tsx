@@ -59,12 +59,12 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
 
   return (
     <section
-      aria-label="AI 导读"
+      aria-label="AI 总结"
       className="mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
     >
       <div className="flex items-center gap-2">
         <span className="rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
-          AI 导读 · 共读
+          AI 总结
         </span>
         {busy ? (
           <span className="flex items-center gap-2 text-xs text-ink-faint">
@@ -78,9 +78,10 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
 
       {task.status === "done" && task.result ? (
         <div className="mt-4">
-          <p className="font-serif text-[1.05rem] leading-relaxed text-ink">
-            {task.result.tldr}
-          </p>
+          {task.result.summary ? (
+            <p className="font-serif text-[1.05rem] leading-relaxed text-ink">{task.result.summary}</p>
+          ) : null}
+          <p className="mt-3 font-serif text-sm leading-relaxed text-ink-muted">{task.result.tldr}</p>
           {task.result.points.length > 0 ? (
             <ul className="mt-4 space-y-2">
               {task.result.points.map((point, i) => (
@@ -104,7 +105,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [] }: Pro
       ) : task.status === "failed" ? (
         <div className="mt-4">
           <p className="text-sm leading-relaxed text-ink-muted">
-            AI 导读生成失败
+            AI 总结生成失败
             {task.error ? <span className="mt-1 block font-mono text-xs text-ink-faint">{task.error}</span> : null}
           </p>
         </div>

@@ -50,14 +50,14 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
 
   return (
     <section
-      aria-label="AI 导读"
+      aria-label="AI 总结"
       className="mt-8 rounded-card border border-line bg-paper/60 p-5 shadow-card"
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-ink">AI 导读 · 共读</p>
+          <p className="text-sm font-medium text-ink">AI 总结</p>
           <p className="mt-0.5 text-xs text-ink-faint">
-            基于当前正文一键生成导读；生成的要点会自动带上文章小标题的跳转锚点
+            基于当前正文一键生成总结；生成的要点会自动带上文章小标题的跳转锚点
           </p>
         </div>
         {task?.model ? (
@@ -69,7 +69,10 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
 
       {done && task.result ? (
         <div className="mt-4 border-t border-line pt-4">
-          <p className="font-serif text-[1.02rem] leading-relaxed text-ink">{task.result.tldr}</p>
+          {task.result.summary ? (
+            <p className="font-serif text-[1.02rem] leading-relaxed text-ink">{task.result.summary}</p>
+          ) : null}
+          <p className="mt-3 font-serif text-sm leading-relaxed text-ink-muted">{task.result.tldr}</p>
           <ul className="mt-3 space-y-2">
             {task.result.points.map((point, i) => {
               const section = point.anchor ? headingBySlug.get(point.anchor) : undefined;
@@ -121,13 +124,13 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
 
       <div className="mt-5 flex items-center gap-3 border-t border-line pt-4">
         <button type="button" onClick={generate} disabled={busyNow} className="btn-primary px-5 text-sm">
-          {busyNow ? "生成中…" : done ? "重新生成" : "一键生成 AI 导读"}
+          {busyNow ? "生成中…" : done ? "重新生成" : "一键生成 AI 总结"}
         </button>
         {!done && !busyNow && !failed ? (
           <p className="text-xs text-ink-faint">需要先保存过一次草稿/文章</p>
         ) : null}
         {failed && !busyNow ? (
-          <p className="text-xs text-ink-faint">检查 Settings → AI 导读 的配置后可重试</p>
+          <p className="text-xs text-ink-faint">检查 Settings → AI 总结 的配置后可重试</p>
         ) : null}
       </div>
     </section>

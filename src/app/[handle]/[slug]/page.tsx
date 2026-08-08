@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getAiStore, getReadContentStore } from "@/content";
 import { Markdown } from "@/components/markdown";
 import { Comments } from "@/components/comments";
@@ -54,7 +55,13 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-28 rise">
       <ReadingProgress sections={sections} />
       <header>
-        <h1 className="font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
+        <Link
+          href="/posts"
+          className="link-underline text-sm text-ink-faint transition-colors hover:text-ink"
+        >
+          ← Back to posts
+        </Link>
+        <h1 className="mt-4 font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {post.title}
         </h1>
         <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">

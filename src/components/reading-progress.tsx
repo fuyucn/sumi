@@ -110,7 +110,14 @@ export function ReadingProgress({
   if (!mounted) return null;
 
   return createPortal(
-    <div ref={rootRef} className={`fixed right-5 bottom-6 z-50 flex flex-col items-end ${className}`}>
+    <>
+      {/* Top hairline: scroll progress as a 2px seal line under the nav. */}
+      <motion.div
+        aria-hidden
+        className="pointer-events-none fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-seal"
+        style={{ scaleX: progress }}
+      />
+      <div ref={rootRef} className={`fixed right-5 bottom-6 z-50 flex flex-col items-end ${className}`}>
       <AnimatePresence>
         {open ? (
           <motion.div
@@ -226,7 +233,8 @@ export function ReadingProgress({
           />
         ) : null}
       </button>
-    </div>,
+      </div>
+    </>,
     document.body,
   );
 }
