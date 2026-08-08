@@ -30,45 +30,72 @@ export default async function MagazinePage({
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <Link
         href={`/@${handle}`}
-        className="link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-seal"
       >
+        <span
+          aria-hidden
+          className="transition-transform duration-200 ease-out group-hover:-translate-x-0.5"
+        >
+          ←
+        </span>
         {authorName}
       </Link>
-      <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight text-ink">
-        {mag.title}
-      </h1>
-      {mag.description ? (
-        <p className="mt-3 font-serif text-lg leading-relaxed text-ink-muted">
-          {mag.description}
+      <header className="mt-6 mb-8">
+        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">Magazine</p>
+        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
+          {mag.title}
+        </h1>
+        {mag.description ? (
+          <p className="mt-3 font-serif text-lg leading-relaxed text-ink-muted">
+            {mag.description}
+          </p>
+        ) : null}
+        <p className="mt-3 text-sm text-ink-muted tabular-nums">
+          {posts.length} {posts.length === 1 ? "post" : "posts"} collected.
         </p>
-      ) : null}
+      </header>
       {posts.length === 0 ? (
-        <p className="mt-16 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
+        <p className="mt-10 border-t border-line py-24 text-center font-serif text-lg text-ink-muted">
           This magazine is empty.
         </p>
       ) : (
-        <ol className="mt-10 divide-y divide-line border-t border-line">
+        <ol className="mt-8 divide-y divide-line border-t border-line">
           {posts.map((post, i) => (
-            <li key={post.slug} className="group -mx-3 rounded-lg px-3 py-5 transition-colors hover:bg-paper-soft/60">
-              <span className="mr-3 text-sm text-ink-faint tabular-nums">{i + 1}.</span>
-              <Link
-                href={`/@${handle}/${post.slug}`}
-                className="link-underline font-serif text-xl font-medium text-ink transition-colors group-hover:text-seal"
-              >
-                {post.title}
-              </Link>
-              {post.publishedAt ? (
-                <time
-                  dateTime={post.publishedAt}
-                  className="mt-1 block text-sm text-ink-faint"
+            <li
+              key={post.slug}
+              className="group -mx-3 rounded-lg px-3 py-5 transition-colors hover:bg-paper-soft/60"
+            >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0 font-serif text-sm text-seal tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/@${handle}/${post.slug}`}
+                    className="link-underline font-serif text-xl font-medium leading-snug text-ink transition-colors group-hover:text-seal"
+                  >
+                    {post.title}
+                  </Link>
+                  {post.publishedAt ? (
+                    <time
+                      dateTime={post.publishedAt}
+                      className="mt-1 block text-sm text-ink-faint tabular-nums"
+                    >
+                      {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </time>
+                  ) : null}
+                </div>
+                <span
+                  aria-hidden
+                  className="pointer-events-none mt-1 shrink-0 translate-x-1 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-300 ease-out group-hover:translate-x-0 group-hover:opacity-100"
                 >
-                  {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </time>
-              ) : null}
+                  →
+                </span>
+              </div>
             </li>
           ))}
         </ol>
