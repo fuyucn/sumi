@@ -590,6 +590,27 @@ body {
   border-radius: var(--radius-card);
 }
 
+/* Book-style opening: the first paragraph of a published article gets a
+   quiet drop cap — ink, not seal, so it reads as typography rather than
+   decoration. Scoped to .prose-article so the editor stays plain. */
+.prose-article > p:first-of-type::first-letter {
+  float: left;
+  font-family: var(--font-serif);
+  font-size: 2.9em;
+  line-height: 0.82;
+  padding: 0.04em 0.12em 0 0;
+  font-weight: 600;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+}
+
+/* Images inside an article share the card language with the cover image:
+   hairline frame + the same corner radius, so figures sit on the paper. */
+.prose-article :where(img) {
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-line);
+}
+
 /* Shiki syntax highlighting: theme colors ship as per-token CSS variables
    (`--shiki-light` / `--shiki-dark`); the page theme picks the set, so code
    blocks follow light/dark like everything else. */

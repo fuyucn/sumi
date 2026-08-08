@@ -61,7 +61,19 @@ const headingComponents = {
 /** Fenced code block rendered as a Shiki-highlighted `<pre>` (server side). */
 async function HighlightedCode({ lang, code }: { lang: string; code: string }) {
   const html = await highlightCode(code, lang);
-  return <div className="my-4" dangerouslySetInnerHTML={{ __html: html }} />;
+  return (
+    <div className="relative my-4">
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+      {lang ? (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute right-4 top-3 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-ink-muted"
+        >
+          {lang}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 function Code({ className, children }: { className?: string; children?: ReactNode }) {
@@ -84,7 +96,7 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
         // Wide tables (esp. on mobile) scroll inside their own container
         // instead of blowing out the article column.
         table: ({ children }) => (
-          <div className="overflow-x-auto">
+          <div className="my-6 overflow-x-auto rounded-card border border-line">
             <table>{children}</table>
           </div>
         ),

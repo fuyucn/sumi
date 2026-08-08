@@ -122,7 +122,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         headings={headings}
       />
       <hr className="mt-8 mb-10 border-line" />
-      <article className="prose prose-stone max-w-none font-serif prose-headings:font-serif">
+      <article className="prose prose-stone prose-article max-w-none font-serif prose-headings:font-serif">
         <Markdown>{post.body}</Markdown>
       </article>
       {post.tags.length > 0 ? (
