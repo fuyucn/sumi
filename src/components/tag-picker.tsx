@@ -113,7 +113,7 @@ export function TagPicker({
         />
       </div>
       {open ? (
-        <div className="absolute z-20 left-0 right-0 mt-1 max-h-56 overflow-auto rounded border border-line bg-paper shadow-lg">
+        <div className="panel-enter absolute z-20 left-0 right-0 mt-1.5 max-h-56 overflow-auto rounded-card border border-line bg-paper shadow-pop">
           {!loaded ? (
             <p className="px-3 py-2 text-sm text-ink-faint">Loading tags…</p>
           ) : suggestions.length === 0 && !createLabel ? (
@@ -126,7 +126,7 @@ export function TagPicker({
                 onMouseEnter={() => setActive(i)}
                 onClick={() => addTag(t.name)}
                 className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-sm transition-colors ${
-                  i === activeIndex ? "bg-ink/[0.06]" : ""
+                  i === activeIndex ? "bg-seal-wash/40" : ""
                 }`}
               >
                 <span className="text-ink">#{t.name}</span>
@@ -140,7 +140,7 @@ export function TagPicker({
               onMouseEnter={() => setActive(suggestions.length)}
               onClick={() => addTag(createLabel)}
               className={`w-full px-3 py-1.5 text-left text-sm ${
-                activeIndex === suggestions.length ? "bg-ink/[0.06]" : ""
+                activeIndex === suggestions.length ? "bg-seal-wash/40" : ""
               }`}
             >
               Create “{createLabel}”

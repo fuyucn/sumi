@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
 import { PageForm } from "@/components/page-form";
+import { EditorBackLink } from "@/components/editor-back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export default async function PageEditPage({
 
   return (
     <main className="max-w-2xl mx-auto px-5 py-10 rise">
+      <EditorBackLink href="/write/pages" label="Your pages" />
       <h1 className="mb-8 font-serif text-3xl font-semibold tracking-tight text-ink">
         {existing ? "Edit page" : "New page"}
       </h1>

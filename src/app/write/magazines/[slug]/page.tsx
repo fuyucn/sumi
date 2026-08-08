@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { getContentStoreForUser } from "@/content";
 import { MagazineForm } from "@/components/magazine-form";
+import { EditorBackLink } from "@/components/editor-back-link";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +30,7 @@ export default async function MagazineEditPage({
 
   return (
     <main className="max-w-2xl mx-auto px-5 py-10 rise">
+      <EditorBackLink href="/write/magazines" label="Your magazines" />
       <h1 className="mb-8 font-serif text-3xl font-semibold tracking-tight text-ink">
         {existing ? "Edit magazine" : "New magazine"}
       </h1>
