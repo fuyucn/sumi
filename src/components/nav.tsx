@@ -259,7 +259,7 @@ export function Nav() {
     <header
       className={`sticky top-0 z-40 border-b border-line backdrop-blur-md transition-[background-color,border-color,box-shadow] duration-[var(--dur-short)] ${
         scrolled
-          ? "bg-paper/95 shadow-[0_12px_32px_-24px_rgb(30_27_22/0.25)]"
+          ? "bg-paper/95 shadow-[var(--shadow-header)]"
           : "bg-paper/70"
       }`}
     >
@@ -271,7 +271,7 @@ export function Nav() {
         >
           <span
             aria-hidden
-            className="seal-stamp flex h-7 w-7 items-center justify-center rounded-[8px] bg-seal font-sans text-[0.8125rem] font-bold text-paper shadow-sm group-hover:bg-seal-soft"
+            className="seal-stamp flex h-7 w-7 items-center justify-center rounded-[8px] bg-seal font-sans text-[0.8125rem] font-bold text-paper shadow-sm transition-colors duration-[var(--dur-short)] group-hover:bg-seal-soft"
           >
             墨
           </span>

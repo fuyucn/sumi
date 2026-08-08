@@ -28,6 +28,7 @@
   --shadow-card: 0 1px 2px rgb(30 27 22 / 0.05), 0 12px 32px -16px rgb(30 27 22 / 0.14);
   --shadow-card-hover: 0 2px 4px rgb(30 27 22 / 0.06), 0 20px 44px -18px rgb(30 27 22 / 0.2);
   --shadow-pop: 0 24px 60px -24px rgb(30 27 22 / 0.28);
+  --shadow-header: 0 12px 32px -24px rgb(30 27 22 / 0.25);
 
   /* Motion language: three named easings + three duration buckets. All
      transitions in the codebase reference these tokens (never `ease`). */
@@ -228,6 +229,7 @@ body {
     --shadow-card: 0 1px 2px rgb(10 7 4 / 0.35), 0 14px 36px -18px rgb(10 7 4 / 0.6);
     --shadow-card-hover: 0 2px 4px rgb(10 7 4 / 0.4), 0 22px 48px -20px rgb(10 7 4 / 0.68);
     --shadow-pop: 0 28px 64px -26px rgb(10 7 4 / 0.75);
+    --shadow-header: 0 14px 36px -26px rgb(0 0 0 / 0.6);
   }
 }
 :root.dark,
@@ -249,6 +251,7 @@ body {
   --shadow-card: 0 1px 2px rgb(10 7 4 / 0.35), 0 14px 36px -18px rgb(10 7 4 / 0.6);
   --shadow-card-hover: 0 2px 4px rgb(10 7 4 / 0.4), 0 22px 48px -20px rgb(10 7 4 / 0.68);
   --shadow-pop: 0 28px 64px -26px rgb(10 7 4 / 0.75);
+  --shadow-header: 0 14px 36px -26px rgb(0 0 0 / 0.6);
 }
 
 /* Moonlit atmosphere: a dim cinnabar glow high on the right, a faint warm
@@ -286,7 +289,6 @@ body {
 *:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-seal) 60%, transparent);
   outline-offset: 2px;
-  border-radius: 3px;
 }
 
 /* The native search clear button borrows the ink-faint circle so it reads as
