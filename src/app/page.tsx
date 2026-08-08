@@ -170,7 +170,7 @@ export default async function Home() {
               <Link
                 key={tag.name}
                 href={`/tag/${encodeURIComponent(tag.name)}`}
-                className={`${tagSize(tag.count)} press font-serif font-medium text-ink transition-colors hover:text-seal`}
+                className={`${tagSize(tag.count)} press inline-block font-serif font-medium text-ink transition-[transform,color] duration-200 ease-out hover:-translate-y-0.5 hover:text-seal`}
               >
                 <span className="text-seal">#</span>
                 {tag.name}

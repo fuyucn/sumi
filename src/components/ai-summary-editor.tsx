@@ -72,37 +72,51 @@ export function AiSummaryEditor({ slug, body, sourceHandle, initialTask = null, 
           {task.result.summary ? (
             <p className="font-serif text-[1.02rem] leading-relaxed text-ink">{task.result.summary}</p>
           ) : null}
-          <p className="mt-3 font-serif text-sm leading-relaxed text-ink-muted">{task.result.tldr}</p>
-          <ul className="mt-3 space-y-2">
-            {task.result.points.map((point, i) => {
-              const section = point.anchor ? headingBySlug.get(point.anchor) : undefined;
-              return (
-                <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-ink-muted">
-                  <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-seal" />
-                  <span>
-                    {point.anchor && section ? (
-                      <a
-                        href={`#${point.anchor}`}
-                        className="font-medium text-ink underline decoration-line-strong underline-offset-4 transition-colors hover:text-seal"
-                      >
-                        {point.text}
-                      </a>
-                    ) : (
-                      point.text
-                    )}
-                    {point.anchor && section ? (
-                      <a
-                        href={`#${point.anchor}`}
-                        className="ml-2 inline-block rounded-full border border-seal/30 bg-seal/[0.06] px-2 py-0.5 text-[10px] font-medium tracking-wide text-seal transition-colors hover:border-seal hover:text-ink"
-                      >
-                        → {section}
-                      </a>
-                    ) : null}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
+
+          <div className="mt-4 rounded-r-lg border-l-2 border-seal bg-seal-wash/40 px-4 py-3">
+            <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-seal">
+              TL;DR
+            </p>
+            <p className="mt-1 font-serif text-sm leading-relaxed text-ink">{task.result.tldr}</p>
+          </div>
+
+          {task.result.points.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-ink-faint">
+                Key points
+              </p>
+              <ul className="mt-2.5 space-y-2">
+                {task.result.points.map((point, i) => {
+                  const section = point.anchor ? headingBySlug.get(point.anchor) : undefined;
+                  return (
+                    <li key={i} className="flex items-start gap-2.5 text-sm leading-relaxed text-ink-muted">
+                      <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-seal" />
+                      <span className="min-w-0">
+                        {point.anchor && section ? (
+                          <a
+                            href={`#${point.anchor}`}
+                            className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
+                          >
+                            {point.text}
+                          </a>
+                        ) : (
+                          point.text
+                        )}
+                        {point.anchor && section ? (
+                          <a
+                            href={`#${point.anchor}`}
+                            className="ml-2 inline-block max-w-full truncate rounded-full border border-seal/30 bg-seal/[0.06] px-2 py-0.5 align-middle text-[10px] font-medium tracking-wide text-seal transition-[background-color,border-color,color,transform] duration-200 ease-out hover:-translate-y-px hover:border-seal hover:bg-seal/10 hover:text-seal"
+                          >
+                            → {section}
+                          </a>
+                        ) : null}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
         </div>
       ) : busyNow ? (
         <div className="mt-4 space-y-3 border-t border-line pt-4" aria-hidden>

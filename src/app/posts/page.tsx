@@ -67,17 +67,19 @@ export default async function PostsPage() {
                     {post.publishedAt ? (
                       <time
                         dateTime={post.publishedAt}
-                        className="pt-0.5 text-sm text-ink-faint tabular-nums"
+                        className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-300 group-hover:text-seal/80"
                       >
                         {formatDay(post.publishedAt)}
                       </time>
                     ) : (
-                      <span className="pt-0.5 text-sm text-ink-faint">Undated</span>
+                      <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-300 group-hover:text-seal/80">
+                        Undated
+                      </span>
                     )}
                     <div>
                       <Link
                         href={`/@${handle}/${post.slug}`}
-                        className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-colors hover:text-seal"
+                        className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-300 ease-out group-hover:translate-x-0.5 hover:text-seal"
                       >
                         {post.title}
                       </Link>

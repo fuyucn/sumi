@@ -49,9 +49,9 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
             <a
               key={tag.name}
               href={`/tag/${encodeURIComponent(tag.name)}`}
-              className="group relative flex items-baseline justify-between py-4 pl-1 pr-8 transition-colors hover:text-seal sm:pr-10"
+              className="group relative flex items-baseline justify-between rounded-md py-4 pl-3 pr-8 transition-[background-color,color] duration-200 ease-out hover:bg-paper-deep/40 hover:text-seal sm:pr-10"
             >
-              <span className="font-serif text-lg text-ink transition-colors group-hover:text-seal">
+              <span className="font-serif text-lg text-ink transition-[transform,color] duration-300 ease-out group-hover:translate-x-1 group-hover:text-seal">
                 <span className="text-seal">#</span>
                 {tag.name}
               </span>
