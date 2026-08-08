@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import type { TagInfo } from "@/content/store";
 import { getTagsLibraryAction } from "@/app/write/actions";
 
@@ -16,6 +17,7 @@ export function TagPicker({
   const [library, setLibrary] = useState<TagInfo[]>([]);
   const [loaded, setLoaded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     let alive = true;
@@ -60,22 +62,29 @@ export function TagPicker({
   return (
     <div className="relative mt-3">
       <div className="flex flex-wrap items-center gap-2 rounded border border-line-strong bg-paper px-2 py-1.5 min-h-[2.25rem]">
-        {value.map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 rounded-full bg-ink/[0.06] px-2.5 py-0.5 text-sm text-ink"
-          >
-            #{tag}
-            <button
-              type="button"
-              aria-label={`Remove tag ${tag}`}
-              onClick={() => removeTag(tag)}
-              className="text-ink-faint hover:text-seal"
+        <AnimatePresence initial={false}>
+          {value.map((tag) => (
+            <motion.span
+              key={tag}
+              layout={!reduce}
+              initial={reduce ? false : { opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduce ? undefined : { opacity: 0, scale: 0.6 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-1 rounded-full bg-ink/[0.06] px-2.5 py-0.5 text-sm text-ink"
             >
-              ×
-            </button>
-          </span>
-        ))}
+              #{tag}
+              <button
+                type="button"
+                aria-label={`Remove tag ${tag}`}
+                onClick={() => removeTag(tag)}
+                className="text-ink-faint transition-colors hover:text-seal"
+              >
+                ×
+              </button>
+            </motion.span>
+          ))}
+        </AnimatePresence>
         <input
           ref={inputRef}
           value={query}

@@ -329,6 +329,22 @@ textarea,
     display: inline-block;
     animation: seal-diamond-in 0.5s var(--ease-out) 0.25s both;
   }
+  /* The autosave dot breathes gently while the local draft is fresh. */
+  .save-dot {
+    display: inline-block;
+    animation: save-breathe 2.6s var(--ease-in-out) infinite;
+  }
+  @keyframes save-breathe {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.18);
+    }
+  }
   @keyframes seal-diamond-in {
     0% {
       opacity: 0;

@@ -173,7 +173,7 @@ export function PostForm({
           <p className="mr-auto text-xs text-ink-faint">
             {savedTime ? (
               <>
-                <span aria-hidden className="mr-1.5 text-seal">●</span>
+                <span aria-hidden className="save-dot mr-1.5 text-seal">●</span>
                 Autosaved locally at {savedTime}
               </>
             ) : (
