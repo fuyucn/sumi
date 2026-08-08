@@ -73,6 +73,20 @@
   }
 }
 
+/* Floating editor toolbar entrance: fade + settle from just below the
+   selection. Kept at root level so the inline style can reference it
+   directly without Tailwind needing to see a matching utility. */
+@keyframes bubble-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
