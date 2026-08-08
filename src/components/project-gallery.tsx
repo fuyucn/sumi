@@ -59,7 +59,7 @@ export function ProjectGallery({
 
       {active !== null ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink/[0.88] p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex animate-fade-in items-center justify-center bg-ink/[0.88] p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label={`${title} image ${active + 1} of ${images.length}`}
@@ -70,7 +70,7 @@ export function ProjectGallery({
             alt={`${title} image ${active + 1}`}
             width={1600}
             height={1200}
-            className="max-h-[82dvh] max-w-full rounded-card border border-line-strong object-contain shadow-card"
+            className="lightbox-zoom max-h-[82dvh] max-w-full rounded-card border border-line-strong object-contain shadow-card"
             onClick={(e) => e.stopPropagation()}
           />
           <button
