@@ -103,6 +103,8 @@ flowchart TB
 
 ### 4.3 服务层（核心库）
 - `src/lib/auth.ts` — Better Auth 单例（惰性 Proxy），GitHub OAuth + 自定义 `username` 字段 + allowlist 门禁 hook + 内置按 IP 限流 + 登录审计日志。
+- `src/lib/crypto.ts` — AES-256-GCM 落库加密助手：AI provider API Key 用主密钥
+  （`BETTER_AUTH_SECRET` 派生）加密后写入 `sumi_ai_providers`，DB 泄露不暴露第三方密钥。
 - `src/lib/env.ts` — zod 校验环境变量，惰性加载单例。
 - `src/lib/db.ts` — Drizzle + postgres-js 惰性单例。
 - `src/lib/current-user.ts` / `session.ts` / `user.ts` — 会话与 handle 解析。
@@ -196,7 +198,9 @@ AI 功能依赖 Postgres 镜像（`DB_MIRROR=1`），通过独立的 `AiStore` �
 Cloudflare D1 后端 `getAiStore()` 返回 null，功能优雅降级：
 
 - `sumi_ai_providers` — 按 creator handle 一行：`base_url / api_key / model / enabled / updated_at`。
-  API Key 仅服务端存储，页面只回传「是否已配置」的占位符，绝不回显明文。
+  API Key 以 `enc:v1:<iv>:<tag>:<cipher>` 形式 **AES-256-GCM 加密落库**（密钥由
+  `BETTER_AUTH_SECRET` 派生，仅存环境变量、不存库），页面只回传「是否已配置」的
+  占位符，绝不回显明文；`scripts/encrypt-ai-keys.ts` 可把历史明文 key 一次性升级为密文。
 - `sumi_ai_tasks` — 按文章去重的一行任务：`handle + post_slug + kind(summary) +
   status(pending/running/done/failed) + result(JSON: summary+tldr+points) + error + model`。
 
@@ -260,6 +264,10 @@ sequenceDiagram
 - **审计日志**：被 allowlist 拒绝的登录尝试与路由层限流触发都会输出一行
   `[security]` 结构化日志（event / login / ip / path），Docker/Cloudflare 日志
   可直接 grep。
+- **第三方密钥落库加密**：AI provider API Key 写入 `sumi_ai_providers` 前用
+  `AES-256-GCM` 加密（`src/lib/crypto.ts`，主密钥派生自 `BETTER_AUTH_SECRET`），
+  数据库泄露也不会暴露 OpenAI/DeepSeek 等服务的密钥；读取时旧明文行自动兼容
+  （返回明文并在下次保存时升级为密文）。
 - **响应安全头**：`src/proxy.ts`（Next 16 Proxy）为每个页面请求签发一次性 CSP
   nonce（`script-src 'nonce-*' 'strict-dynamic'`，开发态附 `'unsafe-eval'`），
   `layout.tsx` 的防闪烁主题内联脚本同样携带该 nonce；配合 `next.config.ts` 的
@@ -503,7 +511,8 @@ sequenceDiagram
    重新校验 allowlist，移除用户即立即吊销会话；Better Auth 内置按 IP 限流
    （sign-in 3 次/10 秒、OAuth 回调 10 次/分）+ 路由层 30 次/分兜底，被拒绝的
    登录尝试输出 `[security]` 审计日志；`BETTER_AUTH_TRUSTED_ORIGINS` 白名单兜底
-   CSRF；每请求 nonce 的 CSP 与 HTTPS 专属 HSTS 封堵 XSS 与降级攻击。详见 6.1。
+   CSRF；每请求 nonce 的 CSP 与 HTTPS 专属 HSTS 封堵 XSS 与降级攻击；AI provider
+   密钥 AES-256-GCM 加密落库。详见 6.1。
 5. **一切读写走存储层/HTTP** —— 无本地 FS 写入，图片以 base64 入库（或 R2
    对象），天然 serverless 可移植。
 6. **惰性单例 (Proxy)** —— `env / db / auth` 均在首次访问才初始化，避免测试与构建期触发副作用。
@@ -517,7 +526,7 @@ sequenceDiagram
 
 ## 9. 测试与验证
 
-- **单元测试**: Vitest 28 个文件 / 201 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、搜索相关性、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub/Cloudflare store 集成（mock）、auth 门禁（PGlite 内存库）、评论深度与删除、登录审计日志与生产配置守卫（含 `BETTER_AUTH_TRUSTED_ORIGINS`）。
+- **单元测试**: Vitest 29 个文件 / 209 个用例，覆盖 frontmatter 序列化、路径与 slug、feed 排序、搜索相关性、Server Action 核心（用依赖注入注入 `store`/`now`）、GitHub/Cloudflare store 集成（mock）、auth 门禁（PGlite 内存库）、评论深度与删除、登录审计日志与生产配置守卫（含 `BETTER_AUTH_TRUSTED_ORIGINS`）、密钥落库加密（AES-GCM 往返 / 篡改 / 旧明文兼容）。
 - **质量门禁**: `pnpm typecheck`、`pnpm test`、`pnpm lint`、`pnpm build`、以及 Docker 冒烟（`docker compose up -d` + `curl :3005` = 200）。
 
 ---

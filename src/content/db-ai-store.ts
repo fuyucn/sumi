@@ -3,6 +3,8 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { randomUUID } from "node:crypto";
 import { schema as dbSchema, sumiAiProviders, sumiAiTasks } from "@/db/schema";
 import { parseSummaryPoint } from "@/lib/ai/summary-point";
+import { decryptSecret, encryptSecret } from "@/lib/crypto";
+import { env } from "@/lib/env";
 import type { AiProviderConfig, AiStore, AiSummaryPoint, AiSummaryResult, AiTask } from "./ai-store";
 
 type Db = PostgresJsDatabase<typeof dbSchema>;
@@ -78,10 +80,11 @@ export class DbAiStore implements AiStore {
       .limit(1);
     const row = rows[0] as ProviderRow | undefined;
     if (!row) return null;
+    const apiKey = decryptSecret(row.apiKey, env.BETTER_AUTH_SECRET) ?? row.apiKey;
     return {
       handle: row.handle,
       baseUrl: row.baseUrl,
-      apiKey: row.apiKey,
+      apiKey,
       model: row.model,
       enabled: row.enabled,
     };
@@ -91,7 +94,9 @@ export class DbAiStore implements AiStore {
     const values = {
       handle: provider.handle,
       baseUrl: provider.baseUrl,
-      apiKey: provider.apiKey,
+      // API keys are encrypted at rest with the app master secret so a DB
+      // leak never exposes third-party provider keys in plaintext.
+      apiKey: encryptSecret(provider.apiKey, env.BETTER_AUTH_SECRET),
       model: provider.model,
       enabled: provider.enabled,
       updatedAt: now.toISOString(),

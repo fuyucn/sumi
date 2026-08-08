@@ -35,13 +35,13 @@ async function makeStore() {
   const client = new PGlite();
   await client.exec(DDL);
   const db = drizzle(client, { schema }) as unknown as PostgresJsDatabase<typeof schema>;
-  return new DbAiStore(db);
+  return { store: new DbAiStore(db), client };
 }
 
 const NOW = new Date("2026-08-07T12:00:00.000Z");
 
 test("provider save + get round-trip", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   expect(await store.getProvider("alice")).toBeNull();
   await store.saveProvider(
     { handle: "alice", baseUrl: "https://example.com/v1", apiKey: "sk-x", model: "m1", enabled: true },
@@ -56,8 +56,36 @@ test("provider save + get round-trip", async () => {
   });
 });
 
+test("provider apiKey is encrypted at rest", async () => {
+  const { store, client } = await makeStore();
+  await store.saveProvider(
+    { handle: "alice", baseUrl: "https://example.com/v1", apiKey: "sk-super-secret", model: "m1", enabled: true },
+    NOW,
+  );
+  const result = (await client.query(
+    `select "api_key" from "sumi_ai_providers" where "handle" = 'alice'`,
+  )) as { rows: Array<{ api_key: string }> };
+  const stored = result.rows[0].api_key;
+  expect(stored).toMatch(/^enc:v1:/);
+  expect(stored).not.toContain("sk-super-secret");
+});
+
+test("legacy plaintext apiKey still reads back (backward compatible)", async () => {
+  const { store, client } = await makeStore();
+  await client.query(
+    `insert into "sumi_ai_providers" ("handle","base_url","api_key","model","enabled","updated_at") ` +
+      `values ('bob','https://example.com/v1','sk-legacy','m2',true,'2026-08-07T12:00:00.000Z')`,
+  );
+  expect(await store.getProvider("bob")).toMatchObject({
+    handle: "bob",
+    apiKey: "sk-legacy",
+    model: "m2",
+    enabled: true,
+  });
+});
+
 test("enqueueSummary creates one pending task per post and dedupes", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
@@ -67,7 +95,7 @@ test("enqueueSummary creates one pending task per post and dedupes", async () =>
 });
 
 test("re-enqueue after failure resets the task to pending", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
   await store.finishTask(task!.id, { status: "failed", error: "boom", now: NOW });
@@ -79,7 +107,7 @@ test("re-enqueue after failure resets the task to pending", async () => {
 });
 
 test("claimPending atomically claims up to the limit", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   for (const slug of ["a", "b", "c"]) await store.enqueueSummary("alice", slug, NOW);
   const claimed = await store.claimPending(2, NOW);
   expect(claimed.map((t) => t.postSlug).sort()).toEqual(["a", "b"]);
@@ -94,7 +122,7 @@ test("claimPending atomically claims up to the limit", async () => {
 });
 
 test("finishTask stores done result and model", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
   await store.claimPending(5, NOW);
@@ -112,7 +140,7 @@ test("finishTask stores done result and model", async () => {
 });
 
 test("legacy string-point results are normalized on read", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
   await store.claimPending(5, NOW);
@@ -127,7 +155,7 @@ test("legacy string-point results are normalized on read", async () => {
 });
 
 test("malformed stored result parses as null", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
   await store.claimPending(5, NOW);
@@ -140,7 +168,7 @@ test("malformed stored result parses as null", async () => {
 });
 
 test("resetTask requeues a failed task", async () => {
-  const store = await makeStore();
+  const { store } = await makeStore();
   await store.enqueueSummary("alice", "hello-world", NOW);
   const task = await store.getTask("alice", "hello-world");
   await store.finishTask(task!.id, { status: "failed", error: "boom", now: NOW });

@@ -21,6 +21,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Independent pages** — arbitrary markdown pages per creator at `/@handle/p/<slug>`, optionally linked from their homepage nav.
 - **Posts** — a yearly timeline at `/posts` with reading time and word counts in article bylines.
 - **Notifications** — comments, replies, likes, and new followers land in `/notifications` with an unread badge and "mark all read", on every backend.
+- **AI 总结（导读）** — one-click AI summary from the editor: a full paragraph, a one-line TL;DR, and key points that deep-link to headings. The TL;DR auto-syncs to the post excerpt (导读) for list cards, search, and SEO. Works with any OpenAI-compatible provider (OpenAI, DeepSeek, Moonshot, Ollama, OpenCode Zen), configured in `/settings`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
 - **Own your content** — every article, image, comment, and magazine is stored in your own Postgres (or Cloudflare D1) database, portable and version-controlled; no GitHub repo required.
@@ -49,6 +50,10 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Transport hardening**: HSTS is emitted only for HTTPS requests
   (`x-forwarded-proto`), alongside `nosniff`, `X-Frame-Options: DENY`,
   `Referrer-Policy`, and `Permissions-Policy` headers.
+- **Encrypted at rest**: AI provider API keys are AES-256-GCM encrypted in
+  `sumi_ai_providers` with a key derived from `BETTER_AUTH_SECRET` — a database
+  leak never exposes third-party keys. `scripts/encrypt-ai-keys.ts` upgrades
+  legacy plaintext rows in place.
 - **Server-side only secrets**: GitHub OAuth and AI provider keys live in env
   vars on the server; the client never sees a token.
 

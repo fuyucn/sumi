@@ -16,6 +16,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { createDb } from "@/lib/db";
 import { schema } from "@/db/schema";
 import { chatCompletion, parseSummaryResponse, summaryPrompt } from "@/lib/ai/summarize";
+import { decryptSecret } from "@/lib/crypto";
 import { env } from "@/lib/env";
 
 interface PostRow {
@@ -89,6 +90,8 @@ async function main() {
     await db.$client.end();
     process.exit(1);
   }
+  const apiKey = decryptSecret(provider.apiKey, env.BETTER_AUTH_SECRET) ?? provider.apiKey;
+  const providerConfig = { ...provider, apiKey };
   console.log(`Provider: ${provider.handle} / ${provider.model}`);
 
   let ok = 0;
@@ -98,7 +101,7 @@ async function main() {
     process.stdout.write(`@${post.handle}/${post.slug} … `);
     try {
       const messages = summaryPrompt(post.body);
-      const raw = await chatCompletion(provider, messages);
+      const raw = await chatCompletion(providerConfig, messages);
       const result = parseSummaryResponse(raw);
       await db.insert(schema.sumiAiTasks).values({
         id: randomUUID(),
