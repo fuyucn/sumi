@@ -132,7 +132,7 @@ export default async function NotificationsPage() {
         </p>
       ) : (
         <>
-          <ul className="mt-10 divide-y divide-line border-y border-line">
+          <ul className="drawer-stagger mt-10 divide-y divide-line border-y border-line">
             {notifications.map((n) => (
               <NotificationRow
                 key={n.id}

@@ -12,6 +12,7 @@ import { getUserHandle } from "@/lib/user";
 import { estimateReadingTime } from "@/lib/reading-time";
 import { extractHeadings } from "@/lib/heading-slug";
 import { displayName } from "@/lib/display-name";
+import { Clock } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +71,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
         <h1 className="mt-4 font-serif text-[2rem] sm:text-[2.5rem] leading-[1.12] font-semibold tracking-tight text-ink text-balance">
           {post.title}
         </h1>
-        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
+        <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-ink-faint">
           <a
             href={`/@${data.handle}`}
             className="link-underline font-medium text-ink-muted transition-colors hover:text-ink"
@@ -99,8 +100,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
               </time>
             </>
           ) : null}
-          <span aria-hidden className="text-line-strong">·</span>
-          <span>
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full border border-line px-2.5 py-0.5 text-xs font-medium text-ink-soft"
+          >
+            <Clock size={12} weight="duotone" aria-hidden />
             {reading.minutes} min read · {reading.words.toLocaleString("en-US")}{" "}
             {reading.words === 1 ? "word" : "words"}
           </span>
