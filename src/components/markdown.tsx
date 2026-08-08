@@ -65,6 +65,13 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
       remarkPlugins={[remarkGfm]}
       components={{
         ...headingComponents,
+        // Wide tables (esp. on mobile) scroll inside their own container
+        // instead of blowing out the article column.
+        table: ({ children }) => (
+          <div className="overflow-x-auto">
+            <table>{children}</table>
+          </div>
+        ),
         // Fenced blocks are replaced by Shiki's own <pre>; the default
         // wrapper is dropped to avoid nesting.
         pre: ({ children }) => <>{children}</>,
