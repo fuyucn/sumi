@@ -67,10 +67,9 @@ function buildAuth() {
       github: {
         clientId: env.GITHUB_CLIENT_ID,
         clientSecret: env.GITHUB_CLIENT_SECRET,
-        // `repo` scope is needed to commit articles/images to the content repo
-        // (GitHub-API content store, Plan 2). It grants private-repo write — keep
-        // only while that feature is in scope; narrow to `public_repo` if deferred.
-        scope: ["repo", "read:user"],
+        // Least-privilege OAuth: content lives in Postgres/Cloudflare, not a
+        // GitHub repo, so we only ask for the profile defaults better-auth
+        // requests (`read:user` + `user:email`) and no repo access at all.
         /**
          * Capture the GitHub login (username) into the `username` field.
          * `profile.name` is the display name and may differ from the login;

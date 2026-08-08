@@ -28,9 +28,9 @@ test("renders GFM tables inside the framed scroll container", () => {
   expect(html).toContain("<td>1</td>");
 });
 
-test("renders fenced code blocks with Shiki and a language label", async () => {
+test("renders fenced code blocks with Shiki in a framed code well and a language label", async () => {
   const html = await renderMarkdown("```ts\nconst x: number = 1;\n```");
-  expect(html).toContain("relative my-4");
+  expect(html).toContain("code-well");
   expect(html).toContain("class=\"shiki");
   expect(html).toContain(">ts</span>");
   expect(html).toContain("<span class=\"line\">");

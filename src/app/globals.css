@@ -707,6 +707,21 @@ textarea,
   color: var(--shiki-dark);
 }
 
+/* Code well: a title bar (language + copy) sits on a hairline above the
+   Shiki body, so blocks read as a framed panel instead of a floating card. */
+.code-well {
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background-color: var(--color-paper-deep);
+}
+.code-well .shiki {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  padding: 1.1rem 1.25rem 1.25rem;
+}
+
 /* Shared component tokens: fields, buttons, and card surfaces so every form
    and action speaks the same shape language (input 10 / card 14 / pill 999). */
 @layer components {

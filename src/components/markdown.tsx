@@ -63,17 +63,16 @@ const headingComponents = {
 async function HighlightedCode({ lang, code }: { lang: string; code: string }) {
   const html = await highlightCode(code, lang);
   return (
-    <div className="relative my-4">
-      <div dangerouslySetInnerHTML={{ __html: html }} />
-      {lang ? (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute left-4 top-3 font-mono text-[0.6875rem] uppercase tracking-[0.12em] text-ink-muted"
-        >
-          {lang}
-        </span>
-      ) : null}
-      <CodeBlockCopy code={code} />
+    <div className="my-4">
+      <div className="code-well">
+        <div className="flex items-center justify-between gap-3 border-b border-line bg-paper-deep/60 px-4 py-2">
+          <span className="min-w-0 truncate font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-ink-muted">
+            {lang || "code"}
+          </span>
+          <CodeBlockCopy code={code} />
+        </div>
+        <div dangerouslySetInnerHTML={{ __html: html }} />
+      </div>
     </div>
   );
 }
