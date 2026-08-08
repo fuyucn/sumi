@@ -54,7 +54,7 @@ function PostRow({ post, aiStatus }: { post: ListingPost; aiStatus: AiRowStatus 
   const isDraft = post.status === "draft";
   const date = formatDate(isDraft ? post.createdAt : post.publishedAt);
   return (
-    <div className="flex items-center justify-between gap-4 py-4">
+    <div className="group flex items-center justify-between gap-4 py-4">
       <Link
         href={`/write/${post.slug}${post.isAgent ? `?agent=${encodeURIComponent(post.handle)}` : ""}`}
         className="min-w-0 flex-1 font-serif text-lg leading-snug text-ink transition-[color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal"
