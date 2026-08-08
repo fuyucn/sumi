@@ -1,4 +1,5 @@
 import { getReadContentStore } from "@/content";
+import { TagsExplorer } from "@/components/tags-explorer";
 
 export const dynamic = "force-dynamic";
 
@@ -21,23 +22,7 @@ export default async function TagsPage() {
           No tags yet.
         </p>
       ) : (
-        <div className="divide-y divide-line border-t border-line">
-          {tags.map((tag) => (
-            <a
-              key={tag.name}
-              href={`/tag/${encodeURIComponent(tag.name)}`}
-              className="group flex items-baseline justify-between py-4 transition-colors hover:text-seal"
-            >
-              <span className="font-serif text-lg text-ink transition-colors group-hover:text-seal">
-                <span className="text-seal">#</span>
-                {tag.name}
-              </span>
-              <span className="text-sm text-ink-faint">
-                {tag.count} {tag.count === 1 ? "post" : "posts"}
-              </span>
-            </a>
-          ))}
-        </div>
+        <TagsExplorer tags={tags} />
       )}
     </main>
   );
