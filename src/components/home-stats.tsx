@@ -2,15 +2,26 @@
 import { Reveal } from "@/components/reveal";
 import { CountUp } from "@/components/count-up";
 
-export function HomeStats({ posts, writers, tags }: { posts: number; writers: number; tags: number }) {
+export function HomeStats({
+  posts,
+  writers,
+  tags,
+  views,
+}: {
+  posts: number;
+  writers: number;
+  tags: number;
+  views: number;
+}) {
   const stats = [
     { label: "Posts", value: posts },
     { label: "Writers", value: writers },
     { label: "Tags", value: tags },
+    { label: "Views", value: views },
   ];
   return (
     <Reveal as="section">
-      <dl className="mt-14 grid grid-cols-3 divide-x divide-line border-y border-line">
+      <dl className="mt-14 grid grid-cols-2 divide-x divide-line border-y border-line sm:grid-cols-4">
         {stats.map((stat) => (
           <div key={stat.label} className="px-5 py-5 sm:px-8">
             <dt className="text-xs font-medium uppercase tracking-[0.14em] text-ink-faint">

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, Eye } from "@phosphor-icons/react/dist/ssr";
 import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
@@ -45,6 +45,11 @@ export default async function Home() {
   const featured = feed[0];
   const cover = featured?.post.coverImage;
   const coverSrc = cover?.startsWith("http") ? cover : undefined;
+  const hot = feed
+    .filter(({ post }) => (post.views ?? 0) > 0)
+    .sort((a, b) => (b.post.views ?? 0) - (a.post.views ?? 0))
+    .slice(0, 5);
+  const totalViews = feed.reduce((sum, { post }) => sum + (post.views ?? 0), 0);
   const featuredDate = featured?.post.publishedAt
     ? new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -155,7 +160,12 @@ export default async function Home() {
         </aside>
       </ScrollHero>
 
-      <HomeStats posts={feed.length} writers={creators} tags={totalTags} />
+      <HomeStats
+        posts={feed.length}
+        writers={creators}
+        tags={totalTags}
+        views={totalViews}
+      />
 
       <section className="mt-20 lg:mt-28">
         <Reveal as="div" className="flex items-end justify-between gap-6 border-b border-line pb-4">
@@ -198,6 +208,64 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      {hot.length > 0 ? (
+        <section className="mt-20 lg:mt-28">
+          <Reveal as="div" className="flex items-end justify-between gap-6 border-b border-line pb-4">
+            <div>
+              <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
+                Most read
+              </h2>
+              <p className="mt-2 text-sm text-ink-muted">
+                The pieces readers keep coming back to.
+              </p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1 text-sm text-ink-faint tabular-nums">
+              <Eye size={14} weight="duotone" aria-hidden />
+              {totalViews} total views
+            </span>
+          </Reveal>
+          <ol className="divide-y divide-line">
+            {hot.map(({ handle, post }, i) => {
+              const date = post.publishedAt
+                ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })
+                : null;
+              return (
+                <Reveal as="li" key={`${handle}/${post.slug}`} delay={Math.min(i * 0.04, 0.2)}>
+                  <Link
+                    href={`/@${handle}/${post.slug}`}
+                    transitionTypes={["nav-forward"]}
+                    className="group grid grid-cols-[2.25rem_1fr_auto] items-baseline gap-x-4 gap-y-1 py-5 sm:grid-cols-[3rem_1fr_auto]"
+                  >
+                    <span
+                      aria-hidden
+                      className="font-serif text-2xl font-medium tracking-tight text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal sm:text-3xl"
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-serif text-lg font-medium leading-snug tracking-tight text-ink transition-colors duration-[var(--dur-short)] group-hover:text-seal">
+                        {post.title}
+                      </span>
+                      <span className="mt-0.5 block text-sm text-ink-faint">
+                        {[names.get(handle), date].filter(Boolean).join(" · ")}
+                      </span>
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-ink-muted">
+                      <Eye size={13} weight="duotone" aria-hidden />
+                      {post.views}
+                    </span>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </ol>
+        </section>
+      ) : null}
 
       {tags.length > 0 ? (
         <Reveal as="section" className="mt-20">
