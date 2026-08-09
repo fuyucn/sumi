@@ -207,7 +207,16 @@ export default async function WriteDashboard({
         <h2 className="mb-2 text-sm font-medium uppercase tracking-widest text-ink-faint">
           Collections
         </h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Link
+            href="/write/stats"
+            className="card group flex items-center justify-between transition-[border-color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40"
+          >
+            <span className="font-serif text-lg font-medium text-ink">Stats</span>
+            <span className="text-sm text-ink-faint transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal">
+              →
+            </span>
+          </Link>
           <Link
             href="/write/magazines"
             className="card group flex items-center justify-between transition-[border-color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40"

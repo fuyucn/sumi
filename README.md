@@ -20,6 +20,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Projects** — a `/projects` showcase of featured work with tech stack, links, and a per-project image gallery (cover + lightbox); editable from `/write/projects`.
 - **Independent pages** — arbitrary markdown pages per creator at `/@handle/p/<slug>`, optionally linked from their homepage nav.
 - **Posts** — a yearly timeline at `/posts` with reading time and word counts in article bylines.
+- **Stats** — a `/write/stats` dashboard for publishers: published/word/view counts, 30-day activity, most-read posts, and recent comments (deep-links to the comment on the article).
 - **Notifications** — comments, replies, likes, and new followers land in `/notifications` with an unread badge and "mark all read", on every backend.
 - **AI 总结（导读）** — one-click AI summary from the editor: a full paragraph, a one-line TL;DR, and key points that deep-link to headings. The TL;DR auto-syncs to the post excerpt (导读) for list cards, search, and SEO; without AI configured, the excerpt falls back to the body's first sentence automatically, so there is no manual 导读 field. Works with any OpenAI-compatible provider (OpenAI, DeepSeek, Moonshot, Ollama, OpenCode Zen), configured in `/settings`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.

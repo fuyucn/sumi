@@ -43,7 +43,10 @@ function CommentContent({
 }: CommentNodeProps) {
   return (
     <>
-      <div className="group -mx-3 rounded-lg border-l-2 border-transparent px-3 py-1 transition-[background-color,border-color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:border-seal/60 hover:bg-paper-deep/30">
+      <div
+        id={`comment-${comment.id}`}
+        className="group -mx-3 rounded-lg border-l-2 border-transparent px-3 py-1 scroll-mt-24 transition-[background-color,border-color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:border-seal/60 hover:bg-paper-deep/30"
+      >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Link
             href={`/@${comment.handle}`}
