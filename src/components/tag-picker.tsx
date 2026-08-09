@@ -135,10 +135,16 @@ export function TagPicker({
                 onMouseEnter={() => setActive(i)}
                 onClick={() => addTag(t.name)}
                 className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-sm transition-colors ${
-                  i === activeIndex ? "bg-seal-wash/40" : ""
+                  i === activeIndex ? "bg-seal-wash/60" : ""
                 }`}
               >
-                <span className="text-ink">#{t.name}</span>
+                <span
+                  className={`transition-colors ${
+                    i === activeIndex ? "text-seal" : "text-ink"
+                  }`}
+                >
+                  #{t.name}
+                </span>
                 <span className="text-xs text-ink-faint">{t.count}</span>
               </button>
             ))
@@ -148,8 +154,10 @@ export function TagPicker({
               type="button"
               onMouseEnter={() => setActive(suggestions.length)}
               onClick={() => addTag(createLabel)}
-              className={`w-full px-3 py-1.5 text-left text-sm ${
-                activeIndex === suggestions.length ? "bg-seal-wash/40" : ""
+              className={`w-full px-3 py-1.5 text-left text-sm transition-colors ${
+                activeIndex === suggestions.length
+                  ? "bg-seal-wash/60 text-seal"
+                  : "text-ink"
               }`}
             >
               Create “{createLabel}”

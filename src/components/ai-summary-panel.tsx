@@ -88,7 +88,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
     return (
       <section
         aria-label="AI 总结"
-        className="mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
+        className="panel-enter mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
       >
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
@@ -115,7 +115,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
   return (
     <section
       aria-label="AI 总结"
-      className="mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
+      className="panel-enter mt-8 rounded-card border border-line bg-paper/60 p-5 sm:p-6 shadow-card"
     >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-seal/40 bg-seal/10 px-2.5 py-0.5 text-xs font-medium tracking-wide text-seal">
@@ -196,7 +196,7 @@ export function AiSummaryPanel({ handle, slug, initialTask, headings = [], isAut
           ) : null}
         </div>
       ) : task.status === "failed" ? (
-        <div className="mt-4">
+        <div className="panel-enter mt-4">
           <p className="text-sm leading-relaxed text-ink-muted">
             AI 总结生成失败
             {isAuthor && task.error ? (
