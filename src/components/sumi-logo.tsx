@@ -10,8 +10,11 @@ type Props = {
 
 // One full "write, hold, erase, pause" loop of the wordmark, in ms.
 const CYCLE_MS = 7000;
-const HOLD_END_MS = 4300;
-const ERASE_END_MS = 5600;
+// The last stroke (the "i" dot) touches down ~6.1s in; the whole word then
+// holds fully drawn until the unified erase begins.
+const ERASE_START_MS = 6300;
+const INK_FADE_MS = 140;
+const ERASE_FADE_MS = 500;
 // Ghost underlay — the full letter shape at low opacity, so the word is
 // readable while the ink is mid-stroke (and as a static fallback).
 const GHOST_OPACITY = 0.14;
@@ -40,7 +43,9 @@ export function SumiLogo({ className = "" }: Props) {
     if (!svg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return;
     }
-    const paths = svg.querySelectorAll("path");
+    // Only the ink strokes animate — the mask fill and ghost underlay are
+    // plain fills and must stay outside the stroke timeline.
+    const paths = svg.querySelectorAll<SVGPathElement>("[data-sumi-ink] path");
     const timings: ReadonlyArray<readonly [number, number]> = [
       ...chains.map((c) => [c.start, c.dur] as const),
       [dotStart, dotDur] as const,
@@ -49,26 +54,25 @@ export function SumiLogo({ className = "" }: Props) {
       const [start, dur] = timings[i] ?? [0, 0.3];
       const drawStart = (start * 1000) / CYCLE_MS;
       const drawEnd = ((start + dur) * 1000) / CYCLE_MS;
-      const holdEnd = HOLD_END_MS / CYCLE_MS;
-      const eraseEnd = ERASE_END_MS / CYCLE_MS;
+      const inkIn = Math.min(drawStart + INK_FADE_MS / CYCLE_MS, drawEnd);
+      // Paths that finish late (the dot) hold a beat past the unified erase
+      // start so no keyframe offset ever regresses.
+      const eraseFrom = Math.max(
+        ERASE_START_MS / CYCLE_MS,
+        drawEnd + 100 / CYCLE_MS,
+      );
+      const eraseTo = Math.min(
+        eraseFrom + ERASE_FADE_MS / CYCLE_MS,
+        1 - 100 / CYCLE_MS,
+      );
       return path.animate(
         [
           { strokeDashoffset: 1, opacity: 0, offset: 0 },
           { strokeDashoffset: 1, opacity: 0, offset: drawStart },
-          {
-            strokeDashoffset: 1,
-            opacity: 1,
-            offset: Math.min(drawStart + 0.02, drawEnd),
-            easing: "ease-out",
-          },
+          { strokeDashoffset: 1, opacity: 1, offset: inkIn, easing: "ease-out" },
           { strokeDashoffset: 0, opacity: 1, offset: drawEnd, easing: "ease-out" },
-          { strokeDashoffset: 0, opacity: 1, offset: holdEnd, easing: "linear" },
-          {
-            strokeDashoffset: 1,
-            opacity: 0,
-            offset: eraseEnd,
-            easing: "ease-in-out",
-          },
+          { strokeDashoffset: 0, opacity: 1, offset: eraseFrom, easing: "linear" },
+          { strokeDashoffset: 1, opacity: 0, offset: eraseTo, easing: "ease-in-out" },
           { strokeDashoffset: 1, opacity: 0, offset: 1 },
         ],
         { duration: CYCLE_MS, iterations: Infinity },
@@ -107,7 +111,7 @@ export function SumiLogo({ className = "" }: Props) {
         opacity={GHOST_OPACITY}
         className="sumi-wordmark-ghost"
       />
-      <g mask={`url(#${maskId})`}>
+      <g mask={`url(#${maskId})`} data-sumi-ink>
         {chains.map((chain, i) => (
           <path
             key={i}
