@@ -61,7 +61,7 @@ export function TagPicker({
 
   return (
     <div className="relative mt-3">
-      <div className="flex flex-wrap items-center gap-2 rounded border border-line-strong bg-paper px-2 py-1.5 min-h-[2.25rem]">
+      <div className="flex min-h-[2.25rem] flex-wrap items-center gap-2 rounded border border-line-strong bg-paper px-2 py-1.5 transition focus-within:border-seal/70 focus-within:ring-2 focus-within:ring-seal/25">
         <AnimatePresence initial={false}>
           {value.map((tag) => (
             <motion.span

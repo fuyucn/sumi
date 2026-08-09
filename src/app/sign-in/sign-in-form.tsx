@@ -134,7 +134,7 @@ export function SignInForm({ passphraseRequired }: { passphraseRequired: boolean
                 }}
                 autoComplete="current-password"
                 placeholder="输入口令解锁登录"
-                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-seal"
+                className="w-full rounded-lg border border-line-strong bg-paper px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-seal focus:ring-2 focus:ring-seal/25"
               />
               <button
                 type="button"
