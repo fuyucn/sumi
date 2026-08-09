@@ -170,6 +170,7 @@ export default async function Home() {
                   handle={handle}
                   post={post}
                   authorName={names.get(handle)}
+                  ruleDelay={Math.min(i * 0.05, 0.3)}
                 />
               </Reveal>
             ))}

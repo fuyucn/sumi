@@ -88,7 +88,12 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         <div className="divide-y divide-line border-t border-line">
           {posts.map((post, i) => (
             <Reveal key={post.slug} delay={Math.min(i * 0.05, 0.3)}>
-              <PostCard handle={handle} post={post} authorName={authorName} />
+              <PostCard
+                handle={handle}
+                post={post}
+                authorName={authorName}
+                ruleDelay={Math.min(i * 0.05, 0.3)}
+              />
             </Reveal>
           ))}
         </div>
