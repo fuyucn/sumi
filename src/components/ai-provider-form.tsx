@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveAiProviderAction, testAiProviderAction } from "@/app/settings/actions";
-import { Check } from "@phosphor-icons/react";
+import { Check, Eye, EyeSlash } from "@phosphor-icons/react";
 import { friendlyAiError } from "@/lib/ai/error-hint";
 
 export interface AiProviderInitial {
@@ -42,6 +42,7 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
+  const [showKey, setShowKey] = useState(false);
   const [isPending, startTransition] = useTransition();
   const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -59,10 +60,31 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
 
   const payload = () => ({ baseUrl, apiKey, model });
 
+  /** Client-side gate so the buttons never fire on obviously bad input. */
+  const validate = (): string | null => {
+    const url = baseUrl.trim();
+    if (!url) return "请填写 Base URL";
+    try {
+      const parsed = new URL(url);
+      if (!/^https?:$/.test(parsed.protocol)) return "Base URL 需要是 http(s) 地址";
+    } catch {
+      return "Base URL 格式不对，请检查后重试";
+    }
+    if (!model.trim()) return "请填写 Model 名称";
+    if (!initial.hasKey && !apiKey.trim()) return "请填写 API Key";
+    return null;
+  };
+
   return (
     <form
+      noValidate
       onSubmit={(e) => {
         e.preventDefault();
+        const invalid = validate();
+        if (invalid) {
+          setError(invalid);
+          return;
+        }
         setError(null);
         setTestResult(null);
         startTransition(async () => {
@@ -108,7 +130,8 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
         </label>
         <input
           id="ai-base-url"
-          type="url"
+          type="text"
+          inputMode="url"
           value={baseUrl}
           onChange={(e) => setBaseUrl(e.target.value)}
           placeholder="https://opencode.ai/zen/go/v1"
@@ -119,14 +142,31 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
         <label htmlFor="ai-api-key" className="text-sm font-medium text-ink-muted">
           API Key
         </label>
-        <input
-          id="ai-api-key"
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder={initial.hasKey ? "••••••••（留空保持不变）" : "sk-..."}
-          className="field mt-1"
-        />
+        <div className="relative mt-1">
+          <input
+            id="ai-api-key"
+            type={showKey ? "text" : "password"}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            placeholder={initial.hasKey ? "••••••••（留空保持不变）" : "sk-..."}
+            className="field pr-10"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <button
+            type="button"
+            onClick={() => setShowKey((v) => !v)}
+            aria-label={showKey ? "隐藏 API Key" : "显示 API Key"}
+            aria-pressed={showKey}
+            className="press absolute right-1.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-ink-faint transition-colors hover:text-ink"
+          >
+            {showKey ? (
+              <EyeSlash size={15} weight="duotone" aria-hidden />
+            ) : (
+              <Eye size={15} weight="duotone" aria-hidden />
+            )}
+          </button>
+        </div>
       </div>
       <div>
         <label htmlFor="ai-model" className="text-sm font-medium text-ink-muted">
@@ -178,6 +218,11 @@ export function AiProviderForm({ initial }: { initial: AiProviderInitial }) {
           onClick={() => {
             setError(null);
             setTestResult(null);
+            const invalid = validate();
+            if (invalid) {
+              setError(invalid);
+              return;
+            }
             startTransition(async () => {
               const result = await testAiProviderAction(payload());
               setTestResult(result.ok ? "✓ 连接成功" : `✗ ${friendlyAiError(result.error)}`);

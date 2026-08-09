@@ -91,9 +91,12 @@ export default async function SettingsPage() {
             登录与安全
           </h2>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-muted">
-            只允许出现在 `ALLOWED_GITHUB_USERS` 白名单里的 GitHub 账号登录；
+            只允许出现在{" "}
+            <code className="code-chip">ALLOWED_GITHUB_USERS</code>{" "}
+            白名单里的 GitHub 账号登录；
             每次登录和每个请求都会重新校验，移除账号后会话立即失效。
-            设置 `LOGIN_PASSPHRASE` 后可再启用第二道口令阀。
+            设置 <code className="code-chip">LOGIN_PASSPHRASE</code>{" "}
+            后可再启用第二道口令阀。
           </p>
           <dl className="mt-5 space-y-3 text-sm">
             <div className="flex items-center justify-between gap-3 rounded-lg border border-line bg-paper/40 px-4 py-3">

@@ -1210,6 +1210,21 @@ textarea,
     box-shadow: var(--shadow-card);
   }
 
+  /* Inline identifiers (env names, handles, paths) as a small chip so they
+     read as code without shouting: same ink as body text, sunken paper well. */
+  .code-chip {
+    display: inline-block;
+    border: 1px solid var(--color-line);
+    border-radius: 6px;
+    background-color: var(--color-paper-deep);
+    padding: 0.1em 0.4em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.92em;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
   .btn-primary,
   .btn-seal,
   .btn-ghost {
