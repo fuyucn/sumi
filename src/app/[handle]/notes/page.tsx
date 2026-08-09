@@ -48,14 +48,14 @@ export default async function NotesPage({
     <main className="max-w-2xl mx-auto px-5 pt-14 pb-24 rise">
       <Link
         href={`/@${handle}`}
-        className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink-muted transition-colors hover:text-seal"
+        className="group/back link-underline text-sm font-medium text-ink-muted transition-colors hover:text-ink"
       >
         <span
           aria-hidden
-          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
+          className="inline-block transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/back:-translate-x-0.5"
         >
           ←
-        </span>
+        </span>{" "}
         {authorName}
       </Link>
       <header className="mt-6 mb-8">

@@ -30,14 +30,14 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
       <Link
         href="/tags"
         transitionTypes={["nav-back"]}
-        className="group inline-flex items-center gap-1.5 text-sm text-ink-faint transition-colors hover:text-seal"
+        className="group/back link-underline text-sm text-ink-faint transition-colors hover:text-ink"
       >
         <span
           aria-hidden
-          className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:-translate-x-0.5"
+          className="inline-block transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/back:-translate-x-0.5"
         >
           ←
-        </span>
+        </span>{" "}
         All tags
       </Link>
       <header className="mb-12">
@@ -65,10 +65,12 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
                 key={name}
                 href={`/tag/${encodeURIComponent(name)}`}
                 transitionTypes={["nav-forward"]}
-                className="rounded-full border border-line-strong px-3 py-1 text-sm text-ink-muted transition-colors hover:border-seal hover:text-seal"
+                className="press group rounded-full border border-line-strong px-3 py-1 text-sm text-ink-muted transition-colors hover:border-seal hover:bg-seal-wash/60 hover:text-seal"
               >
                 #{name}
-                <span className="ml-1 text-xs text-ink-faint tabular-nums">{count}</span>
+                <span className="pop-on-hover ml-1 text-xs text-ink-faint tabular-nums">
+                  {count}
+                </span>
               </Link>
             ))}
           </div>
