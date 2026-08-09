@@ -12,6 +12,9 @@ type Props = {
 const CYCLE_MS = 7000;
 const HOLD_END_MS = 4300;
 const ERASE_END_MS = 5600;
+// Ghost underlay — the full letter shape at low opacity, so the word is
+// readable while the ink is mid-stroke (and as a static fallback).
+const GHOST_OPACITY = 0.14;
 
 /**
  * Handwritten "Sumi" wordmark built from the Alex Brush skeleton. The word is
@@ -50,12 +53,23 @@ export function SumiLogo({ className = "" }: Props) {
       const eraseEnd = ERASE_END_MS / CYCLE_MS;
       return path.animate(
         [
-          { strokeDashoffset: 1, offset: 0 },
-          { strokeDashoffset: 1, offset: drawStart },
-          { strokeDashoffset: 0, offset: drawEnd, easing: "ease-out" },
-          { strokeDashoffset: 0, offset: holdEnd, easing: "linear" },
-          { strokeDashoffset: 1, offset: eraseEnd, easing: "ease-in-out" },
-          { strokeDashoffset: 1, offset: 1 },
+          { strokeDashoffset: 1, opacity: 0, offset: 0 },
+          { strokeDashoffset: 1, opacity: 0, offset: drawStart },
+          {
+            strokeDashoffset: 1,
+            opacity: 1,
+            offset: Math.min(drawStart + 0.02, drawEnd),
+            easing: "ease-out",
+          },
+          { strokeDashoffset: 0, opacity: 1, offset: drawEnd, easing: "ease-out" },
+          { strokeDashoffset: 0, opacity: 1, offset: holdEnd, easing: "linear" },
+          {
+            strokeDashoffset: 1,
+            opacity: 0,
+            offset: eraseEnd,
+            easing: "ease-in-out",
+          },
+          { strokeDashoffset: 1, opacity: 0, offset: 1 },
         ],
         { duration: CYCLE_MS, iterations: Infinity },
       );
@@ -85,6 +99,14 @@ export function SumiLogo({ className = "" }: Props) {
           <path d={fill} fill="white" fillRule="evenodd" />
         </mask>
       </defs>
+      {/* Ghost underlay keeps the signature legible while the ink draws */}
+      <path
+        d={fill}
+        fill="currentColor"
+        fillRule="evenodd"
+        opacity={GHOST_OPACITY}
+        className="sumi-wordmark-ghost"
+      />
       <g mask={`url(#${maskId})`}>
         {chains.map((chain, i) => (
           <path
