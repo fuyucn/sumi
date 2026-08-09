@@ -13,10 +13,83 @@ import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { estimateReadingTime } from "@/lib/reading-time";
 import { extractHeadings } from "@/lib/heading-slug";
-import { displayName } from "@/lib/display-name";
+import { displayName, getDisplayNameMap } from "@/lib/display-name";
+import { relatedFromStore } from "@/content/related";
+import { Reveal } from "@/components/reveal";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { Clock } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
+
+function RelatedInk({
+  items,
+  byTag,
+  names,
+}: {
+  items: { handle: string; post: import("@/content/types").PostMeta }[];
+  byTag: boolean;
+  names: Map<string, string>;
+}) {
+  if (items.length === 0) return null;
+  return (
+    <Reveal as="section" className="mt-16">
+      <div className="flex items-end justify-between gap-6 border-b border-line pb-4">
+        <div>
+          <h2 className="font-serif text-2xl font-semibold tracking-tight text-ink">
+            {byTag ? "Related ink" : "More ink"}
+          </h2>
+          <p className="mt-1.5 text-sm text-ink-muted">
+            {byTag
+              ? "Keeps wandering in the same neighbourhood."
+              : "From the same quiet shelves."}
+          </p>
+        </div>
+        <Link
+          href="/posts"
+          transitionTypes={["nav-forward"]}
+          className="group/link link-underline inline-flex items-center gap-1 text-sm text-ink-faint transition-colors hover:text-ink-muted"
+        >
+          All posts
+          <ArrowRight
+            size={13}
+            weight="duotone"
+            aria-hidden
+            className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/link:translate-x-0.5"
+          />
+        </Link>
+      </div>
+      <div className="grid gap-5 pt-6 sm:grid-cols-2 lg:grid-cols-3">
+        {items.map(({ handle, post }) => {
+          const date = post.publishedAt
+            ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              })
+            : null;
+          return (
+            <Link
+              key={`${handle}/${post.slug}`}
+              href={`/@${handle}/${post.slug}`}
+              transitionTypes={["nav-forward"]}
+              className="group flex h-full flex-col justify-between rounded-card border border-line bg-paper-raised p-5 shadow-sm transition-[border-color,box-shadow,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40 hover:shadow-card"
+            >
+              <h3 className="font-serif text-lg font-medium leading-snug tracking-tight text-ink transition-colors duration-[var(--dur-short)] group-hover:text-seal">
+                {post.title}
+              </h3>
+              <p className="mt-3 line-clamp-2 text-sm leading-relaxed text-ink-muted">
+                {post.excerpt}
+              </p>
+              <p className="mt-4 text-sm text-ink-faint">
+                {[names.get(handle), date].filter(Boolean).join(" · ")}
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+    </Reveal>
+  );
+}
 
 async function load(handleRaw: string, slugRaw: string) {
   // Next delivers params URL-encoded (e.g. "%40fuyucn"); decode before use.
@@ -44,6 +117,15 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
   if (!data) notFound();
   const { post } = data;
   const decodedSlug = decodeURIComponent(slug);
+  const { items: related, byTag } = await relatedFromStore(
+    data.store,
+    data.handle,
+    decodedSlug,
+    post.tags,
+  );
+  const relatedNames = await getDisplayNameMap(
+    related.map((r) => r.handle),
+  );
   const user = await getCurrentUser();
   const signedInHandle = user ? await getUserHandle(user.id) : null;
   const likers = await data.store.listLikes(data.handle, decodedSlug);
@@ -183,6 +265,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
           initialLiked={signedInHandle !== null && likers.includes(signedInHandle)}
         />
       </div>
+      <RelatedInk items={related} byTag={byTag} names={relatedNames} />
       <Comments handle={data.handle} slug={decodedSlug} />
       </main>
     </PageTransition>
