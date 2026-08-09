@@ -12,8 +12,8 @@ export async function CreatorProfile({ handle }: { handle: string }) {
         aria-hidden
         className="relative mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center"
       >
-        <span className="absolute inset-0 translate-x-1 translate-y-1 rounded-[10px] bg-seal-wash" />
-        <span className="relative flex h-12 w-12 items-center justify-center rounded-[10px] bg-seal font-serif text-2xl font-semibold text-paper shadow-sm">
+        <span className="absolute inset-0 -rotate-2 translate-x-1 translate-y-1 rounded-[10px] bg-seal-wash" />
+        <span className="relative flex h-12 w-12 rotate-[0.5deg] items-center justify-center rounded-[10px] bg-seal font-serif text-2xl font-semibold text-paper shadow-sm">
           {Array.from(name.replace(/^@/, ""))[0] ?? "墨"}
         </span>
       </span>
