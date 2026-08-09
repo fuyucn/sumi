@@ -97,6 +97,9 @@ export function ReadingProgress({
   const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
   const hasSections = sections.length > 0;
   const label = hasSections && current >= 0 ? sections[current].label : null;
+  const arcAngle = progress * Math.PI * 2 - Math.PI / 2;
+  const tipX = 14 + RADIUS * Math.cos(arcAngle);
+  const tipY = 14 + RADIUS * Math.sin(arcAngle);
 
   const jump = useCallback(
     (id: string) => {
@@ -125,7 +128,7 @@ export function ReadingProgress({
             initial={reduce ? false : { opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
             className="mb-2 w-64 origin-bottom-right overflow-hidden rounded-card border border-line bg-paper-raised/95 shadow-pop backdrop-blur-md"
             role="list"
             aria-label="Sections"
@@ -141,6 +144,12 @@ export function ReadingProgress({
                 <X size={13} aria-hidden />
               </button>
             </div>
+            <div aria-hidden className="h-[2px] w-full bg-line">
+              <div
+                className="h-full origin-left bg-seal"
+                style={{ transform: `scaleX(${progress})` }}
+              />
+            </div>
             <ul className="max-h-64 overflow-y-auto p-2">
               <li>
                 <button
@@ -149,10 +158,12 @@ export function ReadingProgress({
                     setOpen(false);
                     window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
                   }}
-                  className="press flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-soft transition-colors hover:bg-paper-deep hover:text-ink"
+                  className="press group flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-ink-soft transition-colors hover:bg-paper-deep hover:text-ink"
                 >
-                  <CaretUp size={14} weight="bold" aria-hidden className="text-seal" />
-                  Back to top
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-seal-wash text-seal transition-colors duration-[var(--dur-short)] group-hover:bg-seal group-hover:text-paper">
+                    <CaretUp size={12} weight="bold" aria-hidden />
+                  </span>
+                  <span className="truncate">Back to top</span>
                 </button>
               </li>
               <li aria-hidden className="my-1 border-t border-line" />
@@ -164,13 +175,26 @@ export function ReadingProgress({
                       type="button"
                       onClick={() => jump(s.id)}
                       className={[
-                        "press w-full truncate rounded-lg px-3 py-2 text-left text-sm transition-colors",
+                        "press group relative flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors",
                         active
                           ? "bg-seal-wash font-medium text-seal"
                           : "text-ink-soft hover:bg-paper-deep hover:text-ink",
                       ].join(" ")}
                     >
-                      {s.label}
+                      <span
+                        aria-hidden
+                        className={[
+                          "h-1 w-1 shrink-0 rotate-45 transition-colors duration-[var(--dur-short)]",
+                          active
+                            ? "bg-seal"
+                            : "bg-line-strong group-hover:bg-ink-faint",
+                        ].join(" ")}
+                      />
+                      <span className="truncate">{s.label}</span>
+                      <span
+                        aria-hidden
+                        className="tag-sweep pointer-events-none absolute inset-x-3 bottom-1.5 h-px"
+                      />
                     </button>
                   </li>
                 );
@@ -189,7 +213,7 @@ export function ReadingProgress({
         aria-expanded={hasSections ? open : undefined}
         aria-label={hasSections ? "Reading progress and sections" : "Back to top"}
         title={hasSections ? "Reading progress" : "Back to top"}
-        className="group flex items-center gap-2.5 rounded-full border border-line bg-paper-raised/90 py-1.5 pr-4 pl-1.5 shadow-card backdrop-blur-md transition-colors hover:border-line-strong"
+        className="press group flex items-center gap-2.5 rounded-full border border-line bg-paper-raised/90 py-1.5 pr-4 pl-1.5 shadow-card backdrop-blur-md transition-colors hover:border-line-strong"
       >
         <span className="relative flex h-8 w-8 items-center justify-center" aria-hidden>
           <svg viewBox="0 0 28 28" className="h-8 w-8 -rotate-90">
@@ -213,6 +237,14 @@ export function ReadingProgress({
               strokeDasharray={CIRCUMFERENCE}
               strokeDashoffset={CIRCUMFERENCE * (1 - progress)}
             />
+            <circle
+              cx={tipX}
+              cy={tipY}
+              r="1.9"
+              className="fill-seal"
+              stroke="var(--color-paper-raised)"
+              strokeWidth="1"
+            />
           </svg>
           {hasSections && current >= 0 ? (
             <ListBullets size={12} weight="bold" className="absolute text-ink-faint" />
@@ -230,9 +262,10 @@ export function ReadingProgress({
               animate={{ opacity: 1, y: 0 }}
               exit={reduce ? undefined : { opacity: 0, y: -4 }}
               transition={{ duration: 0.14 }}
-              className="max-w-44 truncate text-sm font-medium text-ink-soft"
+              className="flex max-w-44 items-center gap-1.5 text-sm font-medium text-ink-soft"
             >
-              {label}
+              <span aria-hidden className="h-1 w-1 shrink-0 rotate-45 bg-seal" />
+              <span className="truncate">{label}</span>
             </motion.span>
           </AnimatePresence>
         ) : (
