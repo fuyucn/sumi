@@ -34,6 +34,8 @@ const LABELS: Record<Theme, string> = {
   system: "System theme",
 };
 
+let themeTimer: number | undefined;
+
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
   const reduce = useReducedMotion();
@@ -56,6 +58,20 @@ export function ThemeToggle() {
       aria-label={LABELS[theme]}
       onClick={() => {
         const next = CYCLE[(CYCLE.indexOf(theme) + 1) % CYCLE.length];
+        if (!reduce) {
+          const root = document.documentElement;
+          root.classList.add("theme-crossfade");
+          // Force a style recalc so the browser snapshots the old colors
+          // with the transition armed; otherwise the flip happens in the
+          // same frame and nothing animates.
+          void root.offsetWidth;
+          window.clearTimeout(themeTimer);
+          themeTimer = window.setTimeout(() => {
+            root.classList.remove("theme-crossfade");
+          }, 360);
+        }
+        // Crossfade must be armed before the theme flips, or the colors
+        // change instantly and there is nothing left to transition.
         setTheme(next);
         localStorage.setItem(STORAGE_KEY, next);
         apply(next);

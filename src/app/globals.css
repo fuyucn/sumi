@@ -109,6 +109,23 @@ body {
   background-attachment: fixed;
 }
 
+/* Smooth theme switch: toggling adds .theme-crossfade to <html> for a short
+   window so colors crossfade instead of snapping. */
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-crossfade,
+  html.theme-crossfade body,
+  html.theme-crossfade *,
+  html.theme-crossfade *::before,
+  html.theme-crossfade *::after {
+    transition:
+      background-color 300ms var(--ease-out),
+      border-color 300ms var(--ease-out),
+      color 300ms var(--ease-out),
+      fill 300ms var(--ease-out),
+      stroke 300ms var(--ease-out) !important;
+  }
+}
+
 /* Print: a published article should come off the printer clean and quiet.
    Chrome, navigation, motion and fixed chrome drop away; ink stays ink. */
 @media print {

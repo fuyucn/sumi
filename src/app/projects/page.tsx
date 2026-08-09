@@ -109,7 +109,10 @@ export default async function ProjectsPage() {
                   {project.tech && project.tech.length > 0 ? (
                     <p className="mt-3 flex flex-wrap gap-1.5">
                       {project.tech.map((t) => (
-                        <span key={t} className="rounded-full bg-paper-soft px-2 py-0.5 text-xs text-ink-faint">
+                        <span
+                          key={t}
+                          className="rounded-full border border-line-strong bg-paper-soft px-2 py-0.5 text-xs text-ink-faint"
+                        >
                           #{t}
                         </span>
                       ))}
