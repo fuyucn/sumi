@@ -903,27 +903,12 @@ textarea,
 }
 
 /* The handwritten "Sumi" wordmark — one continuous cursive stroke split into
-   chains. Strokes are visible by default; hovering re-“writes” the word
-   left → right, each chain revealing on its own path (S → u → m → i), with
-   the dot of the "i" touching down last. Reduced motion keeps it static. */
+   chains. Strokes are visible by default; the draw/hold/erase loop is driven
+   from the client (Web Animations API) so each chain keeps its own timing.
+   The static rule below is the no-JS / reduced-motion fallback: fully drawn. */
 .sumi-wordmark path {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .group:hover .sumi-wordmark path,
-  .sumi-wordmark:hover path {
-    animation: sumi-draw var(--sw-dur, 0.3s) var(--ease-out) backwards;
-    animation-delay: var(--sw-start, 0s);
-  }
-  @keyframes sumi-draw {
-    from {
-      stroke-dashoffset: 1;
-    }
-    to {
-      stroke-dashoffset: 0;
-    }
-  }
 }
 
 /* Article headings get a quiet in-place anchor that slides in on hover. */
