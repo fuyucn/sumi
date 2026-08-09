@@ -4,6 +4,7 @@ import remarkGfm from "remark-gfm";
 import { headingSlug } from "@/lib/heading-slug";
 import { highlightCode } from "@/lib/shiki-highlight";
 import { CodeBlockCopy } from "@/components/code-block-copy";
+import { MarkdownImage } from "@/components/markdown-image";
 
 /**
  * Resolve a URL against a base. If `src` is already absolute (starts with
@@ -87,7 +88,16 @@ function Code({ className, children }: { className?: string; children?: ReactNod
 }
 
 /** Renders a Markdown string to sanitized HTML (no raw HTML passthrough). */
-export function Markdown({ children, baseUrl }: { children: string; baseUrl?: string }) {
+export function Markdown({
+  children,
+  baseUrl,
+  zoomable = true,
+}: {
+  children: string;
+  baseUrl?: string;
+  /** Click-to-zoom on body images; disable for compact contexts (comments). */
+  zoomable?: boolean;
+}) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -106,16 +116,7 @@ export function Markdown({ children, baseUrl }: { children: string; baseUrl?: st
         code: Code,
         // Body figures load off the critical path; decode async so long
         // articles with many screenshots don't jank on scroll.
-        img: ({ src, alt }) => (
-          <img
-            src={src}
-            alt={alt ?? ""}
-            loading="lazy"
-            decoding="async"
-            referrerPolicy="no-referrer"
-            className="media-fade my-2 rounded-card border border-line shadow-card transition-[transform,box-shadow] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:scale-[1.01] hover:shadow-card-hover"
-          />
-        ),
+        img: ({ src, alt }) => <MarkdownImage src={src} alt={alt} zoomable={zoomable} />,
       }}
       urlTransform={(url, key) => {
         if (key === "src") return resolveUrl(baseUrl, url);

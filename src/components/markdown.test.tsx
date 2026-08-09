@@ -71,3 +71,14 @@ test("Markdown without baseUrl leaves image src unchanged", () => {
   const html = renderToStaticMarkup(<Markdown>{"![alt](images/photo.png)"}</Markdown>);
   expect(html).toContain('src="images/photo.png"');
 });
+
+test("images are wrapped in a zoom trigger by default", () => {
+  const html = renderToStaticMarkup(<Markdown>{"![alt](a.png)"}</Markdown>);
+  expect(html).toContain('aria-label="放大图片：alt"');
+});
+
+test("zoomable=false renders a plain image without the lightbox trigger", () => {
+  const html = renderToStaticMarkup(<Markdown zoomable={false}>{"![alt](a.png)"}</Markdown>);
+  expect(html).toContain("<img");
+  expect(html).not.toContain("放大图片");
+});

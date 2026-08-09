@@ -66,7 +66,7 @@ function CommentContent({
           </time>
         </div>
         <div className="mt-2 text-sm leading-relaxed text-ink">
-          <Markdown>{comment.body}</Markdown>
+          <Markdown zoomable={false}>{comment.body}</Markdown>
         </div>
         {signedInHandle && (comment.handle === signedInHandle || postHandle === signedInHandle) ? (
           <div className="mt-1.5">
