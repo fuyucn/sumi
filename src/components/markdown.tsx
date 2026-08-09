@@ -43,6 +43,7 @@ function makeHeading(tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
         {
           href: `#${id}`,
           "aria-label": `Link to ${text}`,
+          title: `Link to ${text}`,
           className: "heading-anchor",
         },
         "#",

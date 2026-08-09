@@ -868,20 +868,29 @@ textarea,
   }
 }
 
-/* Article headings get a quiet in-place anchor that appears on hover. */
+/* Article headings get a quiet in-place anchor that slides in on hover. */
 .heading-anchor {
   opacity: 0;
+  display: inline-block;
   margin-left: 0.4em;
-  font-size: 0.7em;
-  font-weight: 400;
+  font-size: 0.72em;
+  font-weight: 500;
   color: var(--color-seal);
   text-decoration: none;
   vertical-align: 0.08em;
-  transition: opacity var(--dur-micro) var(--ease-out);
+  transform: translateX(-0.2em);
+  transition:
+    opacity var(--dur-micro) var(--ease-out),
+    transform var(--dur-short) var(--ease-out),
+    color var(--dur-micro) var(--ease-out);
 }
 .group\/heading:hover .heading-anchor,
 .heading-anchor:focus-visible {
   opacity: 1;
+  transform: translateX(0);
+}
+.heading-anchor:hover {
+  color: var(--color-seal-soft);
 }
 
 /* Reading + writing surfaces use the serif for a calm, book-like feel. */

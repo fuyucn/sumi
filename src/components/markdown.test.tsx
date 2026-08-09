@@ -10,13 +10,13 @@ async function renderMarkdown(md: string): Promise<string> {
 
 test("renders markdown headings and bold to HTML", () => {
   const html = renderToStaticMarkup(<Markdown>{"# Title\n\nsome **bold** text"}</Markdown>);
-  expect(html).toContain('<h1 id="title" class="scroll-mt-24 group/heading">Title<a href="#title" aria-label="Link to Title" class="heading-anchor">#</a></h1>');
+  expect(html).toContain('<h1 id="title" class="scroll-mt-24 group/heading">Title<a href="#title" aria-label="Link to Title" title="Link to Title" class="heading-anchor">#</a></h1>');
   expect(html).toContain("<strong>bold</strong>");
 });
 
 test("renders CJK headings with stable anchor ids", () => {
   const html = renderToStaticMarkup(<Markdown>{"## 安装 与 启动\n\n正文"}</Markdown>);
-  expect(html).toContain('<h2 id="安装-与-启动" class="scroll-mt-24 group/heading">安装 与 启动<a href="#安装-与-启动" aria-label="Link to 安装 与 启动" class="heading-anchor">#</a></h2>');
+  expect(html).toContain('<h2 id="安装-与-启动" class="scroll-mt-24 group/heading">安装 与 启动<a href="#安装-与-启动" aria-label="Link to 安装 与 启动" title="Link to 安装 与 启动" class="heading-anchor">#</a></h2>');
   expect(html).toContain("正文");
 });
 
