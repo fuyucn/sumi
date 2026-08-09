@@ -8,6 +8,7 @@ import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
 import { PageTransition } from "@/components/page-transition";
 import { TiltCard } from "@/components/tilt-card";
+import { ScrollHero } from "@/components/scroll-hero";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDisplayNameMap } from "@/lib/display-name";
 import { Feather } from "@phosphor-icons/react/dist/ssr";
@@ -64,7 +65,7 @@ export default async function Home() {
   return (
     <PageTransition>
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
-      <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+      <ScrollHero>
         <div>
           <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
             <HeroHeadline text="A quiet place to write" />
@@ -152,7 +153,7 @@ export default async function Home() {
             </div>
           )}
         </aside>
-      </section>
+      </ScrollHero>
 
       <HomeStats posts={feed.length} writers={creators} tags={totalTags} />
 
