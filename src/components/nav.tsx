@@ -195,6 +195,7 @@ export function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const { scrollY } = useScroll();
 
   useMotionValueEvent(scrollY, "change", (v) => setScrolled(v > 8));
@@ -244,8 +245,32 @@ export function Nav() {
       'nav[aria-label="Mobile"] a',
     );
     firstLink?.focus();
+    // Trap Tab inside the drawer so keyboard users can't fall out into the
+    // page behind the scrim; wrap from last → first and first → last.
+    const trapTab = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusables = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+      if (focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", trapTab);
     return () => {
       document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", trapTab);
       menuButton?.focus();
     };
   }, [menuOpen]);
@@ -395,6 +420,7 @@ export function Nav() {
                 onClick={closeMenu}
               />
               <div
+                ref={panelRef}
                 className="fixed inset-x-0 top-16 z-50 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-b border-line bg-paper px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-pop animate-drawer-in"
                 role="dialog"
                 aria-modal="true"
