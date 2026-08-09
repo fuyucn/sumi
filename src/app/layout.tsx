@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { SearchShortcut } from "@/components/search-shortcut";
+import { ScrollTop } from "@/components/scroll-top";
 import "./globals.css";
 
 const geist = Geist({
@@ -58,6 +59,7 @@ export default async function RootLayout({
         </a>
         <SearchShortcut />
         <Nav />
+        <ScrollTop />
         {/* Page content rises on full page load; client navigations are
             animated by the per-page ViewTransition instead. */}
         <div id="main" tabIndex={-1} className="rise flex-1 outline-none">
