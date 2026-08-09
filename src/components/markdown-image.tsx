@@ -1,4 +1,7 @@
 "use client";
+/* Remote images (R2 / external) keep unknown intrinsic sizes and there is no
+   Cloudflare-safe image optimizer, so plain <img> is intentional here. */
+/* eslint-disable @next/next/no-img-element */
 import { useCallback, useEffect, useState } from "react";
 import { X } from "@phosphor-icons/react";
 

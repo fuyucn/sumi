@@ -1,3 +1,6 @@
+/* Remote post covers (R2 / external) have no Cloudflare-safe optimizer;
+   plain <img> is intentional here. */
+/* eslint-disable @next/next/no-img-element */
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";

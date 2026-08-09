@@ -1,3 +1,6 @@
+/* Remote project covers (R2 / external) have no Cloudflare-safe optimizer;
+   plain <img> is intentional here. */
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { getReadContentStore } from "@/content";
 import type { Project } from "@/content/types";

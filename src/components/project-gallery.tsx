@@ -1,5 +1,8 @@
 "use client";
 
+/* Remote gallery images (R2 / external) have no Cloudflare-safe optimizer;
+   plain <img> is intentional here. */
+/* eslint-disable @next/next/no-img-element */
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, X } from "@phosphor-icons/react";
 

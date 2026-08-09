@@ -1,3 +1,6 @@
+/* Remote featured covers (R2 / external) have no Cloudflare-safe optimizer;
+   plain <img> is intentional here. */
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { ArrowRight, Eye } from "@phosphor-icons/react/dist/ssr";
 import { getReadContentStore } from "@/content";
