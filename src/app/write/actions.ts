@@ -8,6 +8,7 @@ import { getAiStore, getContentStoreForUser, getReadContentStore } from "@/conte
 import { runDeletePost, runSavePost, runUploadImage, type WriteDeps } from "./actions-core";
 import { firstSentence } from "@/lib/first-sentence";
 import { generateSummary } from "@/lib/ai/summarize";
+import { friendlyAiErrorShort } from "@/lib/ai/error-hint";
 import { AI_GENERATE_LIMIT, rateLimit } from "@/lib/rate-limit";
 import type { AiTask } from "@/content/ai-store";
 import type { WriteForm } from "@/content/post-input";
@@ -154,7 +155,7 @@ export async function generateSummaryAction(
         actor: handle,
         postHandle: handle,
         postSlug: slug,
-        body: `AI 总结生成失败：${message.slice(0, 300)}`,
+        body: `AI 总结生成失败：${friendlyAiErrorShort(message)}`,
       },
       now,
     );

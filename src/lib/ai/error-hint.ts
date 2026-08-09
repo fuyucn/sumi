@@ -9,3 +9,12 @@ export function friendlyAiError(raw: string): string {
   }
   return raw;
 }
+
+/** Notification-safe one-liner: the actionable hint without raw provider
+ * JSON, so the inbox stays readable even when an endpoint returns a blob. */
+export function friendlyAiErrorShort(raw: string): string {
+  if (KEY_RE.test(raw)) {
+    return "API Key 无效或已过期，请到 Settings → AI 总结 更新";
+  }
+  return raw.slice(0, 120);
+}
