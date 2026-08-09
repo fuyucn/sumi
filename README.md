@@ -36,6 +36,14 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **Better Auth** — GitHub OAuth with an allowlist gate
 - **Deployment** — Docker compose (one-click), custom VPS script, or Cloudflare Workers (OpenNext); Vercel also supported
 
+## Brand
+
+- The animated handwritten "Sumi" wordmark lives in `src/components/sumi-logo.tsx`
+  (generated from the Alex Brush skeleton in `src/lib/sumi-wordmark.ts`).
+- Static standalone exports for light/dark backgrounds ship in `public/`
+  (`sumi-wordmark.svg`, `sumi-wordmark-on-dark.svg`); regenerate them with
+  `node --experimental-strip-types scripts/sumi-wordmark/export-static.mjs`.
+
 ## Security model
 
 - **Fail-closed login**: only the GitHub logins listed in `ALLOWED_GITHUB_USERS`
