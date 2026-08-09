@@ -22,11 +22,11 @@ export interface NotificationItem {
 }
 
 const typeLabel: Record<NotificationType, string> = {
-  comment: "commented on your post",
-  reply: "replied to your comment",
-  like: "liked your post",
+  comment: "commented on",
+  reply: "replied to",
+  like: "liked",
   follow: "followed you",
-  ai: "updated your post's AI 总结",
+  ai: "updated",
 };
 
 function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }) {
@@ -61,7 +61,7 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
               {n.actorName}
             </Link>
           )}{" "}
-          {isAi ? <span className="text-ink-muted">updated</span> : label}
+          <span className="text-ink-muted">{label}</span>
           {postHref ? (
             <>
               {" "}
@@ -70,7 +70,7 @@ function NotificationRow({ n, isRead }: { n: NotificationItem; isRead: boolean }
                 transitionTypes={["nav-forward"]}
                 className="link-underline text-ink-muted transition-colors hover:text-seal"
               >
-                your post
+                {n.type === "reply" ? "your comment" : "your post"}
               </Link>
             </>
           ) : null}
