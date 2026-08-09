@@ -1,32 +1,23 @@
 "use client";
 
-import { useEffect, useId, useRef } from "react";
+import { useId, useRef } from "react";
 
+import { GHOST_OPACITY, WORDMARK_ANIM_CSS } from "@/lib/sumi-wordmark-anim";
 import { SUMI_WORDMARK } from "@/lib/sumi-wordmark";
 
 type Props = {
   className?: string;
 };
 
-// One full "write, hold, erase, pause" loop of the wordmark, in ms.
-const CYCLE_MS = 7000;
-// The last stroke (the "i" dot) touches down ~6.1s in; the whole word then
-// holds fully drawn until the unified erase begins.
-const ERASE_START_MS = 6300;
-const INK_FADE_MS = 140;
-const ERASE_FADE_MS = 500;
-// Ghost underlay — the full letter shape at low opacity, so the word is
-// readable while the ink is mid-stroke (and as a static fallback).
-const GHOST_OPACITY = 0.14;
-
 /**
  * Handwritten "Sumi" wordmark built from the Alex Brush skeleton. The word is
  * split into stroke segments (chains); each chain reveals along its own path
  * with a staggered delay, so the word writes itself left → right in one
  * connected pen line (S → u → m → i), holds, then un-writes — antfu-style
- * stroke-dashoffset animation driven by the Web Animations API so each chain
- * keeps its own timing. Hovering replays the signature instantly. Reduced
- * motion keeps the wordmark static.
+ * stroke-dashoffset animation. The loop is pure CSS (per-stroke keyframes,
+ * shared with the standalone SVG exports), so it runs on mount everywhere —
+ * no JS animation API required. Hovering replays the signature instantly.
+ * Reduced motion keeps the wordmark fully drawn and static.
  *
  * The full letter shape is used as a mask over the centerline strokes so the
  * ink stays inside the glyphs (counters stay holes).
@@ -34,55 +25,18 @@ const GHOST_OPACITY = 0.14;
 export function SumiLogo({ className = "" }: Props) {
   const maskId = useId();
   const svgRef = useRef<SVGSVGElement>(null);
-  const animsRef = useRef<Animation[]>([]);
-  const { viewBox, coverWidth, dot, dotDur, dotStart, fill, chains } =
-    SUMI_WORDMARK;
+  const { viewBox, coverWidth, dot, fill, chains } = SUMI_WORDMARK;
 
-  useEffect(() => {
+  // Restart the CSS loop from the first pen stroke on hover. Toggling the
+  // animation off and on (with a forced reflow in between) is done inside one
+  // synchronous task, so the blank "paused" frame never paints.
+  const replay = () => {
     const svg = svgRef.current;
-    if (!svg || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      return;
-    }
-    // Only the ink strokes animate — the mask fill and ghost underlay are
-    // plain fills and must stay outside the stroke timeline.
-    const paths = svg.querySelectorAll<SVGPathElement>("[data-sumi-ink] path");
-    const timings: ReadonlyArray<readonly [number, number]> = [
-      ...chains.map((c) => [c.start, c.dur] as const),
-      [dotStart, dotDur] as const,
-    ];
-    animsRef.current = Array.from(paths).map((path, i) => {
-      const [start, dur] = timings[i] ?? [0, 0.3];
-      const drawStart = (start * 1000) / CYCLE_MS;
-      const drawEnd = ((start + dur) * 1000) / CYCLE_MS;
-      const inkIn = Math.min(drawStart + INK_FADE_MS / CYCLE_MS, drawEnd);
-      // Paths that finish late (the dot) hold a beat past the unified erase
-      // start so no keyframe offset ever regresses.
-      const eraseFrom = Math.max(
-        ERASE_START_MS / CYCLE_MS,
-        drawEnd + 100 / CYCLE_MS,
-      );
-      const eraseTo = Math.min(
-        eraseFrom + ERASE_FADE_MS / CYCLE_MS,
-        1 - 100 / CYCLE_MS,
-      );
-      return path.animate(
-        [
-          { strokeDashoffset: 1, opacity: 0, offset: 0 },
-          { strokeDashoffset: 1, opacity: 0, offset: drawStart },
-          { strokeDashoffset: 1, opacity: 1, offset: inkIn, easing: "ease-out" },
-          { strokeDashoffset: 0, opacity: 1, offset: drawEnd, easing: "ease-out" },
-          { strokeDashoffset: 0, opacity: 1, offset: eraseFrom, easing: "linear" },
-          { strokeDashoffset: 1, opacity: 0, offset: eraseTo, easing: "ease-in-out" },
-          { strokeDashoffset: 1, opacity: 0, offset: 1 },
-        ],
-        { duration: CYCLE_MS, iterations: Infinity },
-      );
-    });
-    return () => {
-      animsRef.current.forEach((a) => a.cancel());
-      animsRef.current = [];
-    };
-  }, [chains, dotDur, dotStart]);
+    if (!svg) return;
+    svg.classList.add("sumi-replay");
+    void svg.getBoundingClientRect();
+    svg.classList.remove("sumi-replay");
+  };
 
   return (
     <svg
@@ -90,14 +44,10 @@ export function SumiLogo({ className = "" }: Props) {
       viewBox={`0 0 ${viewBox[0]} ${viewBox[1]}`}
       fill="none"
       aria-hidden
-      onMouseEnter={() => {
-        animsRef.current.forEach((a) => {
-          a.play();
-          a.currentTime = 0;
-        });
-      }}
+      onMouseEnter={replay}
       className={`sumi-wordmark ${className}`}
     >
+      <style>{WORDMARK_ANIM_CSS}</style>
       <defs>
         <mask id={maskId}>
           <path d={fill} fill="white" fillRule="evenodd" />
@@ -111,7 +61,7 @@ export function SumiLogo({ className = "" }: Props) {
         opacity={GHOST_OPACITY}
         className="sumi-wordmark-ghost"
       />
-      <g mask={`url(#${maskId})`} data-sumi-ink>
+      <g mask={`url(#${maskId})`}>
         {chains.map((chain, i) => (
           <path
             key={i}
@@ -121,6 +71,7 @@ export function SumiLogo({ className = "" }: Props) {
             strokeWidth={coverWidth}
             strokeLinecap="round"
             strokeLinejoin="round"
+            className={`sumi-ink sumi-ink-${i}`}
           />
         ))}
         {/* i dot — touches down after the word is written */}
@@ -130,6 +81,7 @@ export function SumiLogo({ className = "" }: Props) {
           stroke="currentColor"
           strokeWidth={coverWidth}
           strokeLinecap="round"
+          className={`sumi-ink sumi-ink-${chains.length}`}
         />
       </g>
     </svg>
