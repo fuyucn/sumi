@@ -8,6 +8,7 @@ import { ReplyComposer } from "@/components/reply-composer";
 import { DeleteCommentButton } from "@/components/delete-comment-button";
 import { replyAllowed } from "@/lib/comment-depth";
 import { AuthorName } from "@/components/author-name";
+import { EmptyState } from "@/components/empty-state";
 import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 import { Reveal } from "@/components/reveal";
 import type { Comment } from "@/content/types";
@@ -147,18 +148,11 @@ export async function Comments({ handle, slug }: { handle: string; slug: string 
           ))}
         </ul>
       ) : (
-        <div className="mt-6 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
-          <span
-            aria-hidden
-            className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-seal-wash text-seal"
-          >
-            <ChatCircle size={20} weight="duotone" />
-          </span>
-          <p className="font-serif text-lg text-ink-soft">No comments yet.</p>
-          <p className="mt-1.5 text-sm text-ink-faint">
-            Start the conversation and leave the first mark.
-          </p>
-        </div>
+        <EmptyState
+          icon={<ChatCircle size={20} weight="duotone" />}
+          title="No comments yet."
+          hint="Start the conversation and leave the first mark."
+        />
       )}
       <div className="mt-10">
         {signedInHandle ? (

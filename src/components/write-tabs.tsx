@@ -32,7 +32,7 @@ export function WriteTabs({ tabs }: { tabs: Tab[] }) {
             <motion.span
               layoutId="write-tab-underline"
               className="absolute inset-x-0 -bottom-[2px] h-0.5 rounded-full bg-seal"
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
               aria-hidden
             />
           ) : null}

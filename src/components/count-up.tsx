@@ -16,7 +16,7 @@ export function CountUp({ value, className }: { value: number; className?: strin
     }
     const controls = animate(0, value, {
       duration: 0.9,
-      ease: [0.22, 1, 0.36, 1],
+      ease: [0.16, 1, 0.3, 1],
       onUpdate: (v) => {
         if (ref.current) ref.current.textContent = String(Math.round(v));
       },
