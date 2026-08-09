@@ -7,6 +7,7 @@ import {
 import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import Heading from "@tiptap/extension-heading";
+import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown, type MarkdownStorage } from "tiptap-markdown";
 import Image from "@tiptap/extension-image";
 import { useRef } from "react";
@@ -202,7 +203,13 @@ export function Editor({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
-    extensions: [StarterKit.configure({ heading: false }), HeadingWithAnchors, Markdown, Image],
+    extensions: [
+      StarterKit.configure({ heading: false }),
+      HeadingWithAnchors,
+      Markdown,
+      Image,
+      Placeholder.configure({ placeholder: "写点什么…" }),
+    ],
     content: initialMarkdown,
     immediatelyRender: false, // avoid SSR hydration mismatch under Next App Router
     onUpdate: ({ editor }) => onChange(toMarkdown(editor)),
