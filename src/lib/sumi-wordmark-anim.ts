@@ -45,14 +45,15 @@ export const WORDMARK_INK_COUNT = timings.length;
 
 /**
  * Self-contained CSS for the handwriting loop: per-stroke keyframes plus a
- * reduced-motion fallback. Shared by the React logo component and the
- * standalone SVG exporter so the two can never drift apart.
+ * reduced-motion fallback. The wordmark rests fully drawn and static; the
+ * write → hold → erase loop only runs while the pointer hovers it, so the
+ * header never animates on its own. Shared by the React logo component and
+ * the standalone SVG exporter so the two can never drift apart.
  */
-export const WORDMARK_ANIM_CSS = `.sumi-ink{fill:none;stroke:currentColor;stroke-width:${SUMI_WORDMARK.coverWidth};stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+export const WORDMARK_ANIM_CSS = `.sumi-ink{fill:none;stroke:currentColor;stroke-width:${SUMI_WORDMARK.coverWidth};stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:0;opacity:1}
 ${timings
-  .map((_, i) => `.sumi-ink-${i}{animation:sumi-ink-${i} ${CYCLE_MS}ms linear infinite}`)
+  .map((_, i) => `.sumi-wordmark:hover .sumi-ink-${i}{animation:sumi-ink-${i} ${CYCLE_MS}ms linear infinite}`)
   .join("\n")}
 ${timings.map(([start, dur], i) => strokeKeyframes(i, start, dur)).join("\n")}
 @media (prefers-reduced-motion:reduce){.sumi-ink{animation:none;stroke-dashoffset:0;opacity:1}}
-.sumi-wordmark.sumi-replay .sumi-ink{animation:none}
 `;

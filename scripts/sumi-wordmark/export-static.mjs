@@ -35,8 +35,9 @@ function buildSvg(color, animated) {
   const extra = animated
     ? `<style>\n${WORDMARK_ANIM_CSS}\n</style>\n`
     : "";
+  const cls = animated ? ' class="sumi-wordmark"' : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" style="color:${color}">
+<svg xmlns="http://www.w3.org/2000/svg"${cls} width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none" style="color:${color}">
   ${extra}
   <defs>
     <mask id="ink"><path d="${fill}" fill="white" fill-rule="evenodd"/></mask>

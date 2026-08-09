@@ -38,11 +38,13 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 
 ## Brand
 
-- The animated handwritten "Sumi" wordmark lives in `src/components/sumi-logo.tsx`
-  (generated from the Alex Brush skeleton in `src/lib/sumi-wordmark.ts`).
+- The handwritten "Sumi" wordmark lives in `src/components/sumi-logo.tsx`
+  (generated from the Alex Brush skeleton in `src/lib/sumi-wordmark.ts`). It
+  rests fully drawn and static; the 7s write → hold → erase loop plays only
+  while the pointer hovers it.
 - Standalone exports for light/dark backgrounds ship in `public/`: static
   (`sumi-wordmark.svg`, `sumi-wordmark-on-dark.svg`) and self-contained animated
-  versions of the same 7s handwriting loop (`sumi-wordmark-animated.svg`,
+  versions of the same hover-triggered loop (`sumi-wordmark-animated.svg`,
   `sumi-wordmark-animated-on-dark.svg`); regenerate all four with
   `node --experimental-strip-types scripts/sumi-wordmark/export-static.mjs`.
 

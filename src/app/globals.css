@@ -903,9 +903,10 @@ textarea,
 }
 
 /* The handwritten "Sumi" wordmark — one continuous cursive stroke split into
-   chains. Strokes are visible by default; the draw/hold/erase loop is driven
-   from the client (Web Animations API) so each chain keeps its own timing.
-   The static rule below is the no-JS / reduced-motion fallback: fully drawn. */
+   chains. Strokes are fully drawn by default; the draw/hold/erase loop is
+   pure CSS gated on `:hover` (per-stroke keyframes injected by the component),
+   so the header rests static until the pointer hovers the logo. The rule
+   below is the shared static fallback: fully drawn. */
 .sumi-wordmark path {
   stroke-dasharray: 1;
   stroke-dashoffset: 0;

@@ -59,8 +59,9 @@ generated JSON.
 
 - `sumi-wordmark.svg` / `sumi-wordmark-on-dark.svg` — static ink, light/dark.
 - `sumi-wordmark-animated.svg` / `sumi-wordmark-animated-on-dark.svg` —
-  self-contained 7s handwriting loop (per-stroke CSS `@keyframes`, no JS);
-  honors `prefers-reduced-motion` with a fully drawn fallback.
+  self-contained 7s handwriting loop gated on `:hover` (per-stroke CSS
+  `@keyframes`, no JS); rests fully drawn, plays only while the pointer hovers
+  the SVG, and honors `prefers-reduced-motion` with a fully drawn fallback.
 
 Regenerate them with:
 
