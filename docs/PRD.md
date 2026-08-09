@@ -9,8 +9,8 @@ a full-stack homepage + blog + notes system that runs on **free Cloudflare
 infrastructure** (D1 + R2) or your own Docker / VPS. Creators sign in with GitHub
 (allowlist-gated), write Markdown in a clean TipTap editor, and every article,
 image, comment, magazine, and profile is stored in the owner's own database —
-Postgres (`sumi_*` tables, Docker/VPS/Vercel) or Cloudflare D1+R2 — a portable,
-version-controlled archive of everything published.
+Postgres (`sumi_*` tables, Docker/VPS/Vercel) or Cloudflare D1+R2 — a portable
+archive of everything published; no GitHub repo required.
 
 ## 2. Goals & Non-goals
 
@@ -28,7 +28,8 @@ notifications, native mobile app.
 ## 3. Personas
 
 - **Creator** — journals, essays, serialized writing; wants a clean editor, easy publish,
-  a distinct homepage, and the reassurance that content is backed up in Git.
+  a distinct homepage, and the reassurance that content lives in their own database
+  (portable and easy to back up).
 - **Reader** — wants a quiet, typography-first reading experience, per-creator pages,
   tags, and the ability to leave a plain comment.
 

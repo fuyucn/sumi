@@ -51,3 +51,23 @@ rebuilt by the commands above (`.gitignore` already excludes them).
 `start`/`dur` values stagger the dash-reveal so the word writes itself
 left → right (`S → u → m → i`); tweak them in the TS file, never in the
 generated JSON.
+
+## Standalone SVG exports
+
+`export-static.mjs` compiles the same skeleton into four standalone SVGs in
+`public/`, so the wordmark can be used outside React (README, docs, embeds):
+
+- `sumi-wordmark.svg` / `sumi-wordmark-on-dark.svg` — static ink, light/dark.
+- `sumi-wordmark-animated.svg` / `sumi-wordmark-animated-on-dark.svg` —
+  self-contained 7s handwriting loop (per-stroke CSS `@keyframes`, no JS);
+  honors `prefers-reduced-motion` with a fully drawn fallback.
+
+Regenerate them with:
+
+```bash
+node --experimental-strip-types scripts/sumi-wordmark/export-static.mjs
+```
+
+The animation timeline constants (`CYCLE_MS`, `ERASE_START_MS`,
+`INK_FADE_MS`, `ERASE_FADE_MS`, `GHOST_OPACITY`) mirror the component in
+`src/components/sumi-logo.tsx` — keep them in sync when tuning the rhythm.

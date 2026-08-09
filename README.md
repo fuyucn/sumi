@@ -4,7 +4,7 @@ Sumi is an open-source, multi-creator publishing platform inspired by note.com
 and mx-space. Creators sign in with GitHub (only explicitly allowed accounts
 may access), write articles in a clean editor, and every piece of content is
 stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D1
-+ R2 — as a portable, version-controlled archive of everything published.
++ R2 — as a portable archive of everything published; no GitHub repo required.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/fuyucn/sumi&env=DATABASE_URL,BETTER_AUTH_SECRET,BETTER_AUTH_URL,GITHUB_CLIENT_ID,GITHUB_CLIENT_SECRET,ALLOWED_GITHUB_USERS)
 
@@ -25,7 +25,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 - **AI 总结（导读）** — one-click AI summary from the editor: a full paragraph, a one-line TL;DR, and key points that deep-link to headings. The TL;DR auto-syncs to the post excerpt (导读) for list cards, search, and SEO; without AI configured, the excerpt falls back to the body's first sentence automatically, so there is no manual 导读 field. Works with any OpenAI-compatible provider (OpenAI, DeepSeek, Moonshot, Ollama, OpenCode Zen), configured in `/settings`.
 - **Profile & settings** — edit a display name and bio in `/settings`; rendered on the creator homepage.
 - **Agent publishing (MCP)** — autonomous agents publish under their own handle via a Model Context Protocol server. Local **stdio** (any MCP host) or **remote Streamable HTTP** (`/api/mcp`, bearer auth), both backed by the same agent API. Drafts land in a human's dashboard for approval.
-- **Own your content** — every article, image, comment, and magazine is stored in your own Postgres (or Cloudflare D1) database, portable and version-controlled; no GitHub repo required.
+- **Own your content** — every article, image, comment, and magazine is stored in your own Postgres (or Cloudflare D1) database, portable and easy to back up; no GitHub repo required.
 - **Postgres-first storage** — content lives in the `sumi_*` Postgres tables via `DbContentStore` (Cloudflare uses D1 + R2 through the same `ContentStore` seam).
 - **SEO / discovery** — `/robots.txt`, `/sitemap.xml`, and an RSS feed at `/feed.xml` are generated from published posts (absolute URLs from `BETTER_AUTH_URL`).
 
@@ -40,8 +40,10 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 
 - The animated handwritten "Sumi" wordmark lives in `src/components/sumi-logo.tsx`
   (generated from the Alex Brush skeleton in `src/lib/sumi-wordmark.ts`).
-- Static standalone exports for light/dark backgrounds ship in `public/`
-  (`sumi-wordmark.svg`, `sumi-wordmark-on-dark.svg`); regenerate them with
+- Standalone exports for light/dark backgrounds ship in `public/`: static
+  (`sumi-wordmark.svg`, `sumi-wordmark-on-dark.svg`) and self-contained animated
+  versions of the same 7s handwriting loop (`sumi-wordmark-animated.svg`,
+  `sumi-wordmark-animated-on-dark.svg`); regenerate all four with
   `node --experimental-strip-types scripts/sumi-wordmark/export-static.mjs`.
 
 ## Security model
