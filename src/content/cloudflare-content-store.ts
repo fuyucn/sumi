@@ -30,6 +30,7 @@ interface PostRow {
   cover_image: string | null;
   status: PostStatus;
   published_at: string | null;
+  views: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -194,6 +195,15 @@ export class CloudflareContentStore implements ContentStore {
     return row ? toPost(row) : null;
   }
 
+  async incrementViews(handle: string, slug: string): Promise<number> {
+    const row = await this.row<{ views: number }>(
+      `UPDATE posts SET views = views + 1 WHERE handle = ? AND slug = ? RETURNING views`,
+      handle,
+      slug,
+    );
+    return row?.views ?? 0;
+  }
+
   async savePost(handle: string, post: NewPost): Promise<string> {
     const slug = post.slug ?? slugify(post.title);
     const now = new Date().toISOString();
@@ -207,12 +217,13 @@ export class CloudflareContentStore implements ContentStore {
       cover_image: post.coverImage ?? null,
       status: post.status ?? "draft",
       published_at: post.publishedAt ?? null,
+      views: 0,
       created_at: now,
       updated_at: now,
     };
     await this.run(
-      `INSERT INTO posts (handle, slug, title, body, tags, excerpt, cover_image, status, published_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO posts (handle, slug, title, body, tags, excerpt, cover_image, status, published_at, views, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT (handle, slug) DO UPDATE SET
          title = excluded.title,
          body = excluded.body,
@@ -223,7 +234,7 @@ export class CloudflareContentStore implements ContentStore {
          published_at = excluded.published_at,
          updated_at = excluded.updated_at`,
       row.handle, row.slug, row.title, row.body, row.tags, row.excerpt, row.cover_image,
-      row.status, row.published_at, row.created_at, row.updated_at,
+      row.status, row.published_at, row.views, row.created_at, row.updated_at,
     );
     return slug;
   }
@@ -665,6 +676,7 @@ function toPostMeta(r: PostRow): PostMeta {
     slug: r.slug,
     tags: parseTags(r.tags),
     status: r.status,
+    ...(r.views !== null ? { views: r.views } : {}),
     ...(r.created_at !== null ? { createdAt: r.created_at } : {}),
     ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
     ...(r.cover_image !== null ? { coverImage: r.cover_image } : {}),

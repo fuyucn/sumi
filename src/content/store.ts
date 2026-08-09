@@ -23,6 +23,8 @@ export interface ContentStore {
   getPost(handle: string, slug: string): Promise<Post | null>;
   savePost(handle: string, post: NewPost): Promise<string>;
   deletePost(handle: string, slug: string): Promise<void>;
+  /** Count one page view for a post; returns the new total. */
+  incrementViews(handle: string, slug: string): Promise<number>;
   uploadImage(handle: string, slug: string, filename: string, bytes: Uint8Array): Promise<string>;
   listComments(postHandle: string, slug: string): Promise<Comment[]>;
   addComment(postHandle: string, slug: string, comment: NewComment, authorHandle: string, now: Date): Promise<Comment>;

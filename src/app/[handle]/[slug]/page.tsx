@@ -8,6 +8,7 @@ import { LikeButton } from "@/components/like-button";
 import { AiSummaryPanel } from "@/components/ai-summary-panel";
 import { ReadingProgress } from "@/components/reading-progress";
 import { PageTransition } from "@/components/page-transition";
+import { TrackView } from "@/components/track-view";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserHandle } from "@/lib/user";
 import { estimateReadingTime } from "@/lib/reading-time";
@@ -114,6 +115,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ handle
             <Clock size={12} weight="duotone" aria-hidden />
             {reading.minutes} min read · {reading.words.toLocaleString("en-US")}{" "}
             {reading.words === 1 ? "word" : "words"}
+            {" · "}
+            <TrackView
+              handle={data.handle}
+              slug={decodedSlug}
+              initialViews={post.views}
+            />
           </span>
         </div>
       </header>

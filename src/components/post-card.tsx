@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { PostMeta } from "@/content/types";
 import { HighlightText } from "@/components/highlight-text";
+import { Eye } from "@phosphor-icons/react/dist/ssr";
 
 function SparkleGlyph() {
   return (
@@ -75,6 +76,12 @@ export function PostCard({
           </p>
         ) : null}
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
+          {typeof post.views === "number" ? (
+            <span className="inline-flex items-center gap-1 tabular-nums">
+              <Eye size={13} weight="duotone" aria-hidden />
+              {post.views.toLocaleString("en-US")} {post.views === 1 ? "view" : "views"}
+            </span>
+          ) : null}
           <Link
             href={`/@${handle}`}
             transitionTypes={["nav-forward"]}

@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS posts (
   cover_image TEXT,
   status TEXT NOT NULL DEFAULT 'draft',
   published_at TEXT,
+  views INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   PRIMARY KEY (handle, slug)
@@ -195,6 +196,20 @@ test("savePost + getPost round-trip (tags, cover, publishedAt, status)", async (
   expect(post?.status).toBe("published");
   expect(post?.publishedAt).toBe("2026-06-12T00:00:00.000Z");
   expect(post?.body).toContain("hello");
+});
+
+test("incrementViews accumulates and survives re-save", async () => {
+  const { store } = inMemoryStore();
+  await store.savePost("alice", { title: "View Counter", body: "track me" });
+
+  expect((await store.getPost("alice", "view-counter"))?.views).toBe(0);
+  expect(await store.incrementViews("alice", "view-counter")).toBe(1);
+  expect(await store.incrementViews("alice", "view-counter")).toBe(2);
+
+  await store.savePost("alice", { title: "View Counter", body: "edited" });
+  expect((await store.getPost("alice", "view-counter"))?.views).toBe(2);
+
+  expect(await store.incrementViews("alice", "missing")).toBe(0);
 });
 
 test("getPost returns null for a missing post", async () => {

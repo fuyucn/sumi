@@ -12,6 +12,7 @@ function fakeStore(data: Record<string, PostMeta[]>): ContentStore {
     },
     async getPost() { return null; },
     async savePost() { return ""; },
+    async incrementViews() { return 0; },
     async deletePost() {},
     async uploadImage() { return ""; },
     async listComments() { return []; },

@@ -7,6 +7,8 @@ export interface PostMeta {
   excerpt?: string;
   coverImage?: string;
   status: PostStatus;
+  /** Number of times the post has been read (view counter). */
+  views?: number;
   /** Creation time (ISO 8601) when the backend tracks it (Postgres/D1). */
   createdAt?: string;
   publishedAt?: string; // ISO 8601

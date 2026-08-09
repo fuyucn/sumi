@@ -78,6 +78,7 @@ export const sumiPosts = pgTable("sumi_posts", {
   status: text("status").notNull().default("draft"),
   publishedAt: text("published_at"),
   agent: boolean("agent").notNull().default(false),
+  views: integer("views").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at").notNull(),
 }, (t) => [primaryKey({ columns: [t.handle, t.slug] })]);

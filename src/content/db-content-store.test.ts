@@ -19,6 +19,7 @@ CREATE TABLE "sumi_posts" (
   "status" text DEFAULT 'draft' NOT NULL,
   "published_at" text,
   "agent" boolean DEFAULT false NOT NULL,
+  "views" integer DEFAULT 0 NOT NULL,
   "created_at" text NOT NULL,
   "updated_at" text NOT NULL,
   CONSTRAINT "sumi_posts_handle_slug_pk" PRIMARY KEY("handle","slug")
@@ -168,6 +169,29 @@ test("savePost + getPost + listPosts round-trip with tags/status/searchable body
   const all = await store.listPosts({ handle: "alice" });
   expect(all.map((p) => p.slug)).toEqual(["my-first-post"]);
   expect(all[0]).not.toHaveProperty("body");
+});
+
+test("incrementViews starts at 0 and accumulates without resetting on edit", async () => {
+  const { store } = await makeStore();
+  const slug = await store.savePost("alice", {
+    title: "View Counter",
+    body: "track me",
+    status: "published",
+  });
+  expect(slug).toBe("view-counter");
+
+  expect((await store.getPost("alice", "view-counter"))?.views).toBe(0);
+  expect(await store.incrementViews("alice", "view-counter")).toBe(1);
+  expect(await store.incrementViews("alice", "view-counter")).toBe(2);
+
+  // Editing a post must not reset the counter.
+  await store.savePost("alice", { title: "View Counter", body: "edited" });
+  expect((await store.getPost("alice", "view-counter"))?.views).toBe(2);
+
+  const [meta] = await store.listPosts({ handle: "alice" });
+  expect(meta.views).toBe(2);
+
+  expect(await store.incrementViews("alice", "missing")).toBe(0);
 });
 
 test("agent flag round-trips through savePost/getPost/listPosts", async () => {

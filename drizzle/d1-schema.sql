@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS posts (
   cover_image TEXT,
   status TEXT NOT NULL DEFAULT 'draft',
   published_at TEXT,
+  views INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
   PRIMARY KEY (handle, slug)

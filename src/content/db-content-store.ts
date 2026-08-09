@@ -51,6 +51,7 @@ interface PostRow {
   status: string;
   publishedAt: string | null;
   agent: boolean;
+  views: number | null;
   createdAt: string;
 }
 
@@ -155,6 +156,15 @@ export class DbContentStore implements ContentStore {
     return row.length ? toPost(row[0]) : null;
   }
 
+  async incrementViews(handle: string, slug: string): Promise<number> {
+    const rows = await this.db
+      .update(sumiPosts)
+      .set({ views: sql`${sumiPosts.views} + 1` })
+      .where(sql`${sumiPosts.handle} = ${handle} AND ${sumiPosts.slug} = ${slug}`)
+      .returning({ views: sumiPosts.views });
+    return rows.length ? (rows[0].views ?? 0) : 0;
+  }
+
   async savePost(handle: string, post: NewPost): Promise<string> {
     const slug = post.slug ?? slugify(post.title);
     const now = new Date().toISOString();
@@ -169,11 +179,12 @@ export class DbContentStore implements ContentStore {
       status: post.status ?? "draft",
       publishedAt: post.publishedAt ?? null,
       agent: post.agent ?? false,
+      views: 0,
       createdAt: now,
     };
     await this.db
       .insert(sumiPosts)
-      .values({ ...full, updatedAt: now })
+      .values({ ...full, views: full.views ?? 0, updatedAt: now })
       .onConflictDoUpdate({
         target: [sumiPosts.handle, sumiPosts.slug],
         set: {
@@ -745,6 +756,7 @@ function toPostMeta(r: PostRow): PostMeta {
     slug: r.slug,
     tags: parseJsonList(r.tags),
     status: r.status as PostStatus,
+    ...(r.views !== null ? { views: r.views } : {}),
     ...(r.createdAt !== null ? { createdAt: r.createdAt } : {}),
     ...(r.excerpt !== null ? { excerpt: r.excerpt } : {}),
     ...(r.coverImage !== null ? { coverImage: r.coverImage } : {}),

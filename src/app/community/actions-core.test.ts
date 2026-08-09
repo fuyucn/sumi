@@ -9,6 +9,7 @@ function fakeStore(): ContentStore {
     async listPosts() { return []; },
     async getPost() { return null; },
     async savePost() { return "x"; },
+    async incrementViews() { return 0; },
     async deletePost() {},
     async uploadImage() { return ""; },
     async listComments() { return []; },

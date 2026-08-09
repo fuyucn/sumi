@@ -10,6 +10,7 @@ function fakeStore(): ContentStore {
     listPosts: vi.fn(),
     getPost: vi.fn(),
     savePost: vi.fn().mockResolvedValue("hi"),
+    incrementViews: vi.fn().mockResolvedValue(1),
     deletePost: vi.fn().mockResolvedValue(undefined),
     uploadImage: vi.fn().mockResolvedValue("images/x.png"),
     listComments: vi.fn().mockResolvedValue([]),
