@@ -1,11 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 
 export function SearchForm({ query }: { query: string }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // After a submit the native GET navigation remounts the page, so refocus
+  // the query box for instant refinement. A session flag keeps cold loads of
+  // shared `?q=` links from stealing focus (and popping the mobile keyboard).
+  useEffect(() => {
+    let submitted = false;
+    try {
+      submitted = sessionStorage.getItem("sumi-search-submitted") === "1";
+      sessionStorage.removeItem("sumi-search-submitted");
+    } catch {
+      // Storage can be unavailable (private mode); fall back to no refocus.
+    }
+    if (!submitted || !query) return;
+    const id = requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [query]);
 
   return (
     <form
@@ -13,6 +36,13 @@ export function SearchForm({ query }: { query: string }) {
       action="/search"
       method="get"
       className="relative flex items-stretch gap-2"
+      onSubmit={() => {
+        try {
+          sessionStorage.setItem("sumi-search-submitted", "1");
+        } catch {
+          // Best-effort; the submit still proceeds without the flag.
+        }
+      }}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -28,6 +58,7 @@ export function SearchForm({ query }: { query: string }) {
       />
       <div className="relative min-w-0 flex-1">
         <input
+          ref={inputRef}
           type="search"
           name="q"
           defaultValue={query}
