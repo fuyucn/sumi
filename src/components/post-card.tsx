@@ -4,7 +4,12 @@ import { HighlightText } from "@/components/highlight-text";
 
 function SparkleGlyph() {
   return (
-    <svg viewBox="0 0 16 16" aria-hidden className="size-3" fill="currentColor">
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden
+      className="size-3 transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:rotate-[18deg] group-hover:scale-110"
+      fill="currentColor"
+    >
       <path d="M8 0c.55 3.1 1.45 4 4.55 4.55C9.45 5.1 8.55 6 8 9.1 7.45 6 6.55 5.1 3.45 4.55 6.55 4 7.45 3.1 8 0z" />
       <path d="M12.5 9.5c.3 1.7.8 2.2 2.5 2.5-1.7.3-2.2.8-2.5 2.5-.3-1.7-.8-2.2-2.5-2.5 1.7-.3 2.2-.8 2.5-2.5z" />
     </svg>
@@ -67,7 +72,7 @@ export function PostCard({
           </h2>
         </Link>
         {post.excerpt ? (
-          <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted line-clamp-2">
+          <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted transition-colors duration-[var(--dur-long)] ease-[var(--ease-out)] line-clamp-2 group-hover:text-ink-soft">
             {highlight ? (
               <HighlightText text={post.excerpt} query={highlight} />
             ) : (

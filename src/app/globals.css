@@ -541,6 +541,19 @@ textarea,
   background-size: 100% 1px;
 }
 
+/* Editorial tag hover: a cinnabar hairline sweeps in under the wordmark,
+   echoing the bookmark line on post cards. Parent must be a Tailwind `group`. */
+.tag-sweep {
+  background-image: linear-gradient(var(--color-seal), var(--color-seal));
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size var(--dur-short) var(--ease-out);
+}
+.group:hover .tag-sweep {
+  background-size: 100% 1px;
+}
+
 /* Icon buttons and ghost actions press down with a physical tick. */
 .press {
   transition:
@@ -609,6 +622,14 @@ textarea,
     100% {
       transform: scale(1);
     }
+  }
+}
+
+/* The tag count stamps in once on hover — a mini seal press that retriggers
+   every time the pointer returns to the tag. */
+@media (prefers-reduced-motion: no-preference) {
+  .group:hover .pop-on-hover {
+    animation: badge-pop 0.28s var(--ease-out);
   }
 }
 
