@@ -81,8 +81,8 @@ export function TagsExplorer({ tags }: { tags: TagInfo[] }) {
                   className="group relative flex items-baseline justify-between rounded-md py-4 pl-3 pr-8 transition-[background-color,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:bg-paper-deep/40 hover:text-seal sm:pr-10"
                 >
                   <span className="font-serif text-lg text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-1 group-hover:text-seal">
-                    <span className="text-seal">#</span>
-                    {tag.name}
+                    <span className="tag-sweep text-seal">#</span>
+                    <span className="tag-sweep">{tag.name}</span>
                   </span>
                   <span className="text-sm text-ink-faint transition-colors group-hover:text-seal/80">
                     {tag.count} {tag.count === 1 ? "post" : "posts"}
