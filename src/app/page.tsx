@@ -13,6 +13,24 @@ import { Feather } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
+/** Staggered word reveal for the hero headline. Pure CSS animation, so the
+ * server and first client render are identical (no hydration risk); reduced
+ * motion falls back to static text via the media gate in globals.css. */
+function HeroHeadline({ text }: { text: string }) {
+  const words = text.split(" ");
+  return (
+    <>
+      {words.map((word, i) => (
+        <span key={`${word}-${i}`}>
+          <span className="hero-word" style={{ animationDelay: `${i * 0.05}s` }}>
+            {word}
+          </span>{" "}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export default async function Home() {
   const feed = await listFeed();
   const store = await getReadContentStore();
@@ -47,8 +65,8 @@ export default async function Home() {
       <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
       <section className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div>
-          <h1 className="rise font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
-            A quiet place to write
+          <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
+            <HeroHeadline text="A quiet place to write" />
             <span aria-hidden className="seal-in text-seal">
               .
             </span>

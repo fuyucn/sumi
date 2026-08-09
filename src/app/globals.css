@@ -385,11 +385,28 @@ textarea,
     animation-delay: 0.24s;
   }
 
+  /* Home hero headline: each word rises on its own beat, so the serif
+     headline settles like type being set rather than rising as a block. */
+  .hero-word {
+    display: inline-block;
+    animation: hero-word-in 0.5s var(--ease-out) both;
+  }
+  @keyframes hero-word-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.45em);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   /* The seal-colored period in the home headline stamps in a beat after the
      words rise — a tiny hanko press instead of a flat fade. */
   .seal-in {
     display: inline-block;
-    animation: seal-in 0.5s var(--ease-out) 0.7s both;
+    animation: seal-in 0.5s var(--ease-out) 0.8s both;
   }
   /* The seal diamond between article sections stamps in like a hanko press,
      keeping the 45-degree rotation through the overshoot. */
