@@ -18,6 +18,7 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useDisplayName } from "@/components/use-display-name";
+import { SumiLogo } from "@/components/sumi-logo";
 import { motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
 
 const iconClass = (active: boolean) =>
@@ -300,7 +301,7 @@ export function Nav() {
           >
             墨
           </span>
-          Sumi
+          <SumiLogo className="h-[1.05rem] w-auto text-ink" />
         </Link>
 
         {/* Site navigation: Home → Posts → Tags (Tags always last). */}

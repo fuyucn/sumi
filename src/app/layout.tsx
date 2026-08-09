@@ -5,6 +5,7 @@ import { Geist, Newsreader } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { SearchShortcut } from "@/components/search-shortcut";
 import { ScrollTop } from "@/components/scroll-top";
+import { SumiLogo } from "@/components/sumi-logo";
 import "./globals.css";
 
 const geist = Geist({
@@ -68,8 +69,8 @@ export default async function RootLayout({
         <footer className="mt-24 border-t border-line">
           <div className="max-w-6xl mx-auto px-5 sm:px-8 py-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between text-xs text-ink-faint">
             <div className="group flex items-baseline gap-3">
-              <span className="font-serif text-base font-medium text-ink transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:text-seal">
-                Sumi{" "}
+              <span className="flex items-baseline gap-2 text-ink">
+                <SumiLogo className="h-[0.95rem] w-auto" />
                 <span
                   aria-hidden
                   className="inline-block text-seal transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:scale-110"

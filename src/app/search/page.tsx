@@ -116,7 +116,6 @@ export default async function SearchPage({
                     post={post}
                     authorName={names.get(handle)}
                     highlight={query}
-                    ruleDelay={Math.min(i * 0.05, 0.3)}
                   />
                 </Reveal>
               ))}

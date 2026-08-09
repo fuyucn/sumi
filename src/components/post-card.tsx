@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { PostMeta } from "@/content/types";
 import { HighlightText } from "@/components/highlight-text";
-import { CardRule } from "@/components/card-rule";
 
 function SparkleGlyph() {
   return (
@@ -22,15 +21,12 @@ export function PostCard({
   post,
   authorName,
   highlight,
-  ruleDelay = 0,
 }: {
   handle: string;
   post: PostMeta;
   authorName?: string;
   /** Search query; when set, matching terms are highlighted in title/excerpt. */
   highlight?: string;
-  /** Entrance delay for the bookmark rule, synced to the wrapping Reveal. */
-  ruleDelay?: number;
 }) {
   const date = post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString("en-US", {
@@ -42,9 +38,6 @@ export function PostCard({
 
   return (
     <article className="group relative grid gap-2 py-7 sm:grid-cols-[7rem_1fr] sm:gap-8 sm:py-8">
-      {/* Editorial bookmark: a cinnabar hairline draws down the row edge as the
-          card enters, marking the entry you are about to open. */}
-      <CardRule delay={ruleDelay} />
       <Link
         href={`/@${handle}/${post.slug}`}
         transitionTypes={["nav-forward"]}

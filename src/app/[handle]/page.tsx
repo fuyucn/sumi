@@ -92,7 +92,6 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
                 handle={handle}
                 post={post}
                 authorName={authorName}
-                ruleDelay={Math.min(i * 0.05, 0.3)}
               />
             </Reveal>
           ))}
