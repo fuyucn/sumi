@@ -210,24 +210,30 @@ export default async function WriteDashboard({
         <div className="grid gap-3 sm:grid-cols-3">
           <Link
             href="/write/magazines"
-            className="card group flex items-center justify-between"
+            className="card group flex items-center justify-between transition-[border-color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40"
           >
             <span className="font-serif text-lg font-medium text-ink">Magazines</span>
-            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+            <span className="text-sm text-ink-faint transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal">
+              →
+            </span>
           </Link>
           <Link
             href="/write/projects"
-            className="card group flex items-center justify-between"
+            className="card group flex items-center justify-between transition-[border-color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40"
           >
             <span className="font-serif text-lg font-medium text-ink">Projects</span>
-            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+            <span className="text-sm text-ink-faint transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal">
+              →
+            </span>
           </Link>
           <Link
             href="/write/pages"
-            className="card group flex items-center justify-between"
+            className="card group flex items-center justify-between transition-[border-color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:border-seal/40"
           >
             <span className="font-serif text-lg font-medium text-ink">Pages</span>
-            <span className="text-sm text-ink-faint transition-colors group-hover:text-seal">→</span>
+            <span className="text-sm text-ink-faint transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:text-seal">
+              →
+            </span>
           </Link>
         </div>
       </Reveal>
