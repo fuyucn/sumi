@@ -12,7 +12,7 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
 ## Features
 
 - **Writing** — clean TipTap rich-text editor serialized to Markdown + YAML frontmatter; drafts vs publish; tags; image upload (stored with the post).
-- **Reading** — newest-first home feed with a most-read ranking and live per-article view counts, full-text search (`/search`), per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
+- **Reading** — newest-first home feed and a yearly archive at `/posts` with live per-article view counts, full-text search (`/search`), per-creator pages (`/@handle`), tag pages (`/tag/<slug>`), and full article pages (`/@handle/<slug>`).
 - **Comments** — signed-in creators can leave comments on any published post, including nested replies, stored per-article.
 - **Notes (手记)** — a short-form timeline per creator at `/@handle/notes`; the owner pins a thought inline, rendered newest-first.
 - **Friends (友链)** — a site-wide friends/links page at `/friends`; signed-in creators can add name/URL/avatar/bio and remove links.
@@ -47,6 +47,11 @@ stored in your own database — Postgres (Docker / VPS / Vercel) or Cloudflare D
   versions of the same hover-triggered loop (`sumi-wordmark-animated.svg`,
   `sumi-wordmark-animated-on-dark.svg`); regenerate all four with
   `node --experimental-strip-types scripts/sumi-wordmark/export-static.mjs`.
+- **Mascot** — the transparent "Sumi-chan" character
+  (`public/mascot/sumi-mascot-v1.webp`, converted from a transparent PNG via
+  `scripts/mascot-cutout.py`) floats behind the home hero copy as a masked
+  background layer (`src/app/page.tsx`); character brief and asset pipeline
+  live in `docs/mascot.md`.
 
 ## Security model
 

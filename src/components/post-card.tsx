@@ -3,20 +3,6 @@ import type { PostMeta } from "@/content/types";
 import { HighlightText } from "@/components/highlight-text";
 import { Eye } from "@phosphor-icons/react/dist/ssr";
 
-function SparkleGlyph() {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden
-      className="size-3 transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:rotate-[18deg] group-hover:scale-110"
-      fill="currentColor"
-    >
-      <path d="M8 0c.55 3.1 1.45 4 4.55 4.55C9.45 5.1 8.55 6 8 9.1 7.45 6 6.55 5.1 3.45 4.55 6.55 4 7.45 3.1 8 0z" />
-      <path d="M12.5 9.5c.3 1.7.8 2.2 2.5 2.5-1.7.3-2.2.8-2.5 2.5-.3-1.7-.8-2.2-2.5-2.5 1.7-.3 2.2-.8 2.5-2.5z" />
-    </svg>
-  );
-}
-
 export function PostCard({
   handle,
   post,
@@ -38,7 +24,7 @@ export function PostCard({
     : null;
 
   return (
-    <article className="group relative grid gap-2 py-7 sm:grid-cols-[7rem_1fr] sm:gap-8 sm:py-8">
+    <article className="group relative grid grid-cols-[auto_1fr] items-baseline gap-x-4 py-6 sm:grid-cols-[auto_1fr_auto] sm:gap-x-6">
       <Link
         href={`/@${handle}/${post.slug}`}
         transitionTypes={["nav-forward"]}
@@ -47,18 +33,18 @@ export function PostCard({
       />
       <time
         dateTime={post.publishedAt}
-        className="pt-1 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/80 sm:pt-1.5"
+        className="essay-num pt-0.5 transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
       >
         {date}
       </time>
-      <div className="pointer-events-none relative z-10">
+      <div className="pointer-events-none relative z-10 min-w-0">
         <Link
           href={`/@${handle}/${post.slug}`}
           transitionTypes={["nav-forward"]}
           className="pointer-events-auto block"
           aria-label={post.title}
         >
-          <h2 className="font-serif text-2xl font-medium leading-snug tracking-tight text-ink transition-all duration-[var(--dur-short)] group-hover:translate-x-1 group-hover:text-seal">
+          <h2 className="essay-title">
             {highlight ? (
               <HighlightText text={post.title} query={highlight} />
             ) : (
@@ -66,20 +52,22 @@ export function PostCard({
             )}
           </h2>
         </Link>
-        {post.excerpt ? (
-          <p className="mt-2 font-serif text-[1.0625rem] leading-relaxed text-ink-muted transition-colors duration-[var(--dur-long)] ease-[var(--ease-out)] line-clamp-2 group-hover:text-ink-soft">
-            {highlight ? (
-              <HighlightText text={post.excerpt} query={highlight} />
-            ) : (
-              post.excerpt
-            )}
-          </p>
-        ) : null}
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-faint">
-          {typeof post.views === "number" ? (
-            <span className="inline-flex items-center gap-1 tabular-nums">
-              <Eye size={13} weight="duotone" aria-hidden />
-              {post.views.toLocaleString("en-US")} {post.views === 1 ? "view" : "views"}
+        <div className="essay-meta mt-2">
+          {post.agent ? (
+            <span
+              className="agent-chip"
+              title="由 autonomous agent 协作写作"
+            >
+              <span className="dot" aria-hidden />
+              Agent
+            </span>
+          ) : null}
+          {post.aiSummary ? (
+            <span
+              className="ai-chip"
+              title="已生成 AI 导读，可在文章页查看"
+            >
+              ✦ AI 导读
             </span>
           ) : null}
           <Link
@@ -89,47 +77,42 @@ export function PostCard({
           >
             {authorName || `@${handle}`}
           </Link>
-          {post.agent ? (
-            <span className="rounded-full border border-seal/40 px-2 py-0.5 text-xs font-medium text-seal">
-              Agent
-            </span>
-          ) : null}
-          {post.aiSummary ? (
-            <span
-              title="已生成 AI 总结，可在文章页查看"
-              className="inline-flex items-center gap-1 rounded-full border border-seal/40 bg-seal/10 px-2 py-0.5 text-xs font-medium text-seal transition-colors duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:border-seal/60 group-hover:bg-seal/15"
+          {post.tags.map((t) => (
+            <Link
+              key={t}
+              href={`/tag/${encodeURIComponent(t)}`}
+              transitionTypes={["nav-forward"]}
+              className="pointer-events-auto"
             >
-              <SparkleGlyph />
-              AI 总结
-            </span>
-          ) : null}
-        </div>
-        {post.tags.length > 0 ? (
-          <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-sm text-ink-faint">
-            {post.tags.map((t) => (
-              <Link
-                key={t}
-                href={`/tag/${encodeURIComponent(t)}`}
-                transitionTypes={["nav-forward"]}
-                className="pointer-events-auto transition-colors hover:text-seal"
-              >
+              <span className="tag-chip">
                 {highlight ? (
                   <HighlightText
-                    text={`#${t}`}
+                    text={t}
                     query={highlight}
                     className="rounded-[3px] bg-seal-wash px-0.5 text-inherit"
                   />
                 ) : (
-                  `#${t}`
+                  t
                 )}
-              </Link>
-            ))}
-          </div>
+              </span>
+            </Link>
+          ))}
+          {typeof post.views === "number" ? (
+            <span className="inline-flex items-center gap-1 tabular-nums text-ink-faint">
+              <Eye size={13} weight="duotone" aria-hidden />
+              {post.views.toLocaleString("en-US")}
+            </span>
+          ) : null}
+        </div>
+        {highlight && post.excerpt ? (
+          <p className="mt-2 font-serif text-[0.95rem] leading-relaxed text-ink-muted line-clamp-1 transition-colors duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:text-ink-soft">
+            <HighlightText text={post.excerpt} query={highlight} />
+          </p>
         ) : null}
       </div>
       <span
         aria-hidden
-        className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-xl text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100 md:block"
+        className="essay-arrow hidden sm:grid"
       >
         →
       </span>

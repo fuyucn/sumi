@@ -49,7 +49,9 @@ export function proxy(req: NextRequest): NextResponse {
 export const config = {
   matcher: [
     {
-      source: "/((?!api|_next/static|_next/image|favicon.ico).*)",
+      // The high-end design demo (public/demo-highend-*) loads its own plain
+      // CSS/JS from /public; it is excluded from the nonce-gated policy.
+      source: "/((?!api|_next/static|_next/image|favicon.ico|demo-highend).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

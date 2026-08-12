@@ -7,7 +7,8 @@ import { motion, useReducedMotion, useScroll, useTransform } from "motion/react"
  * The home hero leans back as the reader scrolls: it fades, compresses
  * slightly, and drifts upward before the feed takes over. Enabled only
  * after mount (SSR and first paint match the static section), and skipped
- * entirely for reduced-motion users.
+ * entirely for reduced-motion users. The mascot renders as an absolutely
+ * positioned background layer behind the copy (see .hero-mascot).
  */
 export function ScrollHero({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLElement>(null);
@@ -32,7 +33,7 @@ export function ScrollHero({ children }: { children: React.ReactNode }) {
     <motion.section
       ref={ref}
       style={enabled ? { opacity, scale, y } : undefined}
-      className="grid items-center gap-10 lg:grid-cols-[1.15fr_1fr] lg:gap-16"
+      className="relative grid min-h-[92dvh] items-center overflow-hidden py-24 lg:py-28"
     >
       {children}
     </motion.section>

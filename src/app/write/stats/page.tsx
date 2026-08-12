@@ -153,7 +153,7 @@ export default async function StatsPage() {
           Stats
         </h1>
         <p className="mt-3 text-sm text-ink-muted">
-          A quiet look at everything you&apos;ve written — ink, reads, and echoes.
+          A quiet look at everything you&apos;ve written: ink, reads, and echoes.
         </p>
       </header>
 
@@ -240,7 +240,7 @@ export default async function StatsPage() {
         </h2>
         {commentRows.length === 0 ? (
           <p className="mt-6 text-sm text-ink-muted">
-            No comments yet — readers will leave their first note soon.
+            No comments yet. Readers will leave their first note soon.
           </p>
         ) : (
           <ul className="divide-y divide-line">

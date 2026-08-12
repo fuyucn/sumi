@@ -26,7 +26,7 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
     .slice(0, 8);
   return (
     <PageTransition>
-      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
+      <main className="max-w-2xl mx-auto px-5 pt-16 pb-24">
       <Link
         href="/tags"
         transitionTypes={["nav-back"]}
@@ -40,13 +40,16 @@ export default async function TagPage({ params }: { params: Promise<{ slug: stri
         </span>{" "}
         All tags
       </Link>
-      <header className="mb-12">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">Topic</p>
-        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
+      <header className="page-head mb-12">
+        <span className="eyebrow">
+          <span aria-hidden className="dot" />
+          Topic
+        </span>
+        <h1>
           <span className="text-seal">#</span>
           {tag}
         </h1>
-        <p className="mt-3 text-sm text-ink-muted tabular-nums">
+        <p className="tabular-nums">
           {matches.length} {matches.length === 1 ? "post" : "posts"} under this topic
           {relatedTags.length > 0
             ? ` · ${relatedTags.length} related ${relatedTags.length === 1 ? "topic" : "topics"}`

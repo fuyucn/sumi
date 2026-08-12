@@ -26,16 +26,15 @@ export default async function SearchPage({
   return (
     <PageTransition>
       <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
-      <header className="mb-12">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
+      <header className="page-head mb-14">
+        <span className="eyebrow">
+          <span aria-hidden className="dot" />
           Find
-        </p>
-        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
-          Search
+        </span>
+        <h1>
+          Search the <em>shelves</em>
         </h1>
-        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-          Find words across every shelf, title, body and tag.
-        </p>
+        <p>Find words across every shelf, title, body and tag.</p>
       </header>
 
       <SearchForm query={query} />
@@ -47,28 +46,28 @@ export default async function SearchPage({
           </p>
           {tags.length > 0 ? (
             <>
-              <div className="mt-5 flex max-w-3xl flex-wrap items-baseline gap-x-5 gap-y-3">
+              <div className="tags-deck mt-6 max-w-3xl">
                 {tags.slice(0, 14).map((tag) => (
                   <Link
                     key={tag.name}
                     href={`/tag/${encodeURIComponent(tag.name)}`}
                     transitionTypes={["nav-forward"]}
-                    className="group press inline-block font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal"
+                    className="tag"
                   >
-                    <span className="text-seal">#</span>
-                    {tag.name}
-                    <span className="ml-1.5 font-sans text-[0.6875rem] font-normal text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/70">
-                      {tag.count}
+                    <span aria-hidden className="text-seal">
+                      #
                     </span>
+                    {tag.name}
+                    <small>{tag.count}</small>
                   </Link>
                 ))}
               </div>
-              <p className="mt-6 text-sm text-ink-muted">
+              <p className="mt-7 text-sm text-ink-muted">
                 Or search above to find words across every shelf.
               </p>
             </>
           ) : (
-            <div className="mt-5 rounded-card border border-dashed border-line-strong px-6 py-10 text-center">
+            <div className="mt-5 border-t border-line pt-8">
               <p className="font-serif text-lg text-ink-soft">
                 The shelves are still quiet.
               </p>

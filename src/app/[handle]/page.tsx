@@ -38,7 +38,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
       : false;
   return (
     <PageTransition>
-      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
+      <main className="max-w-2xl mx-auto px-5 pt-16 pb-24">
       <header className="mb-10">
         <CreatorProfile handle={handle} />
         <div className="mt-3 flex flex-wrap items-center gap-4">

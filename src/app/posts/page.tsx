@@ -4,6 +4,7 @@ import { getDisplayNameMap } from "@/lib/display-name";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
 import { PageTransition } from "@/components/page-transition";
+import { ArchiveRail } from "@/components/archive-rail";
 import { Article } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
@@ -23,10 +24,10 @@ function groupByYear(feed: FeedItem[]) {
     .map(([year, posts]) => ({ year, posts }));
 }
 
-function formatDay(iso: string): string {
+function formatMonthYear(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short" });
 }
 
 export default async function PostsPage() {
@@ -36,86 +37,129 @@ export default async function PostsPage() {
 
   return (
     <PageTransition>
-      <main className="max-w-2xl mx-auto px-5 pt-14 pb-24">
-      <header className="mb-12">
-        <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
-          Shelf
-        </p>
-        <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-ink">
-          Posts
-        </h1>
-        <p className="mt-3 max-w-sm text-sm leading-relaxed text-ink-muted">
-          Every published post, ordered by year.
-          {feed.length > 0
-            ? ` ${feed.length} ${feed.length === 1 ? "post" : "posts"} in the shelves.`
-            : ""}
-        </p>
-      </header>
+      <main className="mx-auto max-w-4xl px-5 pt-16 pb-24 sm:px-8">
+        <header className="page-head">
+          <span className="eyebrow">
+            <span aria-hidden className="dot" />
+            The archive
+          </span>
+          <h1>Posts</h1>
+          <p>
+            Every essay, note and experiment filed by year. Read them in
+            order, or jump straight to a subject you care about.
+          </p>
+          <div className="index-stats">
+            <span>
+              <b>{feed.length}</b>
+              <em>{feed.length === 1 ? "essay" : "essays"}</em>
+            </span>
+            <i aria-hidden />
+            <span>
+              <b>{groups.length}</b>
+              <em>{groups.length === 1 ? "year" : "years"}</em>
+            </span>
+            <i aria-hidden />
+            <span>
+              <b>{names.size}</b>
+              <em>authors</em>
+            </span>
+          </div>
+        </header>
 
-      {groups.length === 0 ? (
-        <EmptyState
-          className="mt-10"
-          icon={<Article size={20} weight="duotone" />}
-          title="Nothing published yet."
-          hint="Posts will collect here as they go live."
-        />
-      ) : (
-        <div className="space-y-14">
-          {groups.map(({ year, posts }) => (
-            <section key={year}>
-              <h2 className="flex items-baseline gap-3 font-serif text-3xl font-semibold tracking-tight text-ink">
-                {year}
-                <span className="text-sm font-sans font-normal text-ink-faint tabular-nums">
-                  {posts.length}
-                </span>
-              </h2>
-              <div className="mt-6 divide-y divide-line border-t border-line">
-                {posts.map(({ handle, post }, i) => (
-                  <Reveal
-                    key={`${handle}/${post.slug}`}
-                    delay={Math.min(i * 0.05, 0.3)}
-                  >
-                    <div className="group relative grid gap-1 py-4 sm:grid-cols-[7rem_1fr] sm:gap-8">
-                      {post.publishedAt ? (
-                        <time
-                          dateTime={post.publishedAt}
-                          className="pt-0.5 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/80"
-                        >
-                          {formatDay(post.publishedAt)}
-                        </time>
-                      ) : (
-                        <span className="pt-0.5 text-sm text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal/80">
-                          Undated
-                        </span>
-                      )}
-                      <div>
-                        <Link
-                          href={`/@${handle}/${post.slug}`}
-                          className="link-underline font-serif text-lg font-medium leading-snug text-ink transition-[background-size,color,transform] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5 hover:text-seal"
-                        >
-                          {post.title}
-                        </Link>
-                        <p className="mt-1 text-sm text-ink-faint">
-                          {names.get(handle)}
-                          {post.tags.length > 0
-                            ? ` · ${post.tags.map((t) => `#${t}`).join(" ")}`
-                            : ""}
-                        </p>
-                      </div>
-                      <span
-                        aria-hidden
-                        className="pointer-events-none absolute right-0 top-1/2 z-10 hidden -translate-y-1/2 translate-x-2 font-serif text-lg text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100 md:block"
+        {groups.length === 0 ? (
+          <EmptyState
+            className="mt-10"
+            icon={<Article size={20} weight="duotone" />}
+            title="Nothing published yet."
+            hint="Posts will collect here as they go live."
+          />
+        ) : (
+          <div className="archive mt-14">
+            <ArchiveRail
+              years={groups.map(({ year, posts }) => ({
+                year,
+                count: posts.length,
+              }))}
+            />
+            <div>
+              {groups.map(({ year, posts }) => (
+                <section
+                  key={year}
+                  id={`y${year}`}
+                  className="year-group scroll-mt-28"
+                >
+                  <h2 className="year-label">{year}</h2>
+                  <div className="divide-y divide-line border-t border-line">
+                    {posts.map(({ handle, post }, i) => (
+                      <Reveal
+                        key={`${handle}/${post.slug}`}
+                        delay={Math.min(i * 0.04, 0.24)}
                       >
-                        →
-                      </span>
-                    </div>
-                  </Reveal>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
+                        <article className="group relative grid grid-cols-[auto_1fr] items-baseline gap-x-6 py-5 sm:grid-cols-[auto_1fr_auto]">
+                          <Link
+                            href={`/@${handle}/${post.slug}`}
+                            transitionTypes={["nav-forward"]}
+                            className="absolute inset-0 z-0"
+                            aria-label={post.title}
+                          />
+                          <span className="essay-date pt-0.5">
+                            {post.publishedAt
+                              ? formatMonthYear(post.publishedAt)
+                              : "Undated"}
+                          </span>
+                          <div className="pointer-events-none relative z-10 min-w-0">
+                            <Link
+                              href={`/@${handle}/${post.slug}`}
+                              transitionTypes={["nav-forward"]}
+                              className="pointer-events-auto block"
+                              aria-label={post.title}
+                            >
+                              <h3 className="essay-title">{post.title}</h3>
+                            </Link>
+                            <div className="essay-meta mt-2">
+                              {post.agent ? (
+                                <span
+                                  className="agent-chip"
+                                  title="由 autonomous agent 协作写作"
+                                >
+                                  <span className="dot" aria-hidden />
+                                  Agent
+                                </span>
+                              ) : null}
+                              <Link
+                                href={`/@${handle}`}
+                                transitionTypes={["nav-forward"]}
+                                className="link-underline pointer-events-auto font-medium text-ink-muted transition-colors hover:text-ink"
+                              >
+                                {names.get(handle)}
+                              </Link>
+                              {post.tags.map((t) => (
+                                <Link
+                                  key={t}
+                                  href={`/tag/${encodeURIComponent(t)}`}
+                                  transitionTypes={["nav-forward"]}
+                                  className="pointer-events-auto"
+                                >
+                                  <span className="tag-chip">{t}</span>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                          <span
+                            aria-hidden
+                            className="essay-arrow hidden sm:grid"
+                          >
+                            →
+                          </span>
+                        </article>
+                      </Reveal>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </PageTransition>
   );

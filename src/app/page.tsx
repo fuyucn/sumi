@@ -1,16 +1,14 @@
-/* Remote featured covers (R2 / external) have no Cloudflare-safe optimizer;
+/* Hero mascot imagery (public/mascot) has no Cloudflare-safe optimizer;
    plain <img> is intentional here. */
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { ArrowRight, Eye } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { getReadContentStore } from "@/content";
 import { listFeed } from "@/content/feed";
 import { PostCard } from "@/components/post-card";
-import { HomeStats } from "@/components/home-stats";
 import { Reveal } from "@/components/reveal";
 import { EmptyState } from "@/components/empty-state";
 import { PageTransition } from "@/components/page-transition";
-import { TiltCard } from "@/components/tilt-card";
 import { ScrollHero } from "@/components/scroll-hero";
 import { getCurrentUser } from "@/lib/current-user";
 import { getDisplayNameMap } from "@/lib/display-name";
@@ -44,15 +42,7 @@ export default async function Home() {
   const tags = (await store?.listTags()) ?? [];
   const creators = new Set(feed.map(({ handle }) => handle)).size;
   const totalTags = tags.reduce((sum, t) => sum + t.count, 0);
-  const maxTagCount = Math.max(1, ...tags.map((t) => t.count));
   const featured = feed[0];
-  const cover = featured?.post.coverImage;
-  const coverSrc = cover?.startsWith("http") ? cover : undefined;
-  const hot = feed
-    .filter(({ post }) => (post.views ?? 0) > 0)
-    .sort((a, b) => (b.post.views ?? 0) - (a.post.views ?? 0))
-    .slice(0, 5);
-  const totalViews = feed.reduce((sum, { post }) => sum + (post.views ?? 0), 0);
   const featuredDate = featured?.post.publishedAt
     ? new Date(featured.post.publishedAt).toLocaleDateString("en-US", {
         year: "numeric",
@@ -60,243 +50,279 @@ export default async function Home() {
         day: "numeric",
       })
     : null;
-  // The featured card already shows feed[0]; don't repeat it in the list.
+  // The spotlight deck already points at feed[0]; the list below shows the rest.
   const recent = featured ? feed.slice(1, 7) : feed.slice(0, 6);
-
-  const tagSize = (count: number) => {
-    const ratio = count / maxTagCount;
-    if (ratio >= 0.8) return "text-lg";
-    if (ratio >= 0.5) return "text-base";
-    return "text-sm";
-  };
+  const nowWriting = featured?.post.title ?? "your first essay";
 
   return (
     <PageTransition>
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-24">
-      <ScrollHero>
-        <div>
-          <h1 className="font-serif text-5xl sm:text-6xl font-semibold leading-[1.05] tracking-tight text-ink text-balance">
-            <HeroHeadline text="A quiet place to write" />
-            <span aria-hidden className="seal-in text-seal">
-              .
-            </span>
-          </h1>
-          <p className="rise rise-delay-1 mt-5 max-w-md font-serif text-lg leading-relaxed text-ink-muted">
-            Your words, inked onto warm paper and kept in your own quiet
-            space. Write, note, and share at your own pace.
-          </p>
-          <Link
-            href={user ? "/write" : "/posts"}
-            transitionTypes={["nav-forward"]}
-            className="btn-primary group rise rise-delay-2 mt-8 px-6 py-3"
-          >
-            {user ? "Start writing" : "Read the latest"}
-            <ArrowRight
-              size={16}
-              weight="duotone"
+      <main className="mx-auto max-w-6xl px-5 pt-12 pb-24 sm:px-8">
+        <ScrollHero>
+          <div aria-hidden className="hero-mascot">
+            <img
+              src="/mascot/sumi-mascot-v1.webp"
+              alt=""
               aria-hidden
-              className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5"
+              draggable={false}
+              loading="eager"
+              decoding="async"
             />
-          </Link>
-        </div>
+          </div>
 
-        <aside className="rise rise-delay-3">
-          {featured && coverSrc ? (
-            <TiltCard className="group relative">
+          <div className="relative z-10 max-w-[46rem]">
+            <span className="eyebrow rise">
+              <span aria-hidden className="dot" />
+              Personal space · est. 2026
+            </span>
+            <h1 className="mt-7 font-serif text-[clamp(3rem,7.4vw,5.6rem)] font-normal leading-[0.98] tracking-[-0.025em] text-ink text-balance">
+              <HeroHeadline text="A quiet place" />
+              <br />
+              to <em className="hero-accent">write</em>
+              <span aria-hidden className="seal-in text-seal">
+                .
+              </span>
+            </h1>
+            <p className="hero-sub rise rise-delay-1 mt-7">
+              Your words, inked onto warm paper and kept in your own quiet
+              corner of the web. No feeds, no noise, just the things you chose
+              to keep.
+            </p>
+            <div className="hero-cta rise rise-delay-2 mt-9">
+              <Link
+                href={user ? "/write" : "/posts"}
+                transitionTypes={["nav-forward"]}
+                className="btn-primary group px-6 py-3"
+              >
+                {user ? "Start writing" : "Read the latest"}
+                <ArrowRight
+                  size={16}
+                  weight="duotone"
+                  aria-hidden
+                  className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0.5"
+                />
+              </Link>
+              <Link
+                href="/posts"
+                transitionTypes={["nav-forward"]}
+                className="btn-ghost group px-6 py-3"
+              >
+                Read the archive
+              </Link>
+            </div>
+          </div>
+        </ScrollHero>
+
+        {/* Spotlight: featured essay, archive totals, now */}
+        <section className="mt-16 lg:mt-24">
+          <Reveal as="div" className="spot-deck">
+            {featured ? (
               <Link
                 href={`/@${featured.handle}/${featured.post.slug}`}
                 transitionTypes={["nav-forward"]}
-                className="lift block overflow-hidden rounded-card border border-line bg-paper-raised shadow-card"
+                className="group block"
               >
-                <img
-                  src={coverSrc}
-                  alt={featured.post.title}
-                  width={1200}
-                  height={800}
-                  loading="eager"
-                  decoding="async"
-                  referrerPolicy="no-referrer"
-                  className="aspect-[3/2] w-full object-cover media-fade transition-transform duration-[var(--dur-long)] ease-[var(--ease-out)] group-hover:scale-[1.03]"
-                />
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium uppercase tracking-[0.14em] text-seal">
-                        Featured
-                      </p>
-                      <h2 className="mt-2 font-serif text-xl font-medium leading-snug tracking-tight text-ink transition-colors duration-[var(--dur-short)] group-hover:text-seal">
-                        {featured.post.title}
-                      </h2>
-                      <p className="mt-1.5 text-sm text-ink-faint">
-                        {[names.get(featured.handle), featuredDate]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    </div>
-                    <span
-                      aria-hidden
-                      className="pointer-events-none shrink-0 translate-x-1 font-serif text-2xl text-seal opacity-0 transition-[transform,opacity] duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover:translate-x-0 group-hover:opacity-100"
-                    >
-                      →
-                    </span>
-                  </div>
+                <span className="deck-label">Featured ink</span>
+                <h2 className="deck-title">{featured.post.title}</h2>
+                <div className="deck-meta">
+                  <span>{names.get(featured.handle) ?? `@${featured.handle}`}</span>
+                  {featuredDate ? (
+                    <>
+                      <i aria-hidden />
+                      <span>{featuredDate}</span>
+                    </>
+                  ) : null}
+                  {typeof featured.post.views === "number" ? (
+                    <>
+                      <i aria-hidden />
+                      <span>
+                        {featured.post.views.toLocaleString("en-US")} views
+                      </span>
+                    </>
+                  ) : null}
                 </div>
               </Link>
-            </TiltCard>
-          ) : (
-            <div className="rounded-card border border-line bg-paper-raised p-8 shadow-card lg:mb-4">
-              <div
-                aria-hidden
-                className="flex h-14 w-14 items-center justify-center rounded-[10px] bg-seal font-serif text-3xl font-semibold text-paper shadow-sm"
-              >
-                墨
+            ) : (
+              <div>
+                <span className="deck-label">Featured ink</span>
+                <h2 className="deck-title">Nothing published yet.</h2>
+                <div className="deck-meta">
+                  <span>The first page is always blank.</span>
+                </div>
               </div>
-              <h2 className="mt-6 font-serif text-2xl font-semibold tracking-tight text-ink">
-                Ink on paper
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-ink-muted">
-                Write in the editor, publish to your own space, and let the
-                seal mark the words you chose to keep.
-              </p>
-            </div>
-          )}
-        </aside>
-      </ScrollHero>
+            )}
 
-      <HomeStats
-        posts={feed.length}
-        writers={creators}
-        tags={totalTags}
-        views={totalViews}
-      />
-
-      <section className="mt-20 lg:mt-28">
-        <Reveal as="div" className="flex items-end justify-between gap-6 border-b border-line pb-4">
-          <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
-            Latest ink
-          </h2>
-          <Link
-            href="/posts"
-            transitionTypes={["nav-forward"]}
-            className="group/link link-underline inline-flex items-center gap-1 text-sm text-ink-faint transition-colors hover:text-ink-muted"
-          >
-            Explore all
-            <ArrowRight
-              size={13}
-              weight="duotone"
-              aria-hidden
-              className="transition-transform duration-[var(--dur-short)] ease-[var(--ease-out)] group-hover/link:translate-x-0.5"
-            />
-          </Link>
-        </Reveal>
-
-        {feed.length === 0 ? (
-          <EmptyState
-            className="mt-10"
-            icon={<Feather size={20} weight="duotone" />}
-            title="Nothing published yet."
-            hint="The first page is always blank. Be the one to fill it."
-          />
-        ) : (
-          <div className="divide-y divide-line">
-            {recent.map(({ handle, post }, i) => (
-              <Reveal key={`${handle}/${post.slug}`} delay={Math.min(i * 0.05, 0.3)}>
-                <PostCard
-                  handle={handle}
-                  post={post}
-                  authorName={names.get(handle)}
-                />
-              </Reveal>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {hot.length > 0 ? (
-        <section className="mt-20 lg:mt-28">
-          <Reveal as="div" className="flex items-end justify-between gap-6 border-b border-line pb-4">
             <div>
-              <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
-                Most read
-              </h2>
-              <p className="mt-2 text-sm text-ink-muted">
-                The pieces readers keep coming back to.
-              </p>
+              <span className="deck-label">The archive, so far</span>
+              <div className="stat-row">
+                <span className="k">Essays inked</span>
+                <span className="stat-num">{feed.length}</span>
+              </div>
+              <div className="stat-row">
+                <span className="k">Tags shelved</span>
+                <span className="stat-num">{totalTags}</span>
+              </div>
+              <div className="stat-row">
+                <span className="k">Authors</span>
+                <span className="stat-num">{creators}</span>
+              </div>
             </div>
-            <span className="inline-flex shrink-0 items-center gap-1 text-sm text-ink-faint tabular-nums">
-              <Eye size={14} weight="duotone" aria-hidden />
-              {totalViews} total views
-            </span>
-          </Reveal>
-          <ol className="divide-y divide-line">
-            {hot.map(({ handle, post }, i) => {
-              const date = post.publishedAt
-                ? new Date(post.publishedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
-                    day: "numeric",
-                  })
-                : null;
-              return (
-                <Reveal as="li" key={`${handle}/${post.slug}`} delay={Math.min(i * 0.04, 0.2)}>
-                  <Link
-                    href={`/@${handle}/${post.slug}`}
-                    transitionTypes={["nav-forward"]}
-                    className="group grid grid-cols-[2.25rem_1fr_auto] items-baseline gap-x-4 gap-y-1 py-5 sm:grid-cols-[3rem_1fr_auto]"
-                  >
-                    <span
-                      aria-hidden
-                      className="font-serif text-2xl font-medium tracking-tight text-ink-faint transition-colors duration-[var(--dur-short)] group-hover:text-seal sm:text-3xl"
-                    >
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-serif text-lg font-medium leading-snug tracking-tight text-ink transition-colors duration-[var(--dur-short)] group-hover:text-seal">
-                        {post.title}
-                      </span>
-                      <span className="mt-0.5 block text-sm text-ink-faint">
-                        {[names.get(handle), date].filter(Boolean).join(" · ")}
-                      </span>
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-sm text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-ink-muted">
-                      <Eye size={13} weight="duotone" aria-hidden />
-                      {post.views}
-                    </span>
-                  </Link>
-                </Reveal>
-              );
-            })}
-          </ol>
-        </section>
-      ) : null}
 
-      {tags.length > 0 ? (
-        <Reveal as="section" className="mt-20">
-          <h2 className="font-serif text-3xl font-semibold tracking-tight text-ink">
-            Filed under
-          </h2>
-          <p className="mt-2 text-sm text-ink-muted">
-            {tags.length} {tags.length === 1 ? "topic" : "topics"}, most used
-            first.
-          </p>
-          <div className="mt-7 flex max-w-3xl flex-wrap items-baseline gap-x-5 gap-y-3">
-            {tags.map((tag) => (
-              <Link
-                key={tag.name}
-                href={`/tag/${encodeURIComponent(tag.name)}`}
-                transitionTypes={["nav-forward"]}
-                className={`${tagSize(tag.count)} group press inline-block pb-0.5 font-serif font-medium text-ink transition-[transform,color] duration-[var(--dur-short)] ease-[var(--ease-out)] hover:-translate-y-0.5 hover:text-seal`}
-              >
-                <span className="tag-sweep text-seal">#</span>
-                <span className="tag-sweep">{tag.name}</span>
-                <span className="pop-on-hover ml-1.5 inline-block font-sans text-[0.6875rem] font-normal text-ink-faint tabular-nums transition-colors duration-[var(--dur-short)] group-hover:text-seal/70">
-                  {tag.count}
+            <div>
+              <span className="deck-label">Now · 墨墨</span>
+              <div className="now-list">
+                <div className="now-row">
+                  <span className="k">Writing</span>
+                  <span className="v">{nowWriting}</span>
+                </div>
+                <div className="now-row">
+                  <span className="k">Reading</span>
+                  <span className="v">
+                    {feed.length} {feed.length === 1 ? "essay" : "essays"} kept
+                  </span>
+                </div>
+                <div className="now-row">
+                  <span className="k">Keeping</span>
+                  <span className="v">{totalTags} tags filed</span>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </section>
+
+        {/* Latest ink */}
+        <section className="mt-20 lg:mt-28">
+          <Reveal as="div" className="sec-head">
+            <div>
+              <span className="eyebrow">
+                <span aria-hidden className="dot" />
+                The archive
+              </span>
+              <h2>
+                Latest <em>ink</em>
+              </h2>
+            </div>
+            <Link
+              href="/posts"
+              transitionTypes={["nav-forward"]}
+              className="sec-link group/link"
+            >
+              View all essays
+              <ArrowRight size={13} weight="duotone" aria-hidden />
+            </Link>
+          </Reveal>
+
+          {feed.length === 0 ? (
+            <EmptyState
+              className="mt-10"
+              icon={<Feather size={20} weight="duotone" />}
+              title="Nothing published yet."
+              hint="The first page is always blank. Be the one to fill it."
+            />
+          ) : recent.length > 0 ? (
+            <div className="divide-y divide-line">
+              {recent.map(({ handle, post }, i) => (
+                <Reveal
+                  key={`${handle}/${post.slug}`}
+                  delay={Math.min(i * 0.05, 0.3)}
+                >
+                  <PostCard
+                    handle={handle}
+                    post={post}
+                    authorName={names.get(handle)}
+                  />
+                </Reveal>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        {/* Tag library */}
+        {tags.length > 0 ? (
+          <Reveal as="section" className="mt-20">
+            <div className="sec-head">
+              <div>
+                <span className="eyebrow">
+                  <span aria-hidden className="dot" />
+                  Topics
                 </span>
+                <h2>
+                  Tag <em>library</em>
+                </h2>
+              </div>
+              <Link
+                href="/tags"
+                transitionTypes={["nav-forward"]}
+                className="sec-link group/link"
+              >
+                All tags
+                <ArrowRight size={13} weight="duotone" aria-hidden />
               </Link>
-            ))}
+            </div>
+            <div className="tags-deck max-w-4xl">
+              {tags.map((tag) => (
+                <Link
+                  key={tag.name}
+                  href={`/tag/${encodeURIComponent(tag.name)}`}
+                  transitionTypes={["nav-forward"]}
+                  className="tag"
+                >
+                  <span>{tag.name}</span>
+                  <small>{tag.count}</small>
+                </Link>
+              ))}
+            </div>
+          </Reveal>
+        ) : null}
+
+        <Reveal as="section" className="manifesto">
+          <div>
+            <div aria-hidden className="seal-block">
+              墨
+            </div>
+            <h2>
+              One quiet space,
+              <br />
+              owned end to end.
+            </h2>
+            <p>
+              Sumi is a full-stack personal space where{" "}
+              <b>content is data</b>: essays, notes and marginalia live in
+              Postgres, render as pages, and stay yours. Sign in with GitHub,
+              write in your own editor, deploy on Cloudflare or your own VPS.
+              Agents can collaborate, leave notifications, and never own the
+              voice you publish under.
+            </p>
+          </div>
+          <div>
+            <ul className="stack-list">
+              <li>
+                <b>Next.js 16</b>
+                <span>App Router, RSC, Turbopack</span>
+                <ArrowRight size={15} weight="duotone" aria-hidden />
+              </li>
+              <li>
+                <b>Postgres</b>
+                <span>Drizzle ORM, one source of truth</span>
+                <ArrowRight size={15} weight="duotone" aria-hidden />
+              </li>
+              <li>
+                <b>GitHub sign-in</b>
+                <span>Display name, not handle</span>
+                <ArrowRight size={15} weight="duotone" aria-hidden />
+              </li>
+              <li>
+                <b>Cloudflare / VPS</b>
+                <span>Docker or Workers, your choice</span>
+                <ArrowRight size={15} weight="duotone" aria-hidden />
+              </li>
+              <li>
+                <b>Remote MCP</b>
+                <span>Agents write, you approve</span>
+                <ArrowRight size={15} weight="duotone" aria-hidden />
+              </li>
+            </ul>
           </div>
         </Reveal>
-      ) : null}
       </main>
     </PageTransition>
   );

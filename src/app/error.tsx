@@ -31,7 +31,7 @@ export default function GlobalError({
       </h1>
       <p className="rise rise-delay-2 mt-4 max-w-sm font-serif text-[1.0625rem] leading-relaxed text-ink-muted">
         Something interrupted this page before it finished printing. Your words
-        are safe here — try again, or head back to the shelves.
+        are safe here. Try again, or head back to the shelves.
       </p>
 
       <div className="rise rise-delay-3 mt-8 flex flex-wrap items-center justify-center gap-3">

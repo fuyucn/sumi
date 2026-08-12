@@ -32,6 +32,9 @@ services:
     restart: unless-stopped
     ports:
       - "3005:3000"
+    volumes:
+      # Live-mount static assets so mascot/demo changes appear without a rebuild.
+      - ./public:/app/public
     env_file:
       - .env
     environment:
